@@ -1,0 +1,1620 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Atlas API",
+    "version": "1.0"
+  },
+  "paths": {
+    "/v1/health": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Health",
+        "operationId": "health_v1_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/meta": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Get Meta",
+        "operationId": "get_meta_v1_meta_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Meta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/countries": {
+      "get": {
+        "tags": [
+          "countries"
+        ],
+        "summary": "List Countries",
+        "operationId": "list_countries_v1_countries_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CountryList"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/countries/{iso2}": {
+      "get": {
+        "tags": [
+          "countries"
+        ],
+        "summary": "Get Country",
+        "operationId": "get_country_v1_countries__iso2__get",
+        "parameters": [
+          {
+            "name": "iso2",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z]{2}$",
+              "title": "Iso2"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CountryDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/polities": {
+      "get": {
+        "tags": [
+          "polities"
+        ],
+        "summary": "List Polities",
+        "operationId": "list_polities_v1_polities_get",
+        "parameters": [
+          {
+            "name": "year",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Year"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000,
+              "minimum": 1,
+              "default": 500,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PolityList"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/polities/{id}": {
+      "get": {
+        "tags": [
+          "polities"
+        ],
+        "summary": "Get Polity",
+        "operationId": "get_polity_v1_polities__id__get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PolityDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/snapshots": {
+      "get": {
+        "tags": [
+          "snapshots"
+        ],
+        "summary": "List Snapshots",
+        "operationId": "list_snapshots_v1_snapshots_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SnapshotList"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/snapshots/nearest": {
+      "get": {
+        "tags": [
+          "snapshots"
+        ],
+        "summary": "Nearest",
+        "operationId": "nearest_v1_snapshots_nearest_get",
+        "parameters": [
+          {
+            "name": "year",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Year"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SnapshotNearest"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/snapshots/{year}/links": {
+      "get": {
+        "tags": [
+          "snapshots"
+        ],
+        "summary": "Links",
+        "operationId": "links_v1_snapshots__year__links_get",
+        "parameters": [
+          {
+            "name": "year",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Year"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SnapshotLinks"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/search": {
+      "get": {
+        "tags": [
+          "search"
+        ],
+        "summary": "Search",
+        "operationId": "search_v1_search_get",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 2,
+              "title": "Q"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 25,
+              "minimum": 1,
+              "default": 10,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResults"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CountryDetail": {
+        "properties": {
+          "iso2": {
+            "type": "string",
+            "title": "Iso2"
+          },
+          "polity_id": {
+            "type": "string",
+            "title": "Polity Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "official_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Official Name"
+          },
+          "capital": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Capital"
+          },
+          "flag_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Flag Url"
+          },
+          "region": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Region"
+          },
+          "regime": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Regime"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "languages": {
+            "items": {
+              "$ref": "#/components/schemas/Language"
+            },
+            "type": "array",
+            "title": "Languages"
+          },
+          "currencies": {
+            "items": {
+              "$ref": "#/components/schemas/Currency"
+            },
+            "type": "array",
+            "title": "Currencies"
+          },
+          "population": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Population"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "area_km2": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Area Km2"
+          },
+          "memberships": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Memberships"
+          },
+          "politics": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Politics"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "timeline": {
+            "items": {
+              "$ref": "#/components/schemas/Event"
+            },
+            "type": "array",
+            "title": "Timeline"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/Source"
+            },
+            "type": "array",
+            "title": "Sources"
+          },
+          "updated_at": {
+            "type": "string",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "iso2",
+          "polity_id",
+          "name",
+          "official_name",
+          "capital",
+          "flag_url",
+          "region",
+          "regime",
+          "summary",
+          "languages",
+          "currencies",
+          "population",
+          "area_km2",
+          "memberships",
+          "politics",
+          "timeline",
+          "sources",
+          "updated_at"
+        ],
+        "title": "CountryDetail"
+      },
+      "CountryList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CountrySummary"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "CountryList"
+      },
+      "CountrySummary": {
+        "properties": {
+          "iso2": {
+            "type": "string",
+            "title": "Iso2"
+          },
+          "polity_id": {
+            "type": "string",
+            "title": "Polity Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "capital": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Capital"
+          },
+          "region": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Region"
+          },
+          "regime": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Regime"
+          },
+          "has_content": {
+            "type": "boolean",
+            "title": "Has Content"
+          },
+          "marker": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Marker"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "iso2",
+          "polity_id",
+          "name",
+          "capital",
+          "region",
+          "regime",
+          "has_content",
+          "marker"
+        ],
+        "title": "CountrySummary"
+      },
+      "Counts": {
+        "properties": {
+          "countries": {
+            "type": "integer",
+            "title": "Countries"
+          },
+          "polities": {
+            "type": "integer",
+            "title": "Polities"
+          },
+          "events": {
+            "type": "integer",
+            "title": "Events"
+          }
+        },
+        "type": "object",
+        "required": [
+          "countries",
+          "polities",
+          "events"
+        ],
+        "title": "Counts"
+      },
+      "Currency": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "symbol": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Symbol"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "name",
+          "symbol"
+        ],
+        "title": "Currency"
+      },
+      "Event": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "year_start": {
+            "type": "integer",
+            "title": "Year Start"
+          },
+          "year_end": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year End"
+          },
+          "precision": {
+            "type": "string",
+            "enum": [
+              "exact",
+              "circa",
+              "decade",
+              "century"
+            ],
+            "title": "Precision"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "political",
+              "war",
+              "treaty",
+              "cultural",
+              "economic",
+              "other"
+            ],
+            "title": "Kind"
+          },
+          "source_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Source Ids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "year_start",
+          "year_end",
+          "precision",
+          "title",
+          "summary",
+          "kind",
+          "source_ids"
+        ],
+        "title": "Event"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "Health": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "ok",
+            "title": "Status"
+          },
+          "db": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "error"
+            ],
+            "title": "Db"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "db"
+        ],
+        "title": "Health"
+      },
+      "Language": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "name"
+        ],
+        "title": "Language"
+      },
+      "Link": {
+        "properties": {
+          "polity_id": {
+            "type": "string",
+            "title": "Polity Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "year": {
+            "type": "integer",
+            "title": "Year"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "renamed",
+              "succeeded",
+              "split",
+              "merged",
+              "absorbed",
+              "conquered"
+            ],
+            "title": "Kind"
+          }
+        },
+        "type": "object",
+        "required": [
+          "polity_id",
+          "name",
+          "year",
+          "kind"
+        ],
+        "title": "Link"
+      },
+      "Marker": {
+        "properties": {
+          "lat": {
+            "type": "number",
+            "title": "Lat"
+          },
+          "lng": {
+            "type": "number",
+            "title": "Lng"
+          }
+        },
+        "type": "object",
+        "required": [
+          "lat",
+          "lng"
+        ],
+        "title": "Marker"
+      },
+      "Meta": {
+        "properties": {
+          "data_version": {
+            "type": "string",
+            "title": "Data Version"
+          },
+          "generated_at": {
+            "type": "string",
+            "title": "Generated At"
+          },
+          "year_min": {
+            "type": "integer",
+            "title": "Year Min"
+          },
+          "year_max": {
+            "type": "integer",
+            "title": "Year Max"
+          },
+          "snapshot_years": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Snapshot Years"
+          },
+          "counts": {
+            "$ref": "#/components/schemas/Counts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data_version",
+          "generated_at",
+          "year_min",
+          "year_max",
+          "snapshot_years",
+          "counts"
+        ],
+        "title": "Meta"
+      },
+      "NamePeriod": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "from_year": {
+            "type": "integer",
+            "title": "From Year"
+          },
+          "to_year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "To Year"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "from_year",
+          "to_year"
+        ],
+        "title": "NamePeriod"
+      },
+      "Politics": {
+        "properties": {
+          "system": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "System"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "system",
+          "note",
+          "updated_at"
+        ],
+        "title": "Politics"
+      },
+      "PolityDetail": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "empire",
+              "kingdom",
+              "republic",
+              "federation",
+              "confederation",
+              "colony",
+              "protectorate",
+              "city_state",
+              "other"
+            ],
+            "title": "Type"
+          },
+          "start_year": {
+            "type": "integer",
+            "title": "Start Year"
+          },
+          "end_year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Year"
+          },
+          "iso2": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Iso2"
+          },
+          "start_precision": {
+            "type": "string",
+            "enum": [
+              "exact",
+              "circa",
+              "decade",
+              "century"
+            ],
+            "title": "Start Precision"
+          },
+          "end_precision": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "exact",
+                  "circa",
+                  "decade",
+                  "century"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Precision"
+          },
+          "names": {
+            "items": {
+              "$ref": "#/components/schemas/NamePeriod"
+            },
+            "type": "array",
+            "title": "Names"
+          },
+          "predecessors": {
+            "items": {
+              "$ref": "#/components/schemas/Link"
+            },
+            "type": "array",
+            "title": "Predecessors"
+          },
+          "successors": {
+            "items": {
+              "$ref": "#/components/schemas/Link"
+            },
+            "type": "array",
+            "title": "Successors"
+          },
+          "regime": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Regime"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "politics": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Politics"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "timeline": {
+            "items": {
+              "$ref": "#/components/schemas/Event"
+            },
+            "type": "array",
+            "title": "Timeline"
+          },
+          "wikipedia": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Wikipedia"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/Source"
+            },
+            "type": "array",
+            "title": "Sources"
+          },
+          "updated_at": {
+            "type": "string",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "type",
+          "start_year",
+          "end_year",
+          "iso2",
+          "start_precision",
+          "end_precision",
+          "names",
+          "predecessors",
+          "successors",
+          "regime",
+          "summary",
+          "politics",
+          "timeline",
+          "wikipedia",
+          "sources",
+          "updated_at"
+        ],
+        "title": "PolityDetail"
+      },
+      "PolityList": {
+        "properties": {
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PolitySummary"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "year",
+          "items",
+          "total"
+        ],
+        "title": "PolityList"
+      },
+      "PolitySummary": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "empire",
+              "kingdom",
+              "republic",
+              "federation",
+              "confederation",
+              "colony",
+              "protectorate",
+              "city_state",
+              "other"
+            ],
+            "title": "Type"
+          },
+          "start_year": {
+            "type": "integer",
+            "title": "Start Year"
+          },
+          "end_year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Year"
+          },
+          "iso2": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Iso2"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "type",
+          "start_year",
+          "end_year",
+          "iso2"
+        ],
+        "title": "PolitySummary"
+      },
+      "Population": {
+        "properties": {
+          "value": {
+            "type": "integer",
+            "title": "Value"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          },
+          "source_id": {
+            "type": "string",
+            "title": "Source Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value",
+          "year",
+          "source_id"
+        ],
+        "title": "Population"
+      },
+      "SearchItem": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "country",
+              "polity"
+            ],
+            "title": "Kind"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "iso2": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Iso2"
+          },
+          "start_year": {
+            "type": "integer",
+            "title": "Start Year"
+          },
+          "end_year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Year"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "id",
+          "name",
+          "iso2",
+          "start_year",
+          "end_year"
+        ],
+        "title": "SearchItem"
+      },
+      "SearchResults": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SearchItem"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "SearchResults"
+      },
+      "SnapshotInfo": {
+        "properties": {
+          "year": {
+            "type": "integer",
+            "title": "Year"
+          },
+          "geometry_url": {
+            "type": "string",
+            "title": "Geometry Url"
+          },
+          "feature_count": {
+            "type": "integer",
+            "title": "Feature Count"
+          },
+          "link_coverage": {
+            "type": "number",
+            "title": "Link Coverage"
+          }
+        },
+        "type": "object",
+        "required": [
+          "year",
+          "geometry_url",
+          "feature_count",
+          "link_coverage"
+        ],
+        "title": "SnapshotInfo"
+      },
+      "SnapshotLink": {
+        "properties": {
+          "source_name": {
+            "type": "string",
+            "title": "Source Name"
+          },
+          "polity_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Polity Id"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "curated",
+              "auto",
+              "unresolved"
+            ],
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source_name",
+          "polity_id",
+          "status"
+        ],
+        "title": "SnapshotLink"
+      },
+      "SnapshotLinks": {
+        "properties": {
+          "snapshot_year": {
+            "type": "integer",
+            "title": "Snapshot Year"
+          },
+          "links": {
+            "items": {
+              "$ref": "#/components/schemas/SnapshotLink"
+            },
+            "type": "array",
+            "title": "Links"
+          }
+        },
+        "type": "object",
+        "required": [
+          "snapshot_year",
+          "links"
+        ],
+        "title": "SnapshotLinks"
+      },
+      "SnapshotList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SnapshotInfo"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "SnapshotList"
+      },
+      "SnapshotNearest": {
+        "properties": {
+          "requested_year": {
+            "type": "integer",
+            "title": "Requested Year"
+          },
+          "snapshot": {
+            "$ref": "#/components/schemas/SnapshotInfo"
+          },
+          "distance_years": {
+            "type": "integer",
+            "title": "Distance Years"
+          }
+        },
+        "type": "object",
+        "required": [
+          "requested_year",
+          "snapshot",
+          "distance_years"
+        ],
+        "title": "SnapshotNearest"
+      },
+      "Source": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          },
+          "license": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "License"
+          },
+          "retrieved_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retrieved At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "url",
+          "license",
+          "retrieved_at"
+        ],
+        "title": "Source"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "Wikipedia": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "url"
+        ],
+        "title": "Wikipedia"
+      }
+    }
+  }
+}

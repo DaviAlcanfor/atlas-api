@@ -1,0 +1,761 @@
+[
+  {
+    "id": "austria",
+    "name": "Áustria",
+    "type": "republic",
+    "start_year": 1955,
+    "end_year": null,
+    "iso2": "AT",
+    "start_precision": "exact",
+    "end_precision": null,
+    "names": [
+      {
+        "name": "Áustria",
+        "from_year": 1955,
+        "to_year": null
+      }
+    ],
+    "predecessors": [],
+    "successors": [],
+    "regime": null,
+    "summary": null,
+    "politics": null,
+    "timeline": [
+      {
+        "id": "stub-event",
+        "year_start": 1990,
+        "year_end": null,
+        "precision": "exact",
+        "title": "Reunificação (stub)",
+        "summary": "Texto de exemplo.",
+        "kind": "political",
+        "source_ids": [
+          "stub"
+        ]
+      }
+    ],
+    "wikipedia": null,
+    "sources": [
+      {
+        "id": "stub",
+        "title": "Stub fixture",
+        "url": null,
+        "license": null,
+        "retrieved_at": null
+      }
+    ],
+    "updated_at": "2026-01-01T00:00:00Z"
+  },
+  {
+    "id": "brazil",
+    "name": "Brasil",
+    "type": "republic",
+    "start_year": 1822,
+    "end_year": null,
+    "iso2": "BR",
+    "start_precision": "exact",
+    "end_precision": null,
+    "names": [
+      {
+        "name": "Brasil",
+        "from_year": 1822,
+        "to_year": null
+      }
+    ],
+    "predecessors": [],
+    "successors": [],
+    "regime": null,
+    "summary": null,
+    "politics": null,
+    "timeline": [
+      {
+        "id": "stub-event",
+        "year_start": 1990,
+        "year_end": null,
+        "precision": "exact",
+        "title": "Reunificação (stub)",
+        "summary": "Texto de exemplo.",
+        "kind": "political",
+        "source_ids": [
+          "stub"
+        ]
+      }
+    ],
+    "wikipedia": null,
+    "sources": [
+      {
+        "id": "stub",
+        "title": "Stub fixture",
+        "url": null,
+        "license": null,
+        "retrieved_at": null
+      }
+    ],
+    "updated_at": "2026-01-01T00:00:00Z"
+  },
+  {
+    "id": "germany",
+    "name": "Alemanha",
+    "type": "republic",
+    "start_year": 1949,
+    "end_year": null,
+    "iso2": "DE",
+    "start_precision": "exact",
+    "end_precision": null,
+    "names": [
+      {
+        "name": "Alemanha",
+        "from_year": 1949,
+        "to_year": null
+      }
+    ],
+    "predecessors": [],
+    "successors": [],
+    "regime": null,
+    "summary": null,
+    "politics": null,
+    "timeline": [
+      {
+        "id": "stub-event",
+        "year_start": 1990,
+        "year_end": null,
+        "precision": "exact",
+        "title": "Reunificação (stub)",
+        "summary": "Texto de exemplo.",
+        "kind": "political",
+        "source_ids": [
+          "stub"
+        ]
+      }
+    ],
+    "wikipedia": null,
+    "sources": [
+      {
+        "id": "stub",
+        "title": "Stub fixture",
+        "url": null,
+        "license": null,
+        "retrieved_at": null
+      }
+    ],
+    "updated_at": "2026-01-01T00:00:00Z"
+  },
+  {
+    "id": "egypt",
+    "name": "Egito",
+    "type": "republic",
+    "start_year": 1953,
+    "end_year": null,
+    "iso2": "EG",
+    "start_precision": "exact",
+    "end_precision": null,
+    "names": [
+      {
+        "name": "Egito",
+        "from_year": 1953,
+        "to_year": null
+      }
+    ],
+    "predecessors": [],
+    "successors": [],
+    "regime": null,
+    "summary": null,
+    "politics": null,
+    "timeline": [
+      {
+        "id": "stub-event",
+        "year_start": 1990,
+        "year_end": null,
+        "precision": "exact",
+        "title": "Reunificação (stub)",
+        "summary": "Texto de exemplo.",
+        "kind": "political",
+        "source_ids": [
+          "stub"
+        ]
+      }
+    ],
+    "wikipedia": null,
+    "sources": [
+      {
+        "id": "stub",
+        "title": "Stub fixture",
+        "url": null,
+        "license": null,
+        "retrieved_at": null
+      }
+    ],
+    "updated_at": "2026-01-01T00:00:00Z"
+  },
+  {
+    "id": "japan",
+    "name": "Japão",
+    "type": "other",
+    "start_year": 1947,
+    "end_year": null,
+    "iso2": "JP",
+    "start_precision": "exact",
+    "end_precision": null,
+    "names": [
+      {
+        "name": "Japão",
+        "from_year": 1947,
+        "to_year": null
+      }
+    ],
+    "predecessors": [],
+    "successors": [],
+    "regime": null,
+    "summary": null,
+    "politics": null,
+    "timeline": [
+      {
+        "id": "stub-event",
+        "year_start": 1990,
+        "year_end": null,
+        "precision": "exact",
+        "title": "Reunificação (stub)",
+        "summary": "Texto de exemplo.",
+        "kind": "political",
+        "source_ids": [
+          "stub"
+        ]
+      }
+    ],
+    "wikipedia": null,
+    "sources": [
+      {
+        "id": "stub",
+        "title": "Stub fixture",
+        "url": null,
+        "license": null,
+        "retrieved_at": null
+      }
+    ],
+    "updated_at": "2026-01-01T00:00:00Z"
+  },
+  {
+    "id": "turkey",
+    "name": "Turquia",
+    "type": "republic",
+    "start_year": 1923,
+    "end_year": null,
+    "iso2": "TR",
+    "start_precision": "exact",
+    "end_precision": null,
+    "names": [
+      {
+        "name": "Turquia",
+        "from_year": 1923,
+        "to_year": null
+      }
+    ],
+    "predecessors": [],
+    "successors": [],
+    "regime": null,
+    "summary": null,
+    "politics": null,
+    "timeline": [
+      {
+        "id": "stub-event",
+        "year_start": 1990,
+        "year_end": null,
+        "precision": "exact",
+        "title": "Reunificação (stub)",
+        "summary": "Texto de exemplo.",
+        "kind": "political",
+        "source_ids": [
+          "stub"
+        ]
+      }
+    ],
+    "wikipedia": null,
+    "sources": [
+      {
+        "id": "stub",
+        "title": "Stub fixture",
+        "url": null,
+        "license": null,
+        "retrieved_at": null
+      }
+    ],
+    "updated_at": "2026-01-01T00:00:00Z"
+  },
+  {
+    "id": "russia",
+    "name": "Rússia",
+    "type": "federation",
+    "start_year": 1991,
+    "end_year": null,
+    "iso2": "RU",
+    "start_precision": "exact",
+    "end_precision": null,
+    "names": [
+      {
+        "name": "Rússia",
+        "from_year": 1991,
+        "to_year": null
+      }
+    ],
+    "predecessors": [],
+    "successors": [],
+    "regime": null,
+    "summary": null,
+    "politics": null,
+    "timeline": [
+      {
+        "id": "stub-event",
+        "year_start": 1990,
+        "year_end": null,
+        "precision": "exact",
+        "title": "Reunificação (stub)",
+        "summary": "Texto de exemplo.",
+        "kind": "political",
+        "source_ids": [
+          "stub"
+        ]
+      }
+    ],
+    "wikipedia": null,
+    "sources": [
+      {
+        "id": "stub",
+        "title": "Stub fixture",
+        "url": null,
+        "license": null,
+        "retrieved_at": null
+      }
+    ],
+    "updated_at": "2026-01-01T00:00:00Z"
+  },
+  {
+    "id": "serbia",
+    "name": "Sérvia",
+    "type": "republic",
+    "start_year": 2006,
+    "end_year": null,
+    "iso2": "RS",
+    "start_precision": "exact",
+    "end_precision": null,
+    "names": [
+      {
+        "name": "Sérvia",
+        "from_year": 2006,
+        "to_year": null
+      }
+    ],
+    "predecessors": [],
+    "successors": [],
+    "regime": null,
+    "summary": null,
+    "politics": null,
+    "timeline": [
+      {
+        "id": "stub-event",
+        "year_start": 1990,
+        "year_end": null,
+        "precision": "exact",
+        "title": "Reunificação (stub)",
+        "summary": "Texto de exemplo.",
+        "kind": "political",
+        "source_ids": [
+          "stub"
+        ]
+      }
+    ],
+    "wikipedia": null,
+    "sources": [
+      {
+        "id": "stub",
+        "title": "Stub fixture",
+        "url": null,
+        "license": null,
+        "retrieved_at": null
+      }
+    ],
+    "updated_at": "2026-01-01T00:00:00Z"
+  },
+  {
+    "id": "ottoman-empire",
+    "name": "Império Otomano",
+    "type": "empire",
+    "start_year": 1299,
+    "end_year": 1922,
+    "iso2": null,
+    "start_precision": "exact",
+    "end_precision": "exact",
+    "names": [
+      {
+        "name": "Império Otomano",
+        "from_year": 1299,
+        "to_year": 1922
+      }
+    ],
+    "predecessors": [],
+    "successors": [],
+    "regime": null,
+    "summary": null,
+    "politics": null,
+    "timeline": [
+      {
+        "id": "stub-event",
+        "year_start": 1990,
+        "year_end": null,
+        "precision": "exact",
+        "title": "Reunificação (stub)",
+        "summary": "Texto de exemplo.",
+        "kind": "political",
+        "source_ids": [
+          "stub"
+        ]
+      }
+    ],
+    "wikipedia": null,
+    "sources": [
+      {
+        "id": "stub",
+        "title": "Stub fixture",
+        "url": null,
+        "license": null,
+        "retrieved_at": null
+      }
+    ],
+    "updated_at": "2026-01-01T00:00:00Z"
+  },
+  {
+    "id": "austria-hungary",
+    "name": "Áustria-Hungria",
+    "type": "empire",
+    "start_year": 1867,
+    "end_year": 1918,
+    "iso2": null,
+    "start_precision": "exact",
+    "end_precision": "exact",
+    "names": [
+      {
+        "name": "Áustria-Hungria",
+        "from_year": 1867,
+        "to_year": 1918
+      }
+    ],
+    "predecessors": [],
+    "successors": [],
+    "regime": null,
+    "summary": null,
+    "politics": null,
+    "timeline": [
+      {
+        "id": "stub-event",
+        "year_start": 1990,
+        "year_end": null,
+        "precision": "exact",
+        "title": "Reunificação (stub)",
+        "summary": "Texto de exemplo.",
+        "kind": "political",
+        "source_ids": [
+          "stub"
+        ]
+      }
+    ],
+    "wikipedia": null,
+    "sources": [
+      {
+        "id": "stub",
+        "title": "Stub fixture",
+        "url": null,
+        "license": null,
+        "retrieved_at": null
+      }
+    ],
+    "updated_at": "2026-01-01T00:00:00Z"
+  },
+  {
+    "id": "german-empire",
+    "name": "Império Alemão",
+    "type": "empire",
+    "start_year": 1871,
+    "end_year": 1918,
+    "iso2": null,
+    "start_precision": "exact",
+    "end_precision": "exact",
+    "names": [
+      {
+        "name": "Império Alemão",
+        "from_year": 1871,
+        "to_year": 1918
+      }
+    ],
+    "predecessors": [],
+    "successors": [],
+    "regime": null,
+    "summary": null,
+    "politics": null,
+    "timeline": [
+      {
+        "id": "stub-event",
+        "year_start": 1990,
+        "year_end": null,
+        "precision": "exact",
+        "title": "Reunificação (stub)",
+        "summary": "Texto de exemplo.",
+        "kind": "political",
+        "source_ids": [
+          "stub"
+        ]
+      }
+    ],
+    "wikipedia": null,
+    "sources": [
+      {
+        "id": "stub",
+        "title": "Stub fixture",
+        "url": null,
+        "license": null,
+        "retrieved_at": null
+      }
+    ],
+    "updated_at": "2026-01-01T00:00:00Z"
+  },
+  {
+    "id": "weimar-republic",
+    "name": "República de Weimar",
+    "type": "republic",
+    "start_year": 1918,
+    "end_year": 1933,
+    "iso2": null,
+    "start_precision": "exact",
+    "end_precision": "exact",
+    "names": [
+      {
+        "name": "República de Weimar",
+        "from_year": 1918,
+        "to_year": 1933
+      }
+    ],
+    "predecessors": [],
+    "successors": [
+      {
+        "polity_id": "germany",
+        "name": "Alemanha",
+        "year": 1949,
+        "kind": "succeeded"
+      }
+    ],
+    "regime": null,
+    "summary": null,
+    "politics": null,
+    "timeline": [
+      {
+        "id": "stub-event",
+        "year_start": 1990,
+        "year_end": null,
+        "precision": "exact",
+        "title": "Reunificação (stub)",
+        "summary": "Texto de exemplo.",
+        "kind": "political",
+        "source_ids": [
+          "stub"
+        ]
+      }
+    ],
+    "wikipedia": null,
+    "sources": [
+      {
+        "id": "stub",
+        "title": "Stub fixture",
+        "url": null,
+        "license": null,
+        "retrieved_at": null
+      }
+    ],
+    "updated_at": "2026-01-01T00:00:00Z"
+  },
+  {
+    "id": "nazi-germany",
+    "name": "Alemanha Nazista",
+    "type": "other",
+    "start_year": 1933,
+    "end_year": 1945,
+    "iso2": null,
+    "start_precision": "exact",
+    "end_precision": "exact",
+    "names": [
+      {
+        "name": "Alemanha Nazista",
+        "from_year": 1933,
+        "to_year": 1945
+      }
+    ],
+    "predecessors": [],
+    "successors": [],
+    "regime": null,
+    "summary": null,
+    "politics": null,
+    "timeline": [
+      {
+        "id": "stub-event",
+        "year_start": 1990,
+        "year_end": null,
+        "precision": "exact",
+        "title": "Reunificação (stub)",
+        "summary": "Texto de exemplo.",
+        "kind": "political",
+        "source_ids": [
+          "stub"
+        ]
+      }
+    ],
+    "wikipedia": null,
+    "sources": [
+      {
+        "id": "stub",
+        "title": "Stub fixture",
+        "url": null,
+        "license": null,
+        "retrieved_at": null
+      }
+    ],
+    "updated_at": "2026-01-01T00:00:00Z"
+  },
+  {
+    "id": "east-germany",
+    "name": "Alemanha Oriental",
+    "type": "republic",
+    "start_year": 1949,
+    "end_year": 1990,
+    "iso2": null,
+    "start_precision": "exact",
+    "end_precision": "exact",
+    "names": [
+      {
+        "name": "Alemanha Oriental",
+        "from_year": 1949,
+        "to_year": 1990
+      }
+    ],
+    "predecessors": [],
+    "successors": [],
+    "regime": null,
+    "summary": null,
+    "politics": null,
+    "timeline": [
+      {
+        "id": "stub-event",
+        "year_start": 1990,
+        "year_end": null,
+        "precision": "exact",
+        "title": "Reunificação (stub)",
+        "summary": "Texto de exemplo.",
+        "kind": "political",
+        "source_ids": [
+          "stub"
+        ]
+      }
+    ],
+    "wikipedia": null,
+    "sources": [
+      {
+        "id": "stub",
+        "title": "Stub fixture",
+        "url": null,
+        "license": null,
+        "retrieved_at": null
+      }
+    ],
+    "updated_at": "2026-01-01T00:00:00Z"
+  },
+  {
+    "id": "soviet-union",
+    "name": "União Soviética",
+    "type": "federation",
+    "start_year": 1922,
+    "end_year": 1991,
+    "iso2": null,
+    "start_precision": "exact",
+    "end_precision": "exact",
+    "names": [
+      {
+        "name": "União Soviética",
+        "from_year": 1922,
+        "to_year": 1991
+      }
+    ],
+    "predecessors": [],
+    "successors": [],
+    "regime": null,
+    "summary": null,
+    "politics": null,
+    "timeline": [
+      {
+        "id": "stub-event",
+        "year_start": 1990,
+        "year_end": null,
+        "precision": "exact",
+        "title": "Reunificação (stub)",
+        "summary": "Texto de exemplo.",
+        "kind": "political",
+        "source_ids": [
+          "stub"
+        ]
+      }
+    ],
+    "wikipedia": null,
+    "sources": [
+      {
+        "id": "stub",
+        "title": "Stub fixture",
+        "url": null,
+        "license": null,
+        "retrieved_at": null
+      }
+    ],
+    "updated_at": "2026-01-01T00:00:00Z"
+  },
+  {
+    "id": "yugoslavia",
+    "name": "Iugoslávia",
+    "type": "federation",
+    "start_year": 1918,
+    "end_year": 1992,
+    "iso2": null,
+    "start_precision": "exact",
+    "end_precision": "exact",
+    "names": [
+      {
+        "name": "Iugoslávia",
+        "from_year": 1918,
+        "to_year": 1992
+      }
+    ],
+    "predecessors": [],
+    "successors": [],
+    "regime": null,
+    "summary": null,
+    "politics": null,
+    "timeline": [
+      {
+        "id": "stub-event",
+        "year_start": 1990,
+        "year_end": null,
+        "precision": "exact",
+        "title": "Reunificação (stub)",
+        "summary": "Texto de exemplo.",
+        "kind": "political",
+        "source_ids": [
+          "stub"
+        ]
+      }
+    ],
+    "wikipedia": null,
+    "sources": [
+      {
+        "id": "stub",
+        "title": "Stub fixture",
+        "url": null,
+        "license": null,
+        "retrieved_at": null
+      }
+    ],
+    "updated_at": "2026-01-01T00:00:00Z"
+  }
+]
