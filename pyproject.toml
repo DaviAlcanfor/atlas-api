@@ -2,15 +2,14 @@
 name = "atlas-api"
 version = "0.1.0"
 description = "Read-only API for modern countries, historical polities and timelines"
-requires-python = ">=3.12"
+requires-python = ">=3.12,<3.14"
 dependencies = [
-    "fastapi>=0.115",
+    "fastapi[standard]>=0.115",
     "pydantic>=2.8",
     "sqlalchemy>=2.0",
     "psycopg[binary]>=3.2",
     "alembic>=1.13",
     "pyyaml>=6",
-    "uvicorn>=0.30",
     "pydantic-settings>=2.16.2",
 ]
 
@@ -38,3 +37,6 @@ files = ["src", "etl"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src", "."]
+
+[tool.fastapi]
+entrypoint = "atlas_api.main:app"
