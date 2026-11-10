@@ -15,7 +15,7 @@ Estado em 2026-11-10. Fases definidas no prompt original (0 a 4). Atualize este 
 - [ ] Trocar a senha do banco Supabase (ela foi colada no chat).
 - [ ] Reconfigurar o MCP do Supabase: hoje aponta para outro projeto (`qskdjqqyuejeyzpkszyf`).
 - [ ] Decidir sobre os termos do REST Countries (ver Riscos).
-- [ ] Criar o `.fastapicloudignore` (a criação foi bloqueada por permissão; sugestão de conteúdo em AGENTS.md/conversa: excluir `.git`, `.venv`, `.env*`, `etl/`, `etl_cache/`, `data_out/`, `content/`, `tests/`, `scripts/`, `docs/`, caches). Formato a confirmar na doc do FastAPI Cloud.
+- [x] `.fastapicloudignore` criado (formato ainda a confirmar na doc do FastAPI Cloud).
 
 ## Fase 1: banco, importador, endpoints reais
 - [ ] Testar/ajustar migrations 0001 e 0002 em Postgres real.
@@ -47,6 +47,8 @@ Estado em 2026-11-10. Fases definidas no prompt original (0 a 4). Atualize este 
 - [ ] `NOTICE.md` com atribuição e aviso GPL-3.0 do historical-basemaps.
 
 ## Fase 4: cache, desempenho, deploy
+- [x] Deploy conecta: `fastapi[standard]`, entrypoint em `[tool.fastapi]` e Python fixado em 3.13 (`requires-python` e `.python-version`), pois o servidor usou 3.15 e o psycopg pode não ter wheels.
+- [ ] No painel do FastAPI Cloud, definir `DATABASE_URL` (pooler Supabase), `CORS_ORIGINS` e `LOG_LEVEL` como variáveis/segredos. Hoje a API não usa o banco, então sobe sem `DATABASE_URL`.
 - [ ] ETag fraco = hash(data_version, path, query), 304 com `If-None-Match`, `X-Data-Version`, `Cache-Control: public, max-age=300, stale-while-revalidate=86400` (exceto `/health`).
 - [ ] Cache em memória para `meta` e polities-por-ano, chave (data_version, year), invalidando quando `data_version` muda.
 - [ ] Medir tempo de import e cold start local.
