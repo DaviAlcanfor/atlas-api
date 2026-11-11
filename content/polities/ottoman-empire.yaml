@@ -1,0 +1,9 @@
+# Anos vindos das fixtures da Fase 0 (NÃO curados). Sem fontes, sem eventos, sem sucessão.
+# TODO verify todas as datas antes de tratar como história curada.
+id: ottoman-empire
+name: "Império Otomano"
+type: empire
+start_year: 1299  # TODO verify
+start_precision: circa
+end_year: 1922  # TODO verify
+end_precision: exact

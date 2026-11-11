@@ -24,8 +24,10 @@ dev, test, lint, typecheck, openapi (writes `openapi.generated.json`). Later: mi
 
 ## Layout
 src/atlas_api/: main.py (app factory + lifespan), config.py (pydantic-settings), deps.py (DI), errors.py (exceptions -> problem+json), schemas/ (contract models), routers/ (one per resource), fixtures/ (Phase 0 JSON stubs in data/, replaced by DB in Phase 1).
-etl/: settings.py, cli.py, restcountries/{models,client,transform,pipeline}.py. Run: `uv run python -m etl restcountries` (reads .env itself).
+etl/: settings.py, cli.py. `etl/restcountries/` is NOT USED FOR THE DATABASE; kept for reference only (its ToS bar retaining data beyond 3 days and aggregating it into a downstream product). Do not extend it, do not write `import-facts` for it.
+Persistent facts come from Wikidata (CC0) and World Bank Indicators (Phase 2). Read each upstream's docs/licence BEFORE coding its ETL and quote what you read.
 docs/CONTRACT_NOTES.md maps contract -> code (the contract itself is frozen).
 
 ## Status
-Phase 0 done: routes return stub fixtures (`fixtures.py`, not authoritative). ETL `restcountries` written (list endpoint, 3-day cache, Free plan 1000 req/mo). Next: Phase 1 (DB, importer, real endpoints).
+Phase 0 done: routes return stub fixtures (not authoritative). Phase 1 done except decisions: the API now reads REAL data from Postgres (`queries.py`, fixtures removed), ETag/304/X-Data-Version live, 196 countries seeded (placeholder start_year 1946, see README), `import-content` + `import-facts`, 40 tests on real Postgres. Pending user decisions: Germany/Yugoslavia/name periods (the 8 historical ids exist only as unverified placeholders, no succession); contract v1.1 (`Indicator`) is still NOT in the repo, so migration 0003/`indicators` are not done; news needs contract change CR-001.
+Geometry: the WEB repo owns MODERN geometry. This repo owns HISTORICAL snapshots only. Micro-state `marker` comes from `content/markers.yaml` (iso2 -> lat,lng).

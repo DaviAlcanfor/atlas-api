@@ -5,6 +5,7 @@ from http import HTTPStatus
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from sqlalchemy.exc import SQLAlchemyError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 log = logging.getLogger("atlas_api")
@@ -62,6 +63,11 @@ def register_error_handlers(app: FastAPI) -> None:
     async def _validation(_: Request, exc: RequestValidationError) -> JSONResponse:
         detail = "; ".join(f"{'.'.join(map(str, e['loc']))}: {e['msg']}" for e in exc.errors())
         return problem(422, detail, "Invalid parameter")
+
+    @app.exception_handler(SQLAlchemyError)  # database down / timeout -> 503, not a bare 500
+    async def _db(request: Request, exc: SQLAlchemyError) -> JSONResponse:
+        log.exception("Database error on %s", request.url.path)
+        return problem(503, "Database unavailable.")
 
     @app.exception_handler(Exception)  # anything unexpected: log it, never leak internals
     async def _unexpected(request: Request, exc: Exception) -> JSONResponse:

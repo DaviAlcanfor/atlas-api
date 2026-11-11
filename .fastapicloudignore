@@ -6,7 +6,8 @@
 etl/
 etl_cache/
 data_out/
-content/
+content/polities/
+content/official_names_pt.yaml
 tests/
 scripts/
 docs/

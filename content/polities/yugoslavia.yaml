@@ -1,0 +1,9 @@
+# Anos vindos das fixtures da Fase 0 (NÃO curados). Sem fontes, sem eventos, sem sucessão.
+# TODO verify todas as datas antes de tratar como história curada.
+id: yugoslavia
+name: "Iugoslávia"
+type: federation
+start_year: 1918  # TODO verify  # DECISÃO PENDENTE (Iugoslávia: 1918 Reino dos Sérvios, Croatas e Eslovenos; RSFI 1943/1945-1992; RFI até 2003)
+start_precision: exact
+end_year: 1992  # TODO verify
+end_precision: exact

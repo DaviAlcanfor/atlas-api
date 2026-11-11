@@ -12,7 +12,7 @@ open an entry in `contract/CHANGE_REQUESTS.md`.
 | Endpoints | `src/atlas_api/routers/<resource>.py`, mounted under `/v1` in `main.py` |
 | Errors (problem+json, 404/422) | `src/atlas_api/errors.py` |
 | CORS_ORIGINS | `src/atlas_api/config.py` (`Settings.cors_origins`) |
-| Seed ids | `src/atlas_api/fixtures/data/*.json` (Phase 0), `content/` (Phase 1) |
+| Seed ids | `content/polities/*.yaml` (loaded by `import-content`) |
 | Caching headers, ETag, X-Data-Version | Phase 4 (not implemented yet) |
 
 ## Implementation choices on ambiguous points
@@ -24,4 +24,7 @@ open an entry in `contract/CHANGE_REQUESTS.md`.
 - `CountryDetail.population.year` is always null for now: REST Countries gives no population year.
 - `Language.code` is the BCP-47 code from REST Countries; `memberships` lists the names of the
   organisations whose flag is true (`un`, `nato`, ...), sorted.
-- Fixture values (Phase 0) are placeholders, not curated history.
+- `SearchItem.id` is the polity id for both kinds; for `kind: country` use `iso2` to call `/countries/{iso2}`.
+- `Language`/`Currency` entries without a code (dialects, language groups) are omitted: the contract requires a code and we never invent one.
+- `/snapshots*` are empty (404 for nearest/links) until the Phase 3 import.
+- `CountryDetail.population.source_id` is `wikidata`; `flag_url` points to flagcdn.com (public-domain flags).

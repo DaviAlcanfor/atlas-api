@@ -1,0 +1,9 @@
+# Anos vindos das fixtures da Fase 0 (NÃO curados). Sem fontes, sem eventos, sem sucessão.
+# TODO verify todas as datas antes de tratar como história curada.
+id: austria-hungary
+name: "Áustria-Hungria"
+type: empire
+start_year: 1867  # TODO verify
+start_precision: exact
+end_year: 1918  # TODO verify
+end_precision: exact

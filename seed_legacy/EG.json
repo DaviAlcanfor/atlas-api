@@ -1,0 +1,33 @@
+{
+  "nome": "Egito",
+  "capital": "Cairo",
+  "regime": "República semipresidencialista",
+  "resumo": "Ponte entre África e Ásia; uma das civilizações mais antigas do mundo.",
+  "historia": [
+    {
+      "ano": -2560,
+      "evento": "Construção aproximada da Grande Pirâmide de Gizé"
+    },
+    {
+      "ano": 1869,
+      "evento": "Inauguração do Canal de Suez"
+    },
+    {
+      "ano": 1952,
+      "evento": "Revolução dos Oficiais Livres derruba a monarquia"
+    },
+    {
+      "ano": 1979,
+      "evento": "Tratado de paz com Israel"
+    },
+    {
+      "ano": 2011,
+      "evento": "Revolta popular encerra o governo de Mubarak"
+    }
+  ],
+  "politica_atual": {
+    "sistema": "Presidente forte com Parlamento unicameral",
+    "nota": "Confira uma fonte atual para cargos e leis recentes."
+  },
+  "atualizado_em": "2026-11-10"
+}

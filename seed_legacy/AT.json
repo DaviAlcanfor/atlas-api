@@ -1,0 +1,33 @@
+{
+  "nome": "Áustria",
+  "capital": "Viena",
+  "regime": "República parlamentar federal",
+  "resumo": "País alpino da Europa Central, centro do antigo Império Habsburgo.",
+  "historia": [
+    {
+      "ano": 1867,
+      "evento": "Criação do Império Austro-Húngaro"
+    },
+    {
+      "ano": 1918,
+      "evento": "Fim da monarquia após a Primeira Guerra"
+    },
+    {
+      "ano": 1938,
+      "evento": "Anexação pela Alemanha nazista (Anschluss)"
+    },
+    {
+      "ano": 1955,
+      "evento": "Tratado de Estado: soberania restaurada e neutralidade"
+    },
+    {
+      "ano": 1995,
+      "evento": "Entrada na União Europeia"
+    }
+  ],
+  "politica_atual": {
+    "sistema": "Presidente como chefe de Estado; chanceler como chefe de governo",
+    "nota": "Governos de coalizão são comuns; confira uma fonte atual."
+  },
+  "atualizado_em": "2026-11-10"
+}

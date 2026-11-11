@@ -12,7 +12,10 @@ from sqlalchemy.orm import Session, sessionmaker
 
 def make_engine(url: str) -> Engine:
     # pool_pre_ping: test a pooled connection before using it (survives DB/pooler restarts).
-    return create_engine(url, pool_pre_ping=True, pool_size=5, max_overflow=5)
+    # connect_timeout: fail fast (seconds) when the DB is unreachable instead of hanging a request.
+    return create_engine(
+        url, pool_pre_ping=True, pool_size=5, max_overflow=5, connect_args={"connect_timeout": 5}
+    )
 
 
 def make_session_factory(engine: Engine) -> sessionmaker[Session]:

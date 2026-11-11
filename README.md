@@ -2,7 +2,7 @@
 
 API somente leitura que serve **países modernos**, **entidades políticas históricas** (impérios, reinos, estados extintos), suas **linhas do tempo** e o **mapeamento entre polígonos de mapas históricos e essas entidades**.
 
-> **Status:** em construção (Fase 0 concluída; schema do banco escrito). As rotas hoje respondem com dados de exemplo (fixtures JSON). O que falta está em [docs/TODO.md](docs/TODO.md).
+> **Status:** em construção. As rotas leem dados reais do Postgres (196 países da Wikidata + 8 entidades históricas placeholders); snapshots, indicadores e notícias ainda não existem. O que falta está em [docs/TODO.md](docs/TODO.md).
 
 ## Por que existe
 
@@ -68,7 +68,8 @@ Segredos **só** por variável de ambiente (ou `.env`, que o git ignora). Nunca 
 | `DATABASE_URL` | Conexão com o Postgres | `postgresql+psycopg://usuário:senha@host:porta/banco`. Caracteres especiais na senha devem ser codificados (`@` → `%40`). |
 | `CORS_ORIGINS` | Origens permitidas | Separadas por vírgula. Ex.: `http://localhost:5173,https://seu-front.example` |
 | `LOG_LEVEL` | Nível de log | Padrão `INFO` |
-| `RESTCOUNTRIES_API_KEY` | Chave do REST Countries | Só o ETL usa |
+| `RESTCOUNTRIES_API_KEY` | Chave do REST Countries | Só o ETL de referência usa |
+| `WIKIDATA_CONTACT` | E-mail ou site para o User-Agent da Wikidata | Exigido pela política da Wikimedia; só o ETL usa |
 | `WEB_PUBLIC_DATA_DIR` | Pasta pública do front | Para copiar a geometria (Fase 3) |
 
 **Supabase:** use o *Session pooler* (porta 5432, usuário `postgres.<ref>`). O host direto (`db.<ref>.supabase.co`) é só IPv6 e falha em muitas redes. Evite o modo *transaction* (porta 6543): costuma quebrar prepared statements do psycopg 3.
@@ -119,7 +120,7 @@ Tabelas (PostgreSQL, com CHECKs e índices; definidas em [src/atlas_api/db/model
 | `succession` | Ligações predecessor → sucessor (`renamed`, `succeeded`, `split`, `merged`, `absorbed`, `conquered`) |
 | `events` · `event_sources` · `sources` | Linha do tempo com precisão de data e fontes citáveis |
 | `snapshots` · `snapshot_links` | Mapas históricos e o mapeamento (ano, nome do polígono) → entidade, com status `curated`/`auto`/`unresolved` |
-| `country_facts` | Fatos de países modernos (capital, bandeira, população, idiomas...) vindos do REST Countries |
+| `country_facts` | Fatos de países modernos (capital, população, idiomas...) vindos da Wikidata (CC0) |
 | `meta` | `data_version` (hash do conteúdo) e `generated_at` |
 
 O **único escritor** do banco será o comando de importação de conteúdo (`import-content`, idempotente, em uma transação). Não há endpoints de escrita nem autenticação na v1.
@@ -138,13 +139,28 @@ O **único escritor** do banco será o comando de importação de conteúdo (`im
 
 CLI separada em [etl/](etl/), usa o grupo de dependências `etl` e lê o `.env` sozinha.
 
-**REST Countries** (`make etl-restcountries` → `data_out/facts.json`):
+> **Não usado para o banco; mantido só para referência.** Os termos do REST Countries (Seção 5 e 6) proíbem guardar os dados além de 3 dias e agregá-los em produto downstream. Os fatos persistentes virão da Wikidata (CC0) e do World Bank (Fase 2).
+
+**REST Countries** (referência; `make etl-restcountries` → `data_out/facts.json`):
 - Usa o endpoint de lista paginado (≈3 requisições para todos os países) e cacheia as respostas brutas em `etl_cache/` por até 3 dias.
 - Plano Free: 1.000 req/mês, 20 req/10 s, uso não comercial.
 - Os termos limitam o cache a 3 dias, exigem atribuição ("REST Countries" com link) e restringem re-expor os dados como API/dataset próprio. **Avalie isso antes do deploy público** (ver [docs/TODO.md](docs/TODO.md)).
 - O API não informa o ano da população: `population_year` fica `null`.
 
-Planejados: geometria moderna (Natural Earth), snapshots históricos e proposta de links para curadoria.
+**Wikidata** (`make etl-wikidata` → `data_out/wikidata.json`): uma consulta SPARQL pequena por propriedade, uma de cada vez, com User-Agent descritivo (contato em `WIKIDATA_CONTACT`) e respostas brutas em `etl_cache/wikidata/` com `retrieved_at`. Licença CC0; a Wikidata pede, sem exigir, a menção "Data from Wikidata".
+
+Planejados: World Bank, snapshots históricos e proposta de links para curadoria. A geometria **moderna** é do repositório web; aqui só entram os snapshots históricos.
+
+## Seed dos países (política da opção A)
+
+Todo país moderno precisa de uma linha em `polities` (`country_facts.iso2` aponta para ela e `start_year` é obrigatório). Os 196 arquivos em `content/polities/` são **gerados** por `scripts/seed_countries.py` a partir da Wikidata, com:
+
+- `start_year: 1946` e `start_precision: century` = **placeholder, data de formação ainda não curada**. É posterior a 1945 de propósito, para os países modernos não aparecerem em `/polities?year=` de anos anteriores; em troca, países formados depois de 1946 aparecem um pouco cedo. Para curar um país, edite o YAML.
+- `type: other` (não curado) e ids em português sem acento, exceto os 8 ids do contrato (`austria`, `brazil`, `germany`, ...).
+- Alemanha, Iugoslávia/Sérvia e nomes de cidades **ainda dependem da sua decisão**: hoje `germany` e `serbia` são só placeholders, sem sucessão.
+- Os 5 arquivos de `seed_legacy/` viram eventos com `# TODO verify` e sem fontes (texto escrito por IA de memória, **não verificado**); o resumo do importador conta esses eventos.
+
+Comandos (banco local): `python -m atlas_api.cli import-content` e `python -m atlas_api.cli import-facts` (lê `data_out/wikidata.json`).
 
 ## Como adicionar conteúdo (planejado)
 
@@ -169,5 +185,17 @@ Alvo: FastAPI Cloud (`fastapi deploy`) + Supabase Postgres, na mesma região. Po
 - Hoje os dados são **placeholders**, não história curada.
 
 ## Licenças e atribuições
+
+### Fontes de dados e atribuição que o front deve mostrar
+
+| Fonte | Uso | Licença (lida em 2026-11-11) | Atribuição |
+|---|---|---|---|
+| [Wikidata](https://www.wikidata.org/) | fatos dos países | CC0 (dados estruturados) | Não exigida; pedida: "Data from Wikidata" |
+| [Flagpedia / flagcdn.com](https://flagpedia.net/) | `flag_url` | "in the public domain and can be used freely without restriction" (termos do site) | Backlink para flagpedia.net apreciado, não exigido |
+| World Bank Indicators | `indicators` (Fase 2, ainda não feito) | CC BY 4.0 (página de datasets, "Last Updated: Mar 23, 2018") | Obrigatória: "The World Bank: nome do dataset: fonte" |
+| historical-basemaps | snapshots (Fase 3) | GPL-3.0, a avaliar | A definir |
+| REST Countries | **não usado** no banco | termos proíbem reter além de 3 dias | n/a |
+
+`content/official_names_pt.yaml` tem nomes oficiais traduzidos pelo assistente, **não verificados**. `memberships` traz só a ONU (a Wikidata é incompleta para as demais organizações).
 
 O código está sob a licença do arquivo [LICENSE](LICENSE). Os mapas do historical-basemaps são GPL-3.0; um `NOTICE.md` com atribuição e as implicações será adicionado na Fase 3 (questão a avaliar, não decidida).
