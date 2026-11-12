@@ -1,5 +1,5 @@
 # Atlas API contract v1 (FROZEN)
-Version: 1.1 (additive over 1.0: a 1.0 client ignores the new fields and endpoints; approved by the owner 2026-11-11, CR-002)
+Version: 1.2 (additive over 1.1; part A = CR-003: languages_spoken, profile, economy, currencies; approved by the owner 2026-11-12)
 
 Status: FROZEN. Neither the API agent nor the web agent may edit this file.
 If you find a problem, stop, describe it in `contract/CHANGE_REQUESTS.md`
@@ -24,10 +24,26 @@ If you find a problem, stop, describe it in `contract/CHANGE_REQUESTS.md`
 - Content language: pt-BR, except data quoted from a source that has no pt-BR version: `Person.name` and
   `Person.occupation` (Pantheon, English, occupation in UPPER CASE as published). `Leader.office/name/party.name`
   are Wikidata labels in pt-BR, else pt, else en.
-- Images (`image`) are thumbnails hosted by Wikimedia Commons. Each file has its own licence: the front MUST show
-  `image.credit` and `image.license` next to the picture. `image` is null when the file has no clear licence + author.
+- Images (`image`) are 320px thumbnails of Wikimedia Commons files, served either by Commons or by the Atlas public
+  storage bucket (a copy of the same thumbnail). Each file has its own licence: the front MUST show `image.credit`
+  and `image.license` next to the picture. `image` is null when the file has no clear licence + author.
 - v1.1: `regime` is the pt-BR label of `regime_id` when `regime_id` is non-null (source: Wikidata P122); otherwise the
   old curated text, which may be null.
+
+- v1.2 numbers: `share` values are fractions 0-1 (0.65 = 65%). Currency `change_1y`, `change_5y` and
+  `max_drawdown_1y` are fractions too (-0.12 = -12%); `volatility_1y` is the annualised standard deviation of the
+  log returns of the last year (0.15 = 15%).
+- Indicators (`id`) are World Bank WDI codes (e.g. "SP.DYN.LE00.IN") or "HDR.HDI" / "HDR.MYS" (UNDP Human
+  Development Report). `label` and `unit` are pt-BR. `value` is the latest year with data for that country
+  (`year`); years differ between countries and indicators. `rank` 1 = HIGHEST value among the `rank_of` countries
+  that have the indicator (also for "bad" indicators such as homicides: the front decides how to read it).
+  `world` = min/median/max of every country's latest value; `region_avg` = simple mean of the latest values of
+  the countries with the same `region` string.
+- Exchange rates: ECB euro reference rates (daily, since 1999) and, for currencies the ECB does not publish,
+  fawazahmed0/exchange-api (secondary source, WEEKLY points, since 2024-03). Cross rates and statistics are
+  calculated by Atlas from EUR quotes (A->B = EUR->B / EUR->A). Currency `stats` measure the value of 1 unit of
+  the currency in USD (in EUR for USD itself), as of the last date with data. The front must cite the sources
+  listed in `sources` / `source`.
 
 ## Shared types
 Source      { id: string, title: string, url: string|null, license: string|null, retrieved_at: string|null }
@@ -75,6 +91,22 @@ CountryDetail  += { regime_id: string|null,
                              scripts: string[] /* pt-BR names of the writing systems of the official languages */ }|null }
                     (`clues` is null when none of its fields has data)
 
+LanguageSpoken { code: string|null /* ISO 639-1, else IETF tag, else ISO 639-3 */, name: string,
+                 status: "official"|"co_official"|"indigenous"|"immigrant"|"sign"|"historical",
+                 where: string|null /* co_official only: subdivisions or municipalities, "A, B, C e mais N" */,
+                 speakers: { value: int, year: int|null }|null /* only when the source ties the count to this country */,
+                 family: string|null /* pt-BR, from a curated list of established families */,
+                 endangerment: "segura"|"vulnerável"|"definitivamente em perigo"|"severamente em perigo"|
+                               "criticamente em perigo"|"extinta"|null /* UNESCO scale */,
+                 wikipedia_url: string|null }
+ProfileIndicator { id: string, label: string, unit: string, value: number, year: int, source_id: string,
+                   rank: int|null, rank_of: int|null, world: { min: number, median: number, max: number }|null,
+                   region_avg: number|null }
+v1.2 fields appended to existing types:
+CountryDetail += { languages_spoken: LanguageSpoken[] }
+                  Sorted by status in the order official, co_official, indigenous, immigrant, sign, historical, then by
+                  speakers desc (unknown last), then name. [] = no data. `languages` (v1.0) is unchanged.
+
 ## Endpoints
 GET /v1/health                       -> { status: "ok", db: "ok"|"error" }
 GET /v1/meta                         -> { data_version: string, generated_at: string, year_min: int, year_max: int,
@@ -106,6 +138,54 @@ GET /v1/countries/{iso2}/people?domain=&limit=
                                         `domain` optional (values of Person.domain, else 422). limit default 10, max 50.
                                         Sorted by rank. 404 unknown country. Source licence is CC BY-SA 4.0 (Pantheon):
                                         the front must show the attribution in `source`.
+
+GET /v1/countries/{iso2}/profile     -> { groups: [{ id: "life"|"society"|"income"|"environment", indicators: ProfileIndicator[] }],
+                                          composition: { religion: [{ label: string, share: number }]|null,
+                                                         ethnicity: [{ label: string, share: number }]|null,
+                                                         year: int|null, source_id: string|null },
+                                          sources: Source[] }
+                                        Always the 4 groups, in this order; an indicator without data for the country is
+                                        left out of its group. Indicators: life = SP.DYN.LE00.IN, SP.DYN.IMRT.IN,
+                                        SP.DYN.TFRT.IN, HDR.HDI; society = SP.URB.TOTL.IN.ZS, SE.ADT.LITR.ZS,
+                                        IT.NET.USER.ZS, VC.IHR.PSRC.P5, HDR.MYS; income = NY.GDP.PCAP.PP.CD, SI.POV.GINI,
+                                        SI.POV.DDAY, SL.UEM.TOTL.ZS; environment = EN.GHG.CO2.PC.CE.AR5, EG.FEC.RNEW.ZS,
+                                        AG.LND.FRST.ZS. A `composition` list (Wikidata) is null unless its shares add up to
+                                        80-105%, sorted by share desc; `year` = most recent year of the listed shares.
+                                        404 unknown country.
+GET /v1/countries/{iso2}/economy     -> { indicators: [{ id: string, label: string, unit: string, value: number|null, year: int|null,
+                                                         source_id: string, series: [{ year: int, value: number }] }],
+                                          sources: Source[] }
+                                        Always these 10 ids, in this order: NY.GDP.MKTP.CD, NY.GDP.PCAP.PP.CD,
+                                        NY.GDP.MKTP.KD.ZG, FP.CPI.TOTL.ZG, SL.UEM.TOTL.ZS, GC.DOD.TOTL.GD.ZS,
+                                        BN.CAB.XOKA.GD.ZS, FI.RES.TOTL.CD, SI.POV.GINI, PA.NUS.PPP. `value`/`year` = latest
+                                        point (null and [] = no data); `series` = the points of the 20 years up to that one,
+                                        ascending, gaps allowed. 404 unknown country.
+GET /v1/economy/compare?countries=&ids=
+                                     -> { countries: string[], indicators: [{ id: string, label: string, unit: string,
+                                                         values: { [iso2: string]: { value: number, year: int }|null } }],
+                                          sources: Source[] }
+                                        `countries`: 2-5 ISO2, comma-separated, kept in the given order (else 422; unknown
+                                        country 404). `ids` optional, comma-separated, subset of the 10 economy ids (else
+                                        422); default all 10. Each value is that country's latest year (years may differ).
+GET /v1/currencies/{code}            -> { code: string, name: string, symbol: string|null, countries: string[] /* iso2 */,
+                                          rates: { date: string /* YYYY-MM-DD */, base: string,
+                                                   items: [{ code: string, rate: number /* 1 base = rate code */ }] }|null,
+                                          stats: { change_1y: number|null, change_5y: number|null,
+                                                   volatility_1y: number|null, max_drawdown_1y: number|null }|null,
+                                          sources: Source[] }
+                                        `code` ISO 4217 (^[A-Z]{3}$, else 422). 404 when no country uses the code.
+                                        `date` = last date with a rate for `code`; each item uses that currency's latest
+                                        rate in the 7 days up to `date`; sorted by code. `rates` null = no rates.
+GET /v1/currencies/{code}/history?vs=&from=&to=
+                                     -> { base: string, vs: string[], items: [{ date: string, rates: { [code: string]: number } }],
+                                          source: Source }
+                                        `vs`: 1-4 ISO 4217 codes, comma-separated (default "USD,EUR" minus `code`), else 422;
+                                        a code without rates (also `code`) -> 404. `from`/`to`: YYYY-MM-DD; default
+                                        to = last date with data, from = to - 365 days; from > to or a window over 30 years
+                                        -> 422. `rates[c]` = how many `c` for 1 `base`; a date appears when at least one vs
+                                        has a rate that day (missing keys = no rate). Windows over 2 years are reduced to one
+                                        point per ISO week (the last day of the week with data).
+                                        `source` = exchange-api (secondary) when any point came from it, else ecb.
 
 ## Seed ids (must exist, same ids in both agents' fixtures)
 Modern: austria (AT), brazil (BR), germany (DE), egypt (EG), japan (JP), turkey (TR), russia (RU), serbia (RS)
