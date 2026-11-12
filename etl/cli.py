@@ -11,12 +11,14 @@ from etl.undp import pipeline as undp
 from etl.wikidata import languages as wikidata_languages
 from etl.wikidata import leaders as wikidata_leaders
 from etl.wikidata import pipeline as wikidata
+from etl.wikipedia import history as wikipedia_history
 from etl.worldbank import pipeline as worldbank
 
 COMMANDS: dict[str, Callable[[], None]] = {
     "restcountries": restcountries.run, "wikidata": wikidata.run, "worldbank": worldbank.run,
     "wikidata-leaders": wikidata_leaders.run, "pantheon": pantheon.run,
     "wikidata-languages": wikidata_languages.run, "undp": undp.run, "fx": fx.run,
+    "wikipedia-history": wikipedia_history.run,
 }
 
 

@@ -218,3 +218,27 @@ GET /v1/currencies/{code}/history?vs=&from=&to=
 - `languages_spoken` can be long (Wikidata P2936 lists every language used in a country: hundreds for NG, IN).
   Show the first statuses and collapse the rest.
 - Currencies outside the ECB list (ARS, NGN...): history is weekly and starts in 2024-03, so `change_5y` is null.
+
+## CR-004: contract v1.3, history summary (additive, proposed 2026-11-12) — spec 016 stage 1
+The owner asked for "o resumo da história do país" (2026-11-12). Spec 016 was approved in the v1.2 bulk approval; this CR is its
+first stage. One change from the approved 016 delta: `Period.year_start` is nullable (section titles of the source articles do not
+always carry years). `event_count` is 0 until stage 2 (Wikidata events). All additive: a v1.2 client keeps working.
+Implemented on branch `feat/history-summary` (migration 0011, `etl wikipedia-history`, `import-facts` reads `data_out/history.json`).
+
+### Exact proposed v1.3 text (paste into CONTRACT.md in BOTH repos)
+Shared types:
+```
+Period         { id: string /* "<iso2 lower>-<n>", article order */, title: string, year_start: int|null, year_end: int|null,
+                 summary: string /* paragraphs separated by a blank line */, event_count: int }
+CountryHistory { summary: string|null, periods: Period[], sources: Source[] }
+```
+Endpoint:
+```
+GET /v1/countries/{iso2}/history     -> CountryHistory
+                                        Condensed (never rewritten) from the pt.wikipedia article "História de X" linked by
+                                        Wikidata P2184; when there is none, the "História" section of the country article.
+                                        `sources[0]` = that article at the exact revision (url ?oldid=), license CC BY-SA 4.0:
+                                        clients must show it next to the text. Both year fields null = the title has no years;
+                                        year_start null + year_end set = "até <year_end>"; year_end null + year_start set = to present.
+                                        No article = { summary: null, periods: [], sources: [] }. Unknown iso2 -> 404.
+```

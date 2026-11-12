@@ -8,6 +8,7 @@ from atlas_api.errors import NotFoundError, ServiceUnavailableError
 from atlas_api.schemas import (
     CountryDetail,
     CountryEconomy,
+    CountryHistory,
     CountryList,
     CountryProfile,
     LeaderList,
@@ -70,3 +71,10 @@ def get_economy(db: DbSession, iso2: Annotated[str, Path(pattern=r"^[A-Z]{2}$")]
     if not queries.country_exists(db, iso2):
         raise NotFoundError(f"Unknown country {iso2}")
     return queries.get_economy(db, iso2)
+
+
+@router.get("/{iso2}/history")  # v1.3 proposal (spec 016 stage 1, CR-004)
+def get_history(db: DbSession, iso2: Annotated[str, Path(pattern=r"^[A-Z]{2}$")]) -> CountryHistory:
+    if not queries.country_exists(db, iso2):
+        raise NotFoundError(f"Unknown country {iso2}")
+    return queries.get_history(db, iso2)

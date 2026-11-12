@@ -25,7 +25,20 @@ GET /v1/countries/{iso2}/history/{period_id} -> { period: Period, events: EventD
 ```
 Evento sem período (automático) cai num período sintético por século.
 
+## Fase 1 (2026-11-12): resumo em texto corrido, CR-004
+Pedido do dono: "falta o resumo da história do país". Fonte: artigo "História de X" da Wikipédia em português, achado pelo Wikidata
+P2184 (sem adivinhar título); sem ele, a seção "História" do artigo do país.
+- Docs lidas em 2026-11-12: mediawiki.org/wiki/Extension:TextExtracts (`prop=extracts&explaintext=1`, um artigo inteiro por
+  requisição), API:Etiquette (User-Agent com contato, requisições em série), Termos de Uso da Wikimedia §7 e CC BY-SA 4.0
+  (reuso exige atribuição com título + link e indicação de alteração; o texto condensado segue sob a mesma licença).
+- Condensação mecânica, nunca gerada: resumo = primeiros parágrafos da introdução (até 1100 caracteres, corte no fim de frase);
+  período = cada seção de nível 2 que não é material de referência (nível 3 quando o nível 2 dá menos de 3, ex.: Japão), título
+  como está, anos tirados do título quando houver, texto = primeiros parágrafos (até 650).
+- `python -m etl wikipedia-history [ISO2...]` -> `data_out/history.json`; migração 0011 (`country_history`, `history_periods`);
+  `GET /v1/countries/{iso2}/history`; testes em `tests/test_history.py`.
+
 ## Tarefas
+- [x] fase 1: ETL da Wikipédia, migração 0011, endpoint, testes, CR-004
 - [ ] SPARQL de eventos e períodos testado em BR, JP, DE, EG, AT (contagens aqui)
 - [ ] extratos da Wikipedia no ETL (com atribuição); tabelas `periods`, `events` ampliada; endpoints; testes
 - [ ] conteúdo curado do Brasil (rascunho para revisão)
