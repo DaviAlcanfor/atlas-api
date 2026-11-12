@@ -3,12 +3,17 @@ import argparse
 import sys
 from collections.abc import Callable
 
+from etl.pantheon import pipeline as pantheon
 from etl.restcountries import pipeline as restcountries
 from etl.restcountries.client import RestCountriesError
+from etl.wikidata import leaders as wikidata_leaders
 from etl.wikidata import pipeline as wikidata
 from etl.worldbank import pipeline as worldbank
 
-COMMANDS: dict[str, Callable[[], None]] = {"restcountries": restcountries.run, "wikidata": wikidata.run, "worldbank": worldbank.run}
+COMMANDS: dict[str, Callable[[], None]] = {
+    "restcountries": restcountries.run, "wikidata": wikidata.run, "worldbank": worldbank.run,
+    "wikidata-leaders": wikidata_leaders.run, "pantheon": pantheon.run,
+}
 
 
 def main() -> None:

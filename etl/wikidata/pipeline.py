@@ -12,6 +12,7 @@ Flag: `flag_url` comes from flagcdn.com by ISO2 (all 196 verified to exist). The
 """
 
 import json
+import logging
 import re
 import sys
 import time
@@ -37,6 +38,22 @@ ORGS = {"Q1065": "ONU"}
 # https://flagpedia.net is appreciated (the README asks the front to show it).
 FLAG_URL = "https://flagcdn.com/{code}.svg"
 OFFICIAL_NAMES_PT = Path("content/official_names_pt.yaml")
+REGIMES = Path("content/regimes.yaml")
+DRIVING_SIDE = {"Q11920728": "left", "Q14565199": "right"}
+# ISO 15924 codes dropped from `scripts`: Braille (not on street signs), English shorthand /
+# historic alphabets Wikidata lists for English (Deseret, Shavian) and composite codes
+# (Jpan = Hani+Hira+Kana, Hrkt = Hira+Kana, Kore = Hang+Hani) that repeat their parts.
+EXCLUDED_SCRIPTS = {"Brai", "Dsrt", "Shaw", "Jpan", "Hrkt", "Kore"}
+log = logging.getLogger("etl.wikidata")
+
+
+def _current(prop: str, label: bool = False) -> str:
+    """Non-deprecated, not-ended statements of `prop`, with their rank (picked in build())."""
+    sel, lab = ("?vLabel", LABEL) if label else ("", "")
+    return (f"SELECT ?iso2 ?v {sel} ?rank WHERE {{ {STATE} ?c p:{prop} ?st. ?st ps:{prop} ?v; "
+            "wikibase:rank ?rank. FILTER(?rank != wikibase:DeprecatedRank) "
+            f"FILTER NOT EXISTS {{ ?st pq:P582 ?end }} {lab} }}")
+
 
 QUERIES: dict[str, str] = {
     "states": f"SELECT ?iso2 ?c ?cLabel WHERE {{ {STATE} {LABEL} }}",
@@ -69,6 +86,20 @@ QUERIES: dict[str, str] = {
     ),
     "continent": f"SELECT ?iso2 ?contLabel WHERE {{ {STATE} ?c wdt:P30 ?cont. {LABEL} }}",
     "flag": f"SELECT ?iso2 ?flag WHERE {{ {STATE} ?c wdt:P41 ?flag }}",
+    # spec 004: basic form of government (truthy = best-rank statements only)
+    "regime": f"SELECT ?iso2 ?g WHERE {{ {STATE} ?c wdt:P122 ?g }}",
+    # spec 003: GeoGuessr clues
+    "driving_side": _current("P1622"),
+    "calling_code": _current("P474"),
+    "tld": _current("P78", label=True),
+    "plate_code": _current("P395"),
+    # P282 values are language-specific alphabets ("alfabeto francês"); walk up P279* to the
+    # script that has an ISO 15924 code (P506), e.g. Latn, Cyrl. Alphabets point to their script
+    # with P279 (subclass) or P282 (e.g. "alfabeto alemão" P282 alfabeto latino).
+    "scripts": (
+        f"SELECT DISTINCT ?iso2 ?s ?sLabel ?code WHERE {{ {STATE} ?c wdt:P37 ?l. ?l wdt:P282 ?s0. "
+        f"?s0 (wdt:P279|wdt:P282)* ?s. ?s wdt:P506 ?code. {LABEL} }}"
+    ),
 }
 
 
@@ -108,8 +139,38 @@ def _is_label(s: str | None) -> bool:
     return bool(s) and not re.fullmatch(r"Q\d+", s or "")  # unlabeled items come back as "Q123"
 
 
+def _pick(rows: list[dict[str, Any]], key: str) -> dict[str, str | None]:
+    """Scalar clue per ISO2: the preferred-rank value, else the only normal one.
+    Several values at the best rank = None (logged): we never choose between them, except
+    for TLDs, where a single 2-letter ASCII ccTLD wins over IDN/brand TLDs."""
+    by: dict[str, dict[int, set[str]]] = {}
+    for r in rows:
+        iso, v = _v(r, "iso2") or "", _v(r, key)
+        if v and _is_label(v):
+            rank = 1 if (_v(r, "rank") or "").endswith("PreferredRank") else 0
+            by.setdefault(iso, {}).setdefault(rank, set()).add(v)
+    out: dict[str, str | None] = {}
+    for iso, ranks in by.items():
+        best = ranks[max(ranks)]
+        if key == "vLabel" and len(best) > 1:  # TLD: IDN variants (.рф) next to the ccTLD (.ru)
+            best = {t for t in best if re.fullmatch(r"\.[a-z]{2}", t)} or best
+        out[iso] = next(iter(best)) if len(best) == 1 else None
+        if len(best) > 1:
+            log.warning("%s: %d values for %s, left null: %s", iso, len(best), key, sorted(best))
+    return out
+
+
+def map_regime(qids: set[str], rules: list[dict[str, Any]]) -> str | None:
+    """First rule whose `when` Q-ids are all in `qids` (content/regimes.yaml)."""
+    for rule in rules:
+        if set(rule["when"]) <= qids:
+            return rule["regime_id"]  # type: ignore[no-any-return]
+    return None
+
+
 def build(
-    raw: dict[str, dict[str, Any]], pt_names: dict[str, str] | None = None
+    raw: dict[str, dict[str, Any]], pt_names: dict[str, str] | None = None,
+    regimes: dict[str, Any] | None = None,
 ) -> dict[str, dict[str, Any]]:
     """Merge the per-property rows into one record per ISO2. Missing = None / empty list."""
     out: dict[str, dict[str, Any]] = {}
@@ -120,6 +181,9 @@ def build(
             "population": None, "population_year": None, "area_km2": None,
             "flag_url": FLAG_URL.format(code=(_v(r, "iso2") or "").lower()),
             "region": None, "languages": [], "currencies": [], "memberships": [], "flag_file": None,
+            "regime_qids": [], "regime_id": None, "regime": None,
+            "clues": {"driving_side": None, "calling_code": None, "tld": None, "plate_code": None,
+                      "scripts": []},
         }
     out.pop("", None)
 
@@ -194,7 +258,51 @@ def build(
             out[iso]["flag_file"] = f.rsplit("/", 1)[-1]  # URL-encoded Commons file name
     for rec in out.values():
         rec["memberships"].sort()
+
+    def rows(name: str) -> list[dict[str, Any]]:
+        return raw.get(name, {"rows": []})["rows"]  # type: ignore[no-any-return]
+
+    for r in rows("regime"):
+        iso, q = _v(r, "iso2") or "", _qid(_v(r, "g"))
+        if iso in out and q and q not in out[iso]["regime_qids"]:
+            out[iso]["regime_qids"].append(q)
+    rules, labels = (regimes or {}).get("rules", []), (regimes or {}).get("labels", {})
+    for rec in out.values():
+        rec["regime_qids"].sort()
+        rec["regime_id"] = map_regime(set(rec["regime_qids"]), rules)
+        rec["regime"] = labels.get(rec["regime_id"]) if rec["regime_id"] else None
+
+    for iso, side in _pick(rows("driving_side"), "v").items():
+        if iso in out:
+            out[iso]["clues"]["driving_side"] = DRIVING_SIDE.get(_qid(side) or "")
+    for clue, col in (("calling_code", "v"), ("tld", "vLabel"), ("plate_code", "v")):
+        for iso, val in _pick(rows(clue), col).items():
+            if iso in out:
+                out[iso]["clues"][clue] = val
+    for r in rows("scripts"):
+        iso, label = _v(r, "iso2") or "", _v(r, "sLabel")
+        if (iso in out and _is_label(label) and _v(r, "code") not in EXCLUDED_SCRIPTS
+                and label not in out[iso]["clues"]["scripts"]):
+            out[iso]["clues"]["scripts"].append(label)
+    for rec in out.values():
+        rec["clues"]["scripts"].sort()
     return out
+
+
+def regime_report(countries: dict[str, dict[str, Any]], regimes: dict[str, Any]) -> list[str]:
+    """Lines for spec 004: P122 Q-ids no rule mentions, and countries left without regime_id."""
+    known = {q for rule in regimes.get("rules", []) for q in rule["when"]}
+    unmapped: dict[str, list[str]] = {}
+    for iso, c in sorted(countries.items()):
+        for q in c["regime_qids"]:
+            if q not in known:
+                unmapped.setdefault(q, []).append(iso)
+    lines = [f"  unmapped {q}: {' '.join(isos)}" for q, isos in sorted(unmapped.items())]
+    no_p122 = [i for i, c in sorted(countries.items()) if not c["regime_qids"]]
+    no_rule = [i for i, c in sorted(countries.items()) if c["regime_qids"] and not c["regime_id"]]
+    lines.append(f"  no P122 in Wikidata ({len(no_p122)}): {' '.join(no_p122)}")
+    lines.append(f"  P122 but no/conflicting rule ({len(no_rule)}): {' '.join(no_rule)}")
+    return lines
 
 
 def run() -> None:
@@ -211,7 +319,12 @@ def run() -> None:
     bad = [k for k in pt_names if not (isinstance(k, str) and len(k) == 2)]
     if bad:
         sys.exit(f"official_names_pt.yaml: keys must be 2-letter strings (quote NO!): {bad}")
-    countries = build(raw, pt_names)
+    regimes = yaml.safe_load(REGIMES.read_text(encoding="utf-8")) if REGIMES.exists() else {}
+    unknown = {r["regime_id"] for r in regimes.get("rules", [])} - set(regimes.get("labels", {})) - {None}
+    if unknown:
+        sys.exit(f"regimes.yaml: rules use regime_ids without a label: {sorted(unknown)}")
+    logging.basicConfig(level=logging.WARNING, format="  %(message)s")
+    countries = build(raw, pt_names, regimes)
     s.out_dir.mkdir(parents=True, exist_ok=True)
     payload = {
         "source": {"id": "wikidata", "title": "Wikidata", "url": "https://www.wikidata.org/",
@@ -227,3 +340,8 @@ def run() -> None:
         print(f"  {field}: {sum(c[field] is not None for c in countries.values())}/{n}")
     for field in ("languages", "currencies", "memberships"):
         print(f"  {field}: {sum(bool(c[field]) for c in countries.values())}/{n}")
+    print(f"  regime_id: {sum(c['regime_id'] is not None for c in countries.values())}/{n}")
+    for field in ("driving_side", "calling_code", "tld", "plate_code", "scripts"):
+        print(f"  clues.{field}: {sum(bool(c['clues'][field]) for c in countries.values())}/{n}")
+    print("regime report (content/regimes.yaml):")
+    print(*regime_report(countries, regimes), sep="\n")

@@ -1,10 +1,17 @@
 """The API end to end: real app, real Postgres, real content (no mocks, no fixtures)."""
+from pathlib import Path
+
+import pytest
 from fastapi.testclient import TestClient
 
 from atlas_api.schemas import (
     CountryDetail,
     CountryList,
+    GlossaryList,
+    GlossaryTerm,
+    LeaderList,
     Meta,
+    PersonList,
     PolityDetail,
     PolityList,
     SearchResults,
@@ -107,3 +114,76 @@ def test_version_header_matches_meta_and_304(api_client: TestClient) -> None:
     assert r.headers["x-data-version"] == api_client.get("/v1/meta").json()["data_version"]
     again = api_client.get("/v1/countries/BR", headers={"If-None-Match": r.headers["etag"]})
     assert again.status_code == 304 and again.content == b""
+
+
+
+# --- v1.1 (CR-002, specs 003-007) -----------------------------------------------------------
+
+
+def test_capital_coords_and_regime_id(api_client: TestClient) -> None:  # specs 004 + 005
+    by_iso = {c.iso2: c for c in CountryList.model_validate(api_client.get("/v1/countries").json()).items}
+    br = by_iso["BR"]
+    assert [c.name for c in br.capital_coords] == ["Brasília"]
+    assert -16 < br.capital_coords[0].lat < -15 and -48 < br.capital_coords[0].lng < -47
+    assert br.regime_id == "republica-presidencialista" and br.regime == "República presidencialista"
+    assert by_iso["JP"].regime_id == "monarquia-constitucional"
+    assert all(c.capital_coords for c in by_iso.values())  # 196/196 have coordinates
+    assert sum(c.regime_id is not None for c in by_iso.values()) >= 150
+    no = by_iso["CR"]  # Costa Rica has no P122 in Wikidata: null, never guessed
+    assert no.regime_id is None and no.regime is None
+
+
+def test_country_clues(api_client: TestClient) -> None:  # spec 003
+    br = CountryDetail.model_validate(api_client.get("/v1/countries/BR").json())
+    assert br.clues is not None and br.regime_id == "republica-presidencialista"
+    assert (br.clues.driving_side, br.clues.calling_code, br.clues.tld, br.clues.plate_code) == (
+        "right", "+55", ".br", "BR")
+    assert br.clues.scripts == ["alfabeto latino"]
+    jp = CountryDetail.model_validate(api_client.get("/v1/countries/JP").json())
+    assert jp.clues is not None and jp.clues.driving_side == "left" and jp.clues.tld == ".jp"
+
+
+def test_glossary(api_client: TestClient) -> None:  # spec 004
+    items = GlossaryList.model_validate(api_client.get("/v1/glossary").json()).items
+    by_id = {t.id: t for t in items}
+    used = {c["regime_id"] for c in api_client.get("/v1/countries").json()["items"]} - {None}
+    assert used <= set(by_id)  # every regime in use has a term
+    assert {"onu", "africa", "europa"} <= set(by_id) and all(t.sources for t in items)
+    rep = GlossaryTerm.model_validate(api_client.get("/v1/glossary/republica-presidencialista").json())
+    assert rep.kind == "regime" and "BR" in rep.examples and len(rep.examples) <= 8
+    assert by_id["onu"].examples and by_id["europa"].kind == "region"
+    r = api_client.get("/v1/glossary/nope")
+    assert r.status_code == 404 and r.headers["content-type"].startswith("application/problem+json")
+
+
+def test_leaders_and_people_errors(api_client: TestClient) -> None:
+    for path in ("/v1/countries/ZZ/leaders", "/v1/countries/ZZ/people"):
+        assert api_client.get(path).status_code == 404
+    assert api_client.get("/v1/countries/BR/leaders?role=king").status_code == 422
+    assert api_client.get("/v1/countries/BR/people?limit=51").status_code == 422
+    assert api_client.get("/v1/countries/BR/people?domain=magic").status_code == 422
+
+
+@pytest.mark.skipif(not Path("data_out/leaders.json").exists(), reason="run `etl wikidata-leaders`")
+def test_leaders(api_client: TestClient) -> None:  # spec 006
+    br = LeaderList.model_validate(api_client.get("/v1/countries/BR/leaders").json()).items
+    assert br and {x.role for x in br} == {"head_of_state"}  # one office for both roles
+    lula = [x for x in br if x.name == "Luiz Inácio Lula da Silva"]
+    assert lula and lula[-1].start == "2023-01-01" and lula[-1].end is None
+    assert all(x.image is None or (x.image.credit and x.image.license) for x in br)
+    starts = [x.start for x in br if x.start]
+    assert starts == sorted(starts)
+    gov = LeaderList.model_validate(
+        api_client.get("/v1/countries/DE/leaders?role=head_of_government").json()).items
+    assert gov and {x.role for x in gov} == {"head_of_government"}
+
+
+@pytest.mark.skipif(not Path("data_out/pantheon.json").exists(), reason="run `etl pantheon`")
+def test_people(api_client: TestClient) -> None:  # spec 007
+    res = PersonList.model_validate(api_client.get("/v1/countries/BR/people").json())
+    assert len(res.items) == 10 and [p.rank for p in res.items] == list(range(1, 11))
+    assert res.source.id == "pantheon" and "CC BY-SA" in (res.source.license or "")
+    assert "Pantheon" in res.method
+    sports = PersonList.model_validate(
+        api_client.get("/v1/countries/BR/people?domain=sports&limit=50").json()).items
+    assert sports and {p.domain for p in sports} == {"sports"}

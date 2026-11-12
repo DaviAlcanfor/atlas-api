@@ -111,6 +111,150 @@
         }
       }
     },
+    "/v1/countries/{iso2}/leaders": {
+      "get": {
+        "tags": [
+          "countries"
+        ],
+        "summary": "List Leaders",
+        "operationId": "list_leaders_v1_countries__iso2__leaders_get",
+        "parameters": [
+          {
+            "name": "iso2",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z]{2}$",
+              "title": "Iso2"
+            }
+          },
+          {
+            "name": "role",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "head_of_state",
+                    "head_of_government"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Role"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeaderList"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/countries/{iso2}/people": {
+      "get": {
+        "tags": [
+          "countries"
+        ],
+        "summary": "List People",
+        "operationId": "list_people_v1_countries__iso2__people_get",
+        "parameters": [
+          {
+            "name": "iso2",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z]{2}$",
+              "title": "Iso2"
+            }
+          },
+          {
+            "name": "domain",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "arts",
+                    "business_law",
+                    "exploration",
+                    "humanities",
+                    "institutions",
+                    "public_figure",
+                    "science_technology",
+                    "sports"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Domain"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "default": 10,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonList"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/polities": {
       "get": {
         "tags": [
@@ -384,10 +528,164 @@
           }
         }
       }
+    },
+    "/v1/glossary": {
+      "get": {
+        "tags": [
+          "glossary"
+        ],
+        "summary": "List Glossary",
+        "operationId": "list_glossary_v1_glossary_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GlossaryList"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/glossary/{id}": {
+      "get": {
+        "tags": [
+          "glossary"
+        ],
+        "summary": "Get Glossary Term",
+        "operationId": "get_glossary_term_v1_glossary__id__get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GlossaryTerm"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "CapitalCoord": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "lat": {
+            "type": "number",
+            "title": "Lat"
+          },
+          "lng": {
+            "type": "number",
+            "title": "Lng"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "lat",
+          "lng"
+        ],
+        "title": "CapitalCoord"
+      },
+      "Clues": {
+        "properties": {
+          "driving_side": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "left",
+                  "right"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Driving Side"
+          },
+          "calling_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Calling Code"
+          },
+          "tld": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tld"
+          },
+          "plate_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plate Code"
+          },
+          "scripts": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Scripts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "driving_side",
+          "calling_code",
+          "tld",
+          "plate_code",
+          "scripts"
+        ],
+        "title": "Clues"
+      },
       "CountryDetail": {
         "properties": {
           "iso2": {
@@ -537,6 +835,27 @@
           "updated_at": {
             "type": "string",
             "title": "Updated At"
+          },
+          "regime_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Regime Id"
+          },
+          "clues": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Clues"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -558,7 +877,9 @@
           "politics",
           "timeline",
           "sources",
-          "updated_at"
+          "updated_at",
+          "regime_id",
+          "clues"
         ],
         "title": "CountryDetail"
       },
@@ -638,6 +959,24 @@
                 "type": "null"
               }
             ]
+          },
+          "regime_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Regime Id"
+          },
+          "capital_coords": {
+            "items": {
+              "$ref": "#/components/schemas/CapitalCoord"
+            },
+            "type": "array",
+            "title": "Capital Coords"
           }
         },
         "type": "object",
@@ -649,7 +988,9 @@
           "region",
           "regime",
           "has_content",
-          "marker"
+          "marker",
+          "regime_id",
+          "capital_coords"
         ],
         "title": "CountrySummary"
       },
@@ -778,6 +1119,91 @@
         ],
         "title": "Event"
       },
+      "GlossaryList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/GlossaryTerm"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "GlossaryList"
+      },
+      "GlossaryTerm": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "regime",
+              "system",
+              "region",
+              "membership",
+              "currency",
+              "other"
+            ],
+            "title": "Kind"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "short": {
+            "type": "string",
+            "title": "Short"
+          },
+          "body": {
+            "type": "string",
+            "title": "Body"
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon"
+          },
+          "examples": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Examples"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/Source"
+            },
+            "type": "array",
+            "title": "Sources"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "label",
+          "short",
+          "body",
+          "icon",
+          "examples",
+          "sources"
+        ],
+        "title": "GlossaryTerm"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -814,6 +1240,29 @@
         ],
         "title": "Health"
       },
+      "Image": {
+        "properties": {
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "credit": {
+            "type": "string",
+            "title": "Credit"
+          },
+          "license": {
+            "type": "string",
+            "title": "License"
+          }
+        },
+        "type": "object",
+        "required": [
+          "url",
+          "credit",
+          "license"
+        ],
+        "title": "Image"
+      },
       "Language": {
         "properties": {
           "code": {
@@ -831,6 +1280,119 @@
           "name"
         ],
         "title": "Language"
+      },
+      "Leader": {
+        "properties": {
+          "person_id": {
+            "type": "string",
+            "title": "Person Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "head_of_state",
+              "head_of_government"
+            ],
+            "title": "Role"
+          },
+          "office": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Office"
+          },
+          "start": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start"
+          },
+          "end": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End"
+          },
+          "party": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Party"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "image": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Image"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "wikipedia_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Wikipedia Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "person_id",
+          "name",
+          "role",
+          "office",
+          "start",
+          "end",
+          "party",
+          "image",
+          "wikipedia_url"
+        ],
+        "title": "Leader"
+      },
+      "LeaderList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Leader"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "LeaderList"
       },
       "Link": {
         "properties": {
@@ -955,6 +1517,153 @@
           "to_year"
         ],
         "title": "NamePeriod"
+      },
+      "Party": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "Party"
+      },
+      "Person": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "occupation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Occupation"
+          },
+          "domain": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "arts",
+                  "business_law",
+                  "exploration",
+                  "humanities",
+                  "institutions",
+                  "public_figure",
+                  "science_technology",
+                  "sports"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Domain"
+          },
+          "birth_year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Birth Year"
+          },
+          "death_year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Death Year"
+          },
+          "image": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Image"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "wikipedia_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Wikipedia Url"
+          },
+          "rank": {
+            "type": "integer",
+            "title": "Rank"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "occupation",
+          "domain",
+          "birth_year",
+          "death_year",
+          "image",
+          "wikipedia_url",
+          "rank"
+        ],
+        "title": "Person"
+      },
+      "PersonList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Person"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "method": {
+            "type": "string",
+            "title": "Method"
+          },
+          "source": {
+            "$ref": "#/components/schemas/Source"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "method",
+          "source"
+        ],
+        "title": "PersonList"
       },
       "Politics": {
         "properties": {

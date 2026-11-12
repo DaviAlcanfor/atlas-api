@@ -5,7 +5,7 @@ import yaml
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from atlas_api.db.models import Event, Meta, Polity, PolityName, Succession
+from atlas_api.db.models import Event, GlossaryTerm, Meta, Polity, PolityName, Succession
 from atlas_api.importer import ContentError, import_content
 
 
@@ -72,3 +72,20 @@ def test_invalid_content_is_rejected_and_nothing_written(
     with pytest.raises(ContentError, match=needle):
         import_content(session, tmp_path)
     assert session.scalar(select(func.count()).select_from(Polity)) == 0
+
+
+def test_glossary_import_and_validation(session: Session, tmp_path: Path) -> None:
+    _write(tmp_path, [_p("a")])
+    term = {"id": "republica", "kind": "regime", "label": "República", "short": "s", "body": "b",
+            "icon": None, "sources": [{"id": "w", "title": "W", "url": "https://x"}]}
+    (tmp_path / "regimes.yaml").write_text(yaml.safe_dump({"labels": {"republica": "República"}}))
+    (tmp_path / "glossary.yaml").write_text(yaml.safe_dump({"terms": [term]}))
+    assert import_content(session, tmp_path)["glossary_terms"] == 1
+    got = session.get(GlossaryTerm, "republica")
+    assert got is not None and got.sources[0]["license"] is None
+    bad = {**term, "kind": "galaxy", "sources": []}
+    (tmp_path / "glossary.yaml").write_text(yaml.safe_dump({"terms": [bad]}))
+    (tmp_path / "regimes.yaml").write_text(yaml.safe_dump({"labels": {"x": "X"}}))
+    with pytest.raises(ContentError) as e:
+        import_content(session, tmp_path)
+    assert len(e.value.problems) == 3  # kind, sources, regime x without a term

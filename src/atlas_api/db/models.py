@@ -30,6 +30,11 @@ POLITY_TYPES = (
 EVENT_KINDS = ("political", "war", "treaty", "cultural", "economic", "other")
 LINK_KINDS = ("renamed", "succeeded", "split", "merged", "absorbed", "conquered")
 LINK_STATUSES = ("curated", "auto", "unresolved")
+GLOSSARY_KINDS = ("regime", "system", "region", "membership", "currency", "other")
+DRIVING_SIDES = ("left", "right")
+LEADER_ROLES = ("head_of_state", "head_of_government")
+PERSON_DOMAINS = ("arts", "business_law", "exploration", "humanities", "institutions",
+                  "public_figure", "science_technology", "sports")
 
 
 def _in(col: str, values: tuple[str, ...]) -> str:
@@ -191,6 +196,84 @@ class CountryFacts(Base):
     memberships: Mapped[list[str] | None] = mapped_column(JSONB)
     source_id: Mapped[str | None] = mapped_column(ForeignKey("sources.id"))
     fetched_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # spec 004: from Wikidata P122 via content/regimes.yaml (overrides the legacy polities.regime)
+    regime_id: Mapped[str | None] = mapped_column(ForeignKey("glossary_terms.id"))
+    regime: Mapped[str | None] = mapped_column(Text)
+    # spec 003: GeoGuessr clues
+    driving_side: Mapped[str | None] = mapped_column(Text)
+    calling_code: Mapped[str | None] = mapped_column(Text)
+    tld: Mapped[str | None] = mapped_column(Text)
+    plate_code: Mapped[str | None] = mapped_column(Text)
+    scripts: Mapped[list[str] | None] = mapped_column(JSONB)
+
+    __table_args__ = (
+        CheckConstraint("driving_side IS NULL OR " + _in("driving_side", DRIVING_SIDES),
+                        name="ck_country_facts_driving_side"),
+    )
+
+
+class GlossaryTerm(Base):
+    """spec 004. Written only by import-content (content/glossary.yaml)."""
+
+    __tablename__ = "glossary_terms"
+    __table_args__ = (CheckConstraint(_in("kind", GLOSSARY_KINDS), name="ck_glossary_terms_kind"),)
+
+    id: Mapped[str] = mapped_column(Text, primary_key=True)
+    kind: Mapped[str] = mapped_column(Text)
+    label: Mapped[str] = mapped_column(Text)
+    short: Mapped[str] = mapped_column(Text)
+    body: Mapped[str] = mapped_column(Text)
+    icon: Mapped[str | None] = mapped_column(Text)
+    sources: Mapped[list[dict[str, str | None]]] = mapped_column(JSONB)  # contract Source objects
+
+
+class Leader(Base):
+    """spec 006 (v1.1). One row per term of office; written only by import-facts."""
+
+    __tablename__ = "leaders"
+    __table_args__ = (
+        CheckConstraint(_in("role", LEADER_ROLES), name="ck_leaders_role"),
+        Index("ix_leaders_iso2", "iso2"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    iso2: Mapped[str] = mapped_column(CHAR(2), ForeignKey("polities.iso2"))
+    person_id: Mapped[str] = mapped_column(Text)  # Wikidata Q-id
+    name: Mapped[str] = mapped_column(Text)
+    role: Mapped[str] = mapped_column(Text)
+    office: Mapped[str | None] = mapped_column(Text)
+    start: Mapped[str | None] = mapped_column(Text)  # 'YYYY-MM-DD' as given by Wikidata
+    end: Mapped[str | None] = mapped_column(Text)
+    party_id: Mapped[str | None] = mapped_column(Text)
+    party_name: Mapped[str | None] = mapped_column(Text)
+    image_url: Mapped[str | None] = mapped_column(Text)
+    image_credit: Mapped[str | None] = mapped_column(Text)
+    image_license: Mapped[str | None] = mapped_column(Text)
+    wikipedia_url: Mapped[str | None] = mapped_column(Text)
+
+
+class Person(Base):
+    """spec 007. Top people per country (Pantheon rank); written only by import-facts."""
+
+    __tablename__ = "people"
+    __table_args__ = (
+        PrimaryKeyConstraint("iso2", "id"),
+        CheckConstraint("domain IS NULL OR " + _in("domain", PERSON_DOMAINS), name="ck_people_domain"),
+        CheckConstraint("birth_year IS NULL OR birth_year <> 0", name="ck_people_no_year_zero"),
+    )
+
+    iso2: Mapped[str] = mapped_column(CHAR(2), ForeignKey("polities.iso2"))
+    id: Mapped[str] = mapped_column(Text)  # Wikidata Q-id (from Pantheon wd_id)
+    name: Mapped[str] = mapped_column(Text)
+    occupation: Mapped[str | None] = mapped_column(Text)
+    domain: Mapped[str | None] = mapped_column(Text)
+    birth_year: Mapped[int | None] = mapped_column(Integer)
+    death_year: Mapped[int | None] = mapped_column(Integer)
+    rank: Mapped[int] = mapped_column(Integer)
+    image_url: Mapped[str | None] = mapped_column(Text)
+    image_credit: Mapped[str | None] = mapped_column(Text)
+    image_license: Mapped[str | None] = mapped_column(Text)
+    wikipedia_url: Mapped[str | None] = mapped_column(Text)
 
 
 class Meta(Base):

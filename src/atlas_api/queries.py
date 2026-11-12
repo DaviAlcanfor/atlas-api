@@ -16,7 +16,10 @@ from sqlalchemy.orm import Session, selectinload
 from atlas_api.db.models import (
     CountryFacts,
     Event,
+    GlossaryTerm,
+    Leader,
     Meta,
+    Person,
     Polity,
     PolityName,
     Snapshot,
@@ -26,14 +29,19 @@ from atlas_api.db.models import (
 )
 from atlas_api.rules import has_content, name_as_of
 from atlas_api.schemas import (
+    CapitalCoord,
+    Clues,
     CountryDetail,
     CountrySummary,
     Counts,
     Currency,
+    Image,
     Language,
     Link,
     Marker,
     NamePeriod,
+    Party,
+    PersonList,
     Politics,
     PolityDetail,
     PolityList,
@@ -44,9 +52,12 @@ from atlas_api.schemas import (
     Wikipedia,
 )
 from atlas_api.schemas import Event as EventOut
+from atlas_api.schemas import GlossaryTerm as GlossaryTermOut
+from atlas_api.schemas import Leader as LeaderOut
 from atlas_api.schemas import (
     Meta as MetaOut,
 )
+from atlas_api.schemas import Person as PersonOut
 from atlas_api.schemas import (
     SnapshotLink as SnapshotLinkOut,
 )
@@ -122,6 +133,26 @@ def get_meta(s: Session) -> MetaOut:
 # --- countries ------------------------------------------------------------------------------
 
 
+def _regime(p: Polity, f: CountryFacts | None) -> str | None:
+    """Wikidata regime (spec 004) overrides the legacy, unverified seed text."""
+    return f.regime if f and f.regime_id else p.regime
+
+
+def _capital_coords(f: CountryFacts | None) -> list[CapitalCoord]:
+    # ponytail: one capital (preferred rank) from the current columns; spec 005 phase 2 adds more.
+    if f is None or f.capital is None or f.capital_lat is None or f.capital_lng is None:
+        return []
+    return [CapitalCoord(name=f.capital, lat=f.capital_lat, lng=f.capital_lng)]
+
+
+def _clues(f: CountryFacts | None) -> Clues | None:
+    if f is None or not (f.driving_side or f.calling_code or f.tld or f.plate_code or f.scripts):
+        return None
+    return Clues(driving_side=f.driving_side, calling_code=f.calling_code,
+                 tld=f.tld, plate_code=f.plate_code, scripts=list(f.scripts or []))
+
+
+
 def list_countries(s: Session) -> list[CountrySummary]:
     event_counts = {pid: n for pid, n in s.execute(select(Event.polity_id, func.count()).group_by(Event.polity_id))}
     markers = load_markers()
@@ -134,9 +165,10 @@ def list_countries(s: Session) -> list[CountrySummary]:
     return [
         CountrySummary(
             iso2=p.iso2 or "", polity_id=p.id, name=p.name,
-            capital=f.capital if f else None, region=f.region if f else None, regime=p.regime,
+            capital=f.capital if f else None, region=f.region if f else None, regime=_regime(p, f),
             has_content=has_content(p.summary, event_counts.get(p.id, 0)),
             marker=markers.get(p.iso2 or ""),
+            regime_id=f.regime_id if f else None, capital_coords=_capital_coords(f),
         )
         for p, f in rows
     ]
@@ -160,7 +192,7 @@ def get_country(s: Session, iso2: str) -> CountryDetail | None:
         iso2=iso2, polity_id=p.id, name=p.name,
         official_name=f.official_name if f else None, capital=f.capital if f else None,
         flag_url=f.flag_url if f else None, region=f.region if f else None,
-        regime=p.regime, summary=p.summary,
+        regime=_regime(p, f), summary=p.summary,
         # The contract needs a code for every language/currency; entries without one are dropped.
         languages=[Language(code=x["code"], name=x["name"]) for x in (f.languages or [] if f else [])
                    if x.get("code") and x.get("name")],
@@ -172,7 +204,98 @@ def get_country(s: Session, iso2: str) -> CountryDetail | None:
         timeline=[_event(e) for e in p.events],  # relationship is ordered by (year_start, id)
         sources=[_source(x) for _, x in sorted(sources.items())],
         updated_at=_ts(p.updated_at) or "",
+        regime_id=f.regime_id if f else None, clues=_clues(f),
     )
+
+
+def country_exists(s: Session, iso2: str) -> bool:
+    return s.scalar(select(Polity.id).where(Polity.iso2 == iso2)) is not None
+
+
+def list_leaders(s: Session, iso2: str, role: str | None) -> list[LeaderOut]:
+    """Terms of office, oldest first (unknown start last); `role` filters when given."""
+    stmt = select(Leader).where(Leader.iso2 == iso2)
+    if role is not None:
+        stmt = stmt.where(Leader.role == role)
+    rows = s.scalars(stmt.order_by(Leader.start.is_(None), Leader.start, Leader.person_id, Leader.id))
+    return [
+        LeaderOut(
+            person_id=x.person_id, name=x.name, role=x.role,
+            office=x.office, start=x.start, end=x.end,
+            party=Party(id=x.party_id, name=x.party_name) if x.party_id and x.party_name else None,
+            image=_image(x.image_url, x.image_credit, x.image_license),
+            wikipedia_url=x.wikipedia_url,
+        )
+        for x in rows
+    ]
+
+
+def _image(url: str | None, credit: str | None, lic: str | None) -> Image | None:
+    return Image(url=url, credit=credit, license=lic) if url and credit and lic else None
+
+
+def list_people(s: Session, iso2: str, domain: str | None, limit: int) -> PersonList | None:
+    """Pantheon rank order; None when the people dataset was never imported."""
+    src, method = s.get(Source, "pantheon"), s.get(Meta, "people_method")
+    if src is None or method is None:
+        return None
+    stmt = select(Person).where(Person.iso2 == iso2)
+    if domain is not None:
+        stmt = stmt.where(Person.domain == domain)
+    rows = s.scalars(stmt.order_by(Person.rank).limit(limit))
+    return PersonList(
+        items=[PersonOut(id=p.id, name=p.name, occupation=p.occupation, domain=p.domain,
+                         birth_year=p.birth_year, death_year=p.death_year,
+                         image=_image(p.image_url, p.image_credit, p.image_license),
+                         wikipedia_url=p.wikipedia_url, rank=p.rank) for p in rows],
+        method=method.value, source=_source(src))
+
+
+# --- glossary -------------------------------------------------------------------------------
+
+EXAMPLES_MAX = 8
+
+
+def _examples(s: Session, terms: list[GlossaryTerm]) -> dict[str, list[str]]:
+    """term id -> up to 8 iso2, by country name: same regime_id / region contains the label /
+    membership in the list. One pass over the 196 country rows."""
+    rows = list(s.execute(
+        select(Polity.iso2, CountryFacts.regime_id, CountryFacts.region, CountryFacts.memberships)
+        .join(CountryFacts, CountryFacts.iso2 == Polity.iso2).order_by(Polity.name, Polity.id)
+    ))
+    out: dict[str, list[str]] = {}
+    for t in terms:
+        if t.kind == "regime":
+            hits = [r[0] for r in rows if r[1] == t.id]
+        elif t.kind == "region":
+            hits = [r[0] for r in rows if t.label in (r[2] or "").split(" / ")]
+        elif t.kind == "membership":
+            hits = [r[0] for r in rows if t.label in (r[3] or [])]
+        else:
+            hits = []
+        out[t.id] = [h for h in hits if h][:EXAMPLES_MAX]
+    return out
+
+
+def _term(t: GlossaryTerm, examples: list[str]) -> GlossaryTermOut:
+    return GlossaryTermOut(
+        id=t.id, kind=t.kind, label=t.label, short=t.short, body=t.body,
+        icon=t.icon, examples=examples,
+        sources=[SourceOut(id=x["id"] or "", title=x["title"] or "", url=x.get("url"),
+                           license=x.get("license"), retrieved_at=x.get("retrieved_at"))
+                 for x in t.sources],
+    )
+
+
+def list_glossary(s: Session) -> list[GlossaryTermOut]:
+    terms = list(s.scalars(select(GlossaryTerm).order_by(GlossaryTerm.kind, GlossaryTerm.label)))
+    ex = _examples(s, terms)
+    return [_term(t, ex[t.id]) for t in terms]
+
+
+def get_glossary_term(s: Session, term_id: str) -> GlossaryTermOut | None:
+    t = s.get(GlossaryTerm, term_id)
+    return _term(t, _examples(s, [t])[t.id]) if t else None
 
 
 # --- polities -------------------------------------------------------------------------------

@@ -5,6 +5,8 @@ content/
   sources.yaml      list of {id, title, url, license, retrieved_at}
   polities/*.yaml   one polity each (keys: see Polity model; plus names[] and events[])
   succession.yaml   list of {predecessor, successor, year, kind, note}
+  glossary.yaml     {terms: [{id, kind, label, short, body, icon, sources[]}]} (spec 004)
+  regimes.yaml      read by the Wikidata ETL; here only checked: every regime_id needs a term
 
 An event with empty source_ids counts as UNVERIFIED in the summary.
 Idempotent: running twice on the same content changes nothing (same data_version).
@@ -25,11 +27,13 @@ from sqlalchemy.orm import Session
 
 from atlas_api.db.models import (
     EVENT_KINDS,
+    GLOSSARY_KINDS,
     LINK_KINDS,
     POLITY_TYPES,
     PRECISIONS,
     Event,
     EventSource,
+    GlossaryTerm,
     Meta,
     Polity,
     PolityName,
@@ -52,7 +56,11 @@ def load_content(root: Path) -> dict[str, Any]:
     sources = _yaml(root / "sources.yaml") if (root / "sources.yaml").exists() else []
     succ = _yaml(root / "succession.yaml") if (root / "succession.yaml").exists() else []
     polities = [_yaml(p) for p in sorted((root / "polities").glob("*.yaml"))]
-    return {"sources": sources or [], "succession": succ or [], "polities": polities}
+    glossary = _yaml(root / "glossary.yaml") if (root / "glossary.yaml").exists() else {}
+    regimes = _yaml(root / "regimes.yaml") if (root / "regimes.yaml").exists() else {}
+    return {"sources": sources or [], "succession": succ or [], "polities": polities,
+            "glossary": (glossary or {}).get("terms") or [],
+            "regime_ids": sorted((regimes or {}).get("labels") or {})}
 
 
 def _has_cycle(edges: list[tuple[str, str]]) -> bool:
@@ -124,6 +132,23 @@ def validate(content: dict[str, Any]) -> list[str]:
         edges.append((a, b))
     if _has_cycle(edges):
         errs.append("succession has a cycle")
+    term_ids: set[str] = set()
+    for t in content.get("glossary", []):
+        tid = t.get("id", "?")
+        if tid in term_ids:
+            errs.append(f"glossary {tid}: duplicate id")
+        term_ids.add(tid)
+        if t.get("kind") not in GLOSSARY_KINDS:
+            errs.append(f"glossary {tid}: bad kind {t.get('kind')!r}")
+        if not all(isinstance(t.get(k), str) and t[k].strip() for k in ("label", "short", "body")):
+            errs.append(f"glossary {tid}: label, short and body are required")
+        if not t.get("sources") or not all(x.get("id") and x.get("title") and x.get("url")
+                                           for x in t["sources"]):
+            errs.append(f"glossary {tid}: needs >= 1 source with id, title, url")
+    regime_terms = {t.get("id") for t in content.get("glossary", []) if t.get("kind") == "regime"}
+    for rid in content.get("regime_ids", []):
+        if rid not in regime_terms:
+            errs.append(f"regimes.yaml: regime_id {rid} has no glossary term (kind: regime)")
     return errs
 
 
@@ -178,6 +203,14 @@ def import_content(session: Session, root: Path) -> dict[str, Any]:
         session.add(Succession(predecessor_id=s_["predecessor"], successor_id=s_["successor"],
                                year=s_["year"], kind=s_["kind"], note=s_.get("note")))
 
+    # ponytail: terms removed from glossary.yaml are not deleted (country_facts FK); same as polities.
+    keys_t = ("id", "kind", "label", "short", "body", "icon")
+    for t in content["glossary"]:
+        session.merge(GlossaryTerm(**{k: t.get(k) for k in keys_t}, sources=[
+            {k: x.get(k) for k in ("id", "title", "url", "license", "retrieved_at")}
+            for x in t["sources"]]))
+    session.flush()
+
     blob = json.dumps(content, sort_keys=True, default=str, ensure_ascii=False)
     version = hashlib.sha256(blob.encode()).hexdigest()[:16]
     cur = session.get(Meta, "data_version")
@@ -187,4 +220,5 @@ def import_content(session: Session, root: Path) -> dict[str, Any]:
     session.flush()
     return {"polities": len(ids), "events": events, "unverified_events": unverified,
             "sources": len(content["sources"]), "succession": len(content["succession"]),
+            "glossary_terms": len(content["glossary"]),
             "data_version": version}

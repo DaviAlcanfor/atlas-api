@@ -30,4 +30,16 @@ docs/CONTRACT_NOTES.md maps contract -> code (the contract itself is frozen).
 
 ## Status
 Phase 0 done: routes return stub fixtures (not authoritative). Phase 1 done except decisions: the API now reads REAL data from Postgres (`queries.py`, fixtures removed), ETag/304/X-Data-Version live, 196 countries seeded (placeholder start_year 1946, see README), `import-content` + `import-facts`, 40 tests on real Postgres. Pending user decisions: Germany/Yugoslavia/name periods (the 8 historical ids exist only as unverified placeholders, no succession); contract v1.1 (`Indicator`) is still NOT in the repo, so migration 0003/`indicators` are not done; news needs contract change CR-001.
+Phase B (contract v1.1 = CR-002, specs 003-007) is implemented LOCALLY (migrations 0003-0006, `etl wikidata-leaders`, `etl pantheon`, `/v1/glossary`, `/leaders`, `/people`) but NOT deployed: waits for the user to paste CR-002 into CONTRACT.md. `content/glossary.yaml` and `content/regimes.yaml` are agent drafts pending human review.
 Geometry: the WEB repo owns MODERN geometry. This repo owns HISTORICAL snapshots only. Micro-state `marker` comes from `content/markers.yaml` (iso2 -> lat,lng).
+
+## Specs (spec-driven)
+New features start in `specs/NNN-slug.md` (index + template: `specs/README.md`), numbered like the web repo's `specs/` so both halves match.
+Status: draft -> approved (only the user approves) -> in progress -> done. No feature code for a `draft` spec.
+A spec's "Contract delta" is a proposal: approved specs of one phase become ONE change request; the user updates the contract in both repos.
+
+## Production
+FastAPI Cloud app `atlas-api`, id `20c95458-4e88-4e5f-93df-aae35082d818`, https://atlas-api.fastapicloud.dev. Front: https://atlas-web-ruddy.vercel.app.
+`CORS_ORIGINS` is set on FastAPI Cloud, not in code (current: `http://localhost:5173,https://atlas-web-ruddy.vercel.app`).
+A new front domain must be added: `.venv/Scripts/fastapi.exe cloud env set CORS_ORIGINS "<csv>" --app-id <id>` (redeploys).
+Windows/OneDrive: `uv run` can fail with "Acesso negado" on `.venv`; call `.venv/Scripts/<tool>.exe` directly.

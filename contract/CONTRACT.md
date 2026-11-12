@@ -1,5 +1,5 @@
 # Atlas API contract v1 (FROZEN)
-Version: 1.0
+Version: 1.1 (additive over 1.0: a 1.0 client ignores the new fields and endpoints; approved by the owner 2026-11-11, CR-002)
 
 Status: FROZEN. Neither the API agent nor the web agent may edit this file.
 If you find a problem, stop, describe it in `contract/CHANGE_REQUESTS.md`
@@ -20,6 +20,14 @@ If you find a problem, stop, describe it in `contract/CHANGE_REQUESTS.md`
   Modern geometry: `/data/modern.geojson`, feature property `ISO2`.
   Historical geometry: `/data/historical/world_<year>.geojson`, feature properties
   `NAME`, `SUBJECTO`, `PARTOF`, `BORDERPRECISION` (1 approximate, 2 moderate, 3 by international law).
+
+- Content language: pt-BR, except data quoted from a source that has no pt-BR version: `Person.name` and
+  `Person.occupation` (Pantheon, English, occupation in UPPER CASE as published). `Leader.office/name/party.name`
+  are Wikidata labels in pt-BR, else pt, else en.
+- Images (`image`) are thumbnails hosted by Wikimedia Commons. Each file has its own licence: the front MUST show
+  `image.credit` and `image.license` next to the picture. `image` is null when the file has no clear licence + author.
+- v1.1: `regime` is the pt-BR label of `regime_id` when `regime_id` is non-null (source: Wikidata P122); otherwise the
+  old curated text, which may be null.
 
 ## Shared types
 Source      { id: string, title: string, url: string|null, license: string|null, retrieved_at: string|null }
@@ -45,6 +53,28 @@ CountryDetail { iso2: string, polity_id: string, name: string, official_name: st
               timeline: Event[], sources: Source[], updated_at: string }
 SnapshotInfo { year: int, geometry_url: string, feature_count: int, link_coverage: number /* 0..1 */ }
 
+Image        { url: string, credit: string, license: string }
+GlossaryTerm { id: string, kind: "regime"|"system"|"region"|"membership"|"currency"|"other", label: string,
+               short: string, body: string, icon: string|null, examples: string[] /* iso2, max 8, by country name */,
+               sources: Source[] }
+Leader       { person_id: string /* Wikidata Q-id */, name: string, role: "head_of_state"|"head_of_government",
+               office: string|null, start: string|null, end: string|null /* "YYYY-MM-DD"; end null = in office or unknown */,
+               party: { id: string, name: string }|null, image: Image|null, wikipedia_url: string|null }
+               (one item per term of office; when one office is both head of state and of government, e.g. a
+               presidential system, it appears once as "head_of_state")
+Person       { id: string /* Wikidata Q-id */, name: string, occupation: string|null,
+               domain: "arts"|"business_law"|"exploration"|"humanities"|"institutions"|"public_figure"|"science_technology"|"sports"|null,
+               birth_year: int|null, death_year: int|null, image: Image|null, wikipedia_url: string|null,
+               rank: int /* 1 = most popular in the country */ }
+v1.1 fields appended to existing types:
+CountrySummary += { regime_id: string|null /* GlossaryTerm id, kind "regime" */,
+                    capital_coords: [{ name: string, lat: number, lng: number }] /* [] = unknown */ }
+CountryDetail  += { regime_id: string|null,
+                    clues: { driving_side: "left"|"right"|null, calling_code: string|null /* "+55" */,
+                             tld: string|null /* ".br" */, plate_code: string|null /* "BR" */,
+                             scripts: string[] /* pt-BR names of the writing systems of the official languages */ }|null }
+                    (`clues` is null when none of its fields has data)
+
 ## Endpoints
 GET /v1/health                       -> { status: "ok", db: "ok"|"error" }
 GET /v1/meta                         -> { data_version: string, generated_at: string, year_min: int, year_max: int,
@@ -64,6 +94,18 @@ GET /v1/snapshots/{year}/links       -> { snapshot_year: int,
 GET /v1/search?q=&limit=             -> { items: [{ kind: "country"|"polity", id: string, name: string, iso2: string|null,
                                                     start_year: int, end_year: int|null }] }
                                         q min 2 chars, accent-insensitive, prefix and substring match. limit default 10, max 25.
+
+GET /v1/glossary                      -> { items: GlossaryTerm[] }                  (sorted by kind, then label)
+GET /v1/glossary/{id}                 -> GlossaryTerm                               (404 unknown id)
+GET /v1/countries/{iso2}/leaders?role=-> { items: Leader[] }
+                                        `role` optional ("head_of_state"|"head_of_government", else 422).
+                                        Sorted by start (unknown start last). 404 unknown country; [] = no data.
+GET /v1/countries/{iso2}/people?domain=&limit=
+                                     -> { items: Person[], method: string /* pt-BR, how the ranking is made + known bias */,
+                                          source: Source }
+                                        `domain` optional (values of Person.domain, else 422). limit default 10, max 50.
+                                        Sorted by rank. 404 unknown country. Source licence is CC BY-SA 4.0 (Pantheon):
+                                        the front must show the attribution in `source`.
 
 ## Seed ids (must exist, same ids in both agents' fixtures)
 Modern: austria (AT), brazil (BR), germany (DE), egypt (EG), japan (JP), turkey (TR), russia (RU), serbia (RS)

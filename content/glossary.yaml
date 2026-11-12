@@ -1,0 +1,268 @@
+# RASCUNHO — revisão humana pendente.
+# Verbetes do glossário (spec 004), texto próprio (não copiado), escrito por agente em 2026-11-11.
+# As fontes são para conferência; os títulos dos artigos foram verificados na API da Wikipédia em 2026-11-11.
+# Campos: id, kind (regime|system|region|membership|currency|other), label, short (1 frase), body,
+# icon (null), sources [{id, title, url, license, retrieved_at}]. `examples` é calculado pela API.
+# Todo regime_id de content/regimes.yaml precisa de um verbete kind: regime com o mesmo id.
+
+terms:
+  # --- regimes ------------------------------------------------------------------------------
+  - id: republica-presidencialista
+    kind: regime
+    label: República presidencialista
+    short: O presidente, eleito pelo povo, é ao mesmo tempo chefe de Estado e chefe de governo.
+    body: >-
+      O presidente comanda o governo e representa o país. Ele tem mandato fixo e, em regra, não
+      pode ser derrubado pelo parlamento por simples falta de apoio político, só por processos
+      especiais como o impeachment. Executivo e Legislativo são eleitos separadamente e um
+      fiscaliza o outro.
+    icon: null
+    sources:
+      - {id: wp-pt-presidencialismo, title: "Presidencialismo (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Presidencialismo", license: "CC BY-SA 4.0", retrieved_at: "2026-11-11T00:00:00Z"}
+      - {id: wp-en-presidential-system, title: "Presidential system (Wikipedia)", url: "https://en.wikipedia.org/wiki/Presidential_system", license: "CC BY-SA 4.0", retrieved_at: "2026-11-11T00:00:00Z"}
+
+  - id: republica-semipresidencialista
+    kind: regime
+    label: República semipresidencialista
+    short: Um presidente eleito divide o poder executivo com um primeiro-ministro que depende do parlamento.
+    body: >-
+      O presidente é eleito pelo povo e tem poderes próprios (por exemplo, em política externa ou
+      defesa). O dia a dia do governo fica com um primeiro-ministro, que precisa da confiança do
+      parlamento e pode ser destituído por ele. O equilíbrio entre os dois muda de país para país.
+    icon: null
+    sources:
+      - {id: wp-pt-semipresidencialismo, title: "Semipresidencialismo (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Semipresidencialismo", license: "CC BY-SA 4.0", retrieved_at: "2026-11-11T00:00:00Z"}
+      - {id: wp-en-semi-presidential-system, title: "Semi-presidential system (Wikipedia)", url: "https://en.wikipedia.org/wiki/Semi-presidential_system", license: "CC BY-SA 4.0", retrieved_at: "2026-11-11T00:00:00Z"}
+
+  - id: republica-parlamentarista
+    kind: regime
+    label: República parlamentarista
+    short: O governo é chefiado por um primeiro-ministro escolhido pelo parlamento; o presidente tem papel sobretudo cerimonial.
+    body: >-
+      Os eleitores escolhem o parlamento, e o governo sai da maioria parlamentar. O primeiro-ministro
+      (ou chanceler) governa enquanto tiver essa maioria; se a perder, pode cair por um voto de
+      desconfiança. O presidente é o chefe de Estado, com funções em geral representativas.
+    icon: null
+    sources:
+      - {id: wp-pt-republica-parlamentarista, title: "República parlamentarista (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Rep%C3%BAblica_parlamentarista", license: "CC BY-SA 4.0", retrieved_at: "2026-11-11T00:00:00Z"}
+      - {id: wp-en-parliamentary-republic, title: "Parliamentary republic (Wikipedia)", url: "https://en.wikipedia.org/wiki/Parliamentary_republic", license: "CC BY-SA 4.0", retrieved_at: "2026-11-11T00:00:00Z"}
+
+  - id: republica
+    kind: regime
+    label: República
+    short: O chefe de Estado não é um monarca hereditário; a fonte não diz se o sistema é presidencialista ou parlamentarista.
+    body: >-
+      Numa república, o chefe de Estado é escolhido (por eleição direta, indireta ou outro meio) e
+      não herda o cargo. Aqui o rótulo é genérico porque o Wikidata só informa "república" para este
+      país, sem dizer como o governo se organiza; os detalhes ficam para a revisão.
+    icon: null
+    sources:
+      - {id: wp-pt-republica, title: "República (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Rep%C3%BAblica", license: "CC BY-SA 4.0", retrieved_at: "2026-11-11T00:00:00Z"}
+      - {id: wp-en-republic, title: "Republic (Wikipedia)", url: "https://en.wikipedia.org/wiki/Republic", license: "CC BY-SA 4.0", retrieved_at: "2026-11-11T00:00:00Z"}
+
+  - id: republica-popular
+    kind: regime
+    label: República popular
+    short: Nome adotado sobretudo por Estados que se declaram socialistas, em geral com um partido dominante.
+    body: >-
+      "República popular" é um termo usado na denominação oficial de vários Estados, principalmente
+      os que se apresentam como socialistas. Na prática, costuma indicar um sistema em que um partido
+      comunista ou de vanguarda dirige o Estado, mas o nome sozinho não descreve as instituições.
+    icon: null
+    sources:
+      - {id: wp-pt-republica-popular, title: "República popular (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Rep%C3%BAblica_popular", license: "CC BY-SA 4.0", retrieved_at: "2026-11-11T00:00:00Z"}
+      - {id: wp-en-peoples-republic, title: "People's republic (Wikipedia)", url: "https://en.wikipedia.org/wiki/People%27s_republic", license: "CC BY-SA 4.0", retrieved_at: "2026-11-11T00:00:00Z"}
+
+  - id: republica-islamica
+    kind: regime
+    label: República islâmica
+    short: República cuja constituição coloca a lei islâmica como base do Estado.
+    body: >-
+      Tem instituições republicanas, como presidente e parlamento eleitos, mas a constituição dá à
+      lei islâmica um papel central. Em alguns casos, autoridades religiosas têm poder de vetar
+      leis ou candidatos e ficam acima dos cargos eleitos.
+    icon: null
+    sources:
+      - {id: wp-pt-republica-islamica, title: "República islâmica (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Rep%C3%BAblica_isl%C3%A2mica", license: "CC BY-SA 4.0", retrieved_at: "2026-11-11T00:00:00Z"}
+      - {id: wp-en-islamic-republic, title: "Islamic republic (Wikipedia)", url: "https://en.wikipedia.org/wiki/Islamic_republic", license: "CC BY-SA 4.0", retrieved_at: "2026-11-11T00:00:00Z"}
+
+  - id: monarquia-constitucional
+    kind: regime
+    label: Monarquia constitucional
+    short: Há um monarca como chefe de Estado, mas seus poderes são limitados por uma constituição.
+    body: >-
+      O rei, rainha, emir ou príncipe ocupa o cargo de chefe de Estado, normalmente por herança. Uma
+      constituição limita o que ele pode fazer. Em muitos casos o papel é cerimonial e quem governa é
+      um primeiro-ministro apoiado pelo parlamento; em outros, o monarca mantém poderes importantes.
+    icon: null
+    sources:
+      - {id: wp-pt-monarquia-constitucional, title: "Monarquia constitucional (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Monarquia_constitucional", license: "CC BY-SA 4.0", retrieved_at: "2026-11-11T00:00:00Z"}
+      - {id: wp-en-constitutional-monarchy, title: "Constitutional monarchy (Wikipedia)", url: "https://en.wikipedia.org/wiki/Constitutional_monarchy", license: "CC BY-SA 4.0", retrieved_at: "2026-11-11T00:00:00Z"}
+
+  - id: monarquia-absoluta
+    kind: regime
+    label: Monarquia absoluta
+    short: O monarca concentra o poder de governar, sem limites efetivos de uma constituição ou parlamento.
+    body: >-
+      O monarca é ao mesmo tempo chefe de Estado e de governo e decide as leis e as nomeações
+      principais. Pode haver conselhos ou assembleias, mas eles são consultivos ou dependem da
+      vontade do monarca.
+    icon: null
+    sources:
+      - {id: wp-pt-monarquia-absoluta, title: "Monarquia absoluta (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Monarquia_absoluta", license: "CC BY-SA 4.0", retrieved_at: "2026-11-11T00:00:00Z"}
+      - {id: wp-en-absolute-monarchy, title: "Absolute monarchy (Wikipedia)", url: "https://en.wikipedia.org/wiki/Absolute_monarchy", license: "CC BY-SA 4.0", retrieved_at: "2026-11-11T00:00:00Z"}
+
+  - id: teocracia
+    kind: regime
+    label: Teocracia
+    short: O poder político é exercido por autoridades religiosas ou em nome de uma religião.
+    body: >-
+      Numa teocracia, a autoridade do governo é justificada pela religião, e líderes religiosos
+      ocupam os cargos mais altos ou têm a palavra final. As leis seguem, total ou parcialmente,
+      normas religiosas.
+    icon: null
+    sources:
+      - {id: wp-pt-teocracia, title: "Teocracia (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Teocracia", license: "CC BY-SA 4.0", retrieved_at: "2026-11-11T00:00:00Z"}
+      - {id: wp-en-theocracy, title: "Theocracy (Wikipedia)", url: "https://en.wikipedia.org/wiki/Theocracy", license: "CC BY-SA 4.0", retrieved_at: "2026-11-11T00:00:00Z"}
+
+  - id: estado-de-partido-unico
+    kind: regime
+    label: Estado de partido único
+    short: Um só partido tem o direito legal de governar; outros partidos são proibidos ou sem poder real.
+    body: >-
+      A constituição ou a prática política garante a um único partido o controle do Estado. Pode
+      haver eleições, mas sem disputa real pelo poder entre partidos. Os cargos mais altos do
+      governo costumam ser ocupados pela direção do partido.
+    icon: null
+    sources:
+      - {id: wp-pt-unipartidarismo, title: "Unipartidarismo (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Unipartidarismo", license: "CC BY-SA 4.0", retrieved_at: "2026-11-11T00:00:00Z"}
+      - {id: wp-en-one-party-state, title: "One-party state (Wikipedia)", url: "https://en.wikipedia.org/wiki/One-party_state", license: "CC BY-SA 4.0", retrieved_at: "2026-11-11T00:00:00Z"}
+
+  - id: junta-militar
+    kind: regime
+    label: Junta militar
+    short: Um grupo de chefes militares governa o país, em geral depois de tomar o poder.
+    body: >-
+      O governo fica com oficiais das Forças Armadas, muitas vezes após um golpe de Estado. As
+      instituições civis e a constituição podem ser suspensas, e os militares costumam se apresentar
+      como governo de transição.
+    icon: null
+    sources:
+      - {id: wp-pt-junta-militar, title: "Junta militar (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Junta_militar", license: "CC BY-SA 4.0", retrieved_at: "2026-11-11T00:00:00Z"}
+      - {id: wp-en-military-junta, title: "Military junta (Wikipedia)", url: "https://en.wikipedia.org/wiki/Military_junta", license: "CC BY-SA 4.0", retrieved_at: "2026-11-11T00:00:00Z"}
+
+  - id: sistema-diretorial
+    kind: regime
+    label: Sistema diretorial
+    short: O poder executivo é exercido por um conselho de várias pessoas, e não por um só chefe.
+    body: >-
+      Em vez de um presidente ou primeiro-ministro, um colegiado eleito pelo parlamento governa em
+      conjunto, e as decisões são tomadas pelo grupo. A presidência do conselho é sobretudo
+      representativa e costuma passar de um membro para outro.
+    icon: null
+    sources:
+      - {id: wp-pt-sistema-diretorial, title: "Sistema diretorial (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Sistema_diretorial", license: "CC BY-SA 4.0", retrieved_at: "2026-11-11T00:00:00Z"}
+      - {id: wp-en-directorial-system, title: "Directorial system (Wikipedia)", url: "https://en.wikipedia.org/wiki/Directorial_system", license: "CC BY-SA 4.0", retrieved_at: "2026-11-11T00:00:00Z"}
+
+  - id: governo-provisorio
+    kind: regime
+    label: Governo provisório
+    short: Governo temporário que administra o país durante uma transição, até que novas instituições sejam definidas.
+    body: >-
+      Costuma surgir depois de uma revolução, guerra ou queda de um regime. Tem a tarefa declarada de
+      conduzir o país até uma nova constituição ou eleições, e suas regras podem mudar com rapidez.
+    icon: null
+    sources:
+      - {id: wp-pt-governo-provisorio, title: "Governo provisório (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Governo_provis%C3%B3rio", license: "CC BY-SA 4.0", retrieved_at: "2026-11-11T00:00:00Z"}
+      - {id: wp-en-provisional-government, title: "Provisional government (Wikipedia)", url: "https://en.wikipedia.org/wiki/Provisional_government", license: "CC BY-SA 4.0", retrieved_at: "2026-11-11T00:00:00Z"}
+
+  # --- regiões (valores de `region`; países transcontinentais aparecem como "Europa / Ásia") ----
+  - id: africa
+    kind: region
+    label: África
+    short: Continente ao sul da Europa, entre os oceanos Atlântico e Índico.
+    body: >-
+      Segundo continente mais populoso do mundo, ligado à Ásia pelo istmo de Suez. É o continente com
+      mais países soberanos. Aqui a região de cada país vem do Wikidata (propriedade "continente").
+    icon: null
+    sources:
+      - {id: wp-pt-africa, title: "África (Wikipédia)", url: "https://pt.wikipedia.org/wiki/%C3%81frica", license: "CC BY-SA 4.0", retrieved_at: "2026-11-11T00:00:00Z"}
+
+  - id: america-do-norte
+    kind: region
+    label: América do Norte
+    short: Continente do hemisfério norte que, nesta classificação, inclui a América Central e o Caribe.
+    body: >-
+      Vai do Canadá e da Groenlândia até o Panamá. Na classificação usada pelo Wikidata, os países da
+      América Central e das ilhas do Caribe também contam como América do Norte.
+    icon: null
+    sources:
+      - {id: wp-pt-america-do-norte, title: "América do Norte (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Am%C3%A9rica_do_Norte", license: "CC BY-SA 4.0", retrieved_at: "2026-11-11T00:00:00Z"}
+
+  - id: america-do-sul
+    kind: region
+    label: América do Sul
+    short: Continente do hemisfério sul (em sua maior parte) que vai da Colômbia e Venezuela até a Terra do Fogo.
+    body: >-
+      Reúne doze países soberanos. Liga-se à América do Norte pelo istmo do Panamá e abriga a maior
+      parte da floresta amazônica e a cordilheira dos Andes.
+    icon: null
+    sources:
+      - {id: wp-pt-america-do-sul, title: "América do Sul (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Am%C3%A9rica_do_Sul", license: "CC BY-SA 4.0", retrieved_at: "2026-11-11T00:00:00Z"}
+
+  - id: asia
+    kind: region
+    label: Ásia
+    short: Maior e mais populoso continente, a leste da Europa e ao norte do oceano Índico.
+    body: >-
+      Vai do Oriente Médio ao Japão e da Sibéria à Indonésia. Concentra a maior parte da população
+      mundial. Alguns países ficam entre a Ásia e a Europa e aparecem com as duas regiões.
+    icon: null
+    sources:
+      - {id: wp-pt-asia, title: "Ásia (Wikipédia)", url: "https://pt.wikipedia.org/wiki/%C3%81sia", license: "CC BY-SA 4.0", retrieved_at: "2026-11-11T00:00:00Z"}
+
+  - id: europa
+    kind: region
+    label: Europa
+    short: Continente a oeste da Ásia, com a qual forma uma única massa de terra (a Eurásia).
+    body: >-
+      O limite com a Ásia é uma convenção (montes Urais, rio Ural, Cáucaso e estreitos turcos), por
+      isso países como Rússia e Turquia podem ser classificados nos dois continentes.
+    icon: null
+    sources:
+      - {id: wp-pt-europa, title: "Europa (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Europa", license: "CC BY-SA 4.0", retrieved_at: "2026-11-11T00:00:00Z"}
+
+  - id: eurasia
+    kind: region
+    label: Eurásia
+    short: Massa de terra formada pela Europa e pela Ásia juntas.
+    body: >-
+      Alguns registros do Wikidata usam "Eurásia" como continente de países que se estendem pelos dois
+      lados do limite convencional entre Europa e Ásia.
+    icon: null
+    sources:
+      - {id: wp-pt-eurasia, title: "Eurásia (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Eur%C3%A1sia", license: "CC BY-SA 4.0", retrieved_at: "2026-11-11T00:00:00Z"}
+
+  - id: oceania
+    kind: region
+    label: Oceania
+    short: Região formada pela Austrália, Nova Zelândia e pelas ilhas do Pacífico.
+    body: >-
+      Inclui a Austrália, a Nova Zelândia, a Papua-Nova Guiné e os arquipélagos da Melanésia,
+      Micronésia e Polinésia. Muitos de seus países são pequenos Estados insulares.
+    icon: null
+    sources:
+      - {id: wp-pt-oceania, title: "Oceânia (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Oce%C3%A2nia", license: "CC BY-SA 4.0", retrieved_at: "2026-11-11T00:00:00Z"}
+
+  # --- organizações (valores de `memberships`) ------------------------------------------------
+  - id: onu
+    kind: membership
+    label: ONU
+    short: Organização das Nações Unidas, que reúne quase todos os países soberanos do mundo.
+    body: >-
+      Criada em 1945, depois da Segunda Guerra Mundial, para manter a paz e a cooperação entre os
+      países. Tem 193 Estados-membros; cada um tem um voto na Assembleia Geral.
+    icon: null
+    sources:
+      - {id: wp-pt-onu, title: "Organização das Nações Unidas (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Organiza%C3%A7%C3%A3o_das_Na%C3%A7%C3%B5es_Unidas", license: "CC BY-SA 4.0", retrieved_at: "2026-11-11T00:00:00Z"}
+      - {id: wp-en-united-nations, title: "United Nations (Wikipedia)", url: "https://en.wikipedia.org/wiki/United_Nations", license: "CC BY-SA 4.0", retrieved_at: "2026-11-11T00:00:00Z"}
