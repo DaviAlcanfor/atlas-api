@@ -27,7 +27,9 @@ def create_app(database_url: str | None = None) -> FastAPI:
     async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         """Startup: create the DB engine (the connection pool). Shutdown: close it."""
         logging.basicConfig(level=get_settings().log_level)
-        engine = make_engine(database_url or get_settings().database_url)
+        st = get_settings()
+        engine = make_engine(database_url or st.database_url, st.db_pool_size, st.db_max_overflow,
+                             st.db_pool_timeout)
         app.state.engine = engine
         app.state.session_factory = make_session_factory(engine)
         yield

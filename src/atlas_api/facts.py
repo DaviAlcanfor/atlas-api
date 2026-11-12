@@ -206,7 +206,7 @@ def import_indicators(session: Session, files: list[Path], known: set[str | None
     session.flush()
     if rows:
         session.execute(insert(Indicator), rows)
-    regions = dict(session.execute(select(CountryFacts.iso2, CountryFacts.region)).tuples().all())
+    regions = {iso: reg for iso, reg in session.execute(select(CountryFacts.iso2, CountryFacts.region))}
     latest: dict[str, dict[str, tuple[int, float]]] = {}
     for r in rows:
         cur = latest.setdefault(r["id"], {}).get(r["iso2"])

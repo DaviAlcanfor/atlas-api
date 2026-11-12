@@ -34,7 +34,12 @@ def _facts(root: Path, **kw: object) -> Path:
     return f
 
 
-def test_import_facts_changes_data_version_and_etag(tmp_path: Path) -> None:
+def test_import_facts_changes_data_version_and_etag(tmp_path: Path,
+                                                   monkeypatch: pytest.MonkeyPatch) -> None:
+    from atlas_api.config import get_settings
+
+    monkeypatch.setenv("DATA_VERSION_TTL", "0")  # read the version on every request
+    get_settings.cache_clear()
     content = tmp_path / "content"
     (content / "polities").mkdir(parents=True)
     (content / "polities" / "za.yaml").write_text(
@@ -59,6 +64,7 @@ def test_import_facts_changes_data_version_and_etag(tmp_path: Path) -> None:
             assert second.headers["x-data-version"] != first.headers["x-data-version"]
     finally:
         eng.dispose()
+        get_settings.cache_clear()
 
 
 def test_import_content_alone_keeps_a_version(session: Session, tmp_path: Path) -> None:
@@ -128,3 +134,31 @@ def test_mirror_images_uploads_once_and_repoints(monkeypatch: pytest.MonkeyPatch
     assert url.startswith("https://x.supabase.co/storage/v1/object/public/atlas-images/")
     assert url.endswith(".jpg") and again == out and out["a.jpg"]["credit"] == "c"
     assert [r.method for r in calls] == ["GET", "POST"]  # second run hits the cache
+
+
+def test_saturated_pool_degrades_fast(api_client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    """spec 019 item 5: with every connection taken, requests get a quick 503 and health answers."""
+    import time
+
+    from atlas_api.config import get_settings
+
+    for k, v in {"DB_POOL_SIZE": "1", "DB_MAX_OVERFLOW": "0", "DB_POOL_TIMEOUT": "0.5",
+                 "DATA_VERSION_TTL": "0"}.items():
+        monkeypatch.setenv(k, v)
+    get_settings.cache_clear()
+    try:
+        with TestClient(create_app(api_client.app.state.test_url)) as c:  # type: ignore[attr-defined]
+            held = c.app.state.engine.connect()  # type: ignore[attr-defined]  # take the only connection
+            try:
+                t = time.perf_counter()
+                r = c.get("/v1/countries/BR")
+                assert r.status_code == 503 and time.perf_counter() - t < 3
+                assert r.headers["content-type"].startswith("application/problem+json")
+                h = c.get("/v1/health")
+                assert h.status_code == 200 and h.json()["db"] == "error"
+            finally:
+                held.close()
+            assert c.get("/v1/health").json()["db"] == "ok"
+            assert c.get("/v1/countries/BR").status_code == 200
+    finally:
+        get_settings.cache_clear()

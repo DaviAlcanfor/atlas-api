@@ -12,6 +12,14 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg://atlas:atlas@localhost:5432/atlas"
     cors_origins: Annotated[list[str], NoDecode] = []
     log_level: str = "INFO"
+    # spec 019 item 5: a SMALL bounded pool per process + a short wait, so a burst gets fast 503s
+    # instead of hanging. Total DB connections = processes x (pool_size + max_overflow): keep it under
+    # the Supabase pooler limit. pool_timeout = seconds a request waits for a free connection.
+    db_pool_size: int = 5
+    db_max_overflow: int = 2
+    db_pool_timeout: float = 3.0
+    # data_version (ETag) is re-read from the DB at most every N seconds per process (0 = every request)
+    data_version_ttl: float = 5.0
 
     @field_validator("cors_origins", mode="before")
     @classmethod
