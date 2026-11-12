@@ -7,7 +7,9 @@ from atlas_api.deps import DbSession
 from atlas_api.errors import NotFoundError, ServiceUnavailableError
 from atlas_api.schemas import (
     CountryDetail,
+    CountryEconomy,
     CountryList,
+    CountryProfile,
     LeaderList,
     LeaderRole,
     PersonDomain,
@@ -54,3 +56,17 @@ def list_people(
     if people is None:
         raise ServiceUnavailableError("People dataset not imported yet")
     return people
+
+
+@router.get("/{iso2}/profile")  # v1.2 (spec 015, CR-003)
+def get_profile(db: DbSession, iso2: Annotated[str, Path(pattern=r"^[A-Z]{2}$")]) -> CountryProfile:
+    if not queries.country_exists(db, iso2):
+        raise NotFoundError(f"Unknown country {iso2}")
+    return queries.get_profile(db, iso2)
+
+
+@router.get("/{iso2}/economy")  # v1.2 (spec 009, CR-003)
+def get_economy(db: DbSession, iso2: Annotated[str, Path(pattern=r"^[A-Z]{2}$")]) -> CountryEconomy:
+    if not queries.country_exists(db, iso2):
+        raise NotFoundError(f"Unknown country {iso2}")
+    return queries.get_economy(db, iso2)

@@ -13,6 +13,10 @@ class EtlSettings(BaseSettings):
     restcountries_base_url: str = "https://api.restcountries.com/countries/v5"
     # Contact (email or URL) for the Wikimedia User-Agent policy. Env var, never committed.
     wikidata_contact: str | None = None
+    # spec 019: Supabase Storage API base (https://<ref>.supabase.co/storage/v1) + service key.
+    # Both set = Commons thumbnails are copied to the public bucket `atlas-images`; else hotlink.
+    image_bucket_url: str | None = None
+    supabase_service_key: SecretStr | None = None
     cache_dir: Path = Path("etl_cache")
     out_dir: Path = Path("data_out")
 

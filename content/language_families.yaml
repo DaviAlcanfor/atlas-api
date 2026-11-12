@@ -1,0 +1,49 @@
+# spec 017. Wikidata Q-id of a language family -> our pt-BR label + regions where it is NATIVE.
+# Used by `python -m etl wikidata-languages`:
+# - `family` of a language = label of the FIRST entry below that is a P279+ ancestor of it;
+#   entries without `label` only classify (sub-families placed under a broad label).
+# - status "indigenous" when a matching entry lists the country's region (country_facts.region).
+#   Broad families that spread by migration/colonisation (indo-europeia, afro-asiática, turcomana,
+#   dravídica, sino-tibetana...) have NO regions on purpose: otherwise French in Germany or
+#   Tamil in Malaysia would be "indigenous". Their languages are indigenous only via P2341.
+# Q-ids were taken from the Wikidata data itself (etl_cache), not typed from memory.
+# RASCUNHO do agente: revisão humana pendente.
+families:
+  # Americas
+  Q34070: {label: tupi, regions: [América do Sul]}
+  Q887133: {label: macro-jê, regions: [América do Sul]}
+  Q626753: {label: aruaque, regions: [América do Sul, América do Norte]}
+  Q2475746: {label: pano-tacana, regions: [América do Sul]}
+  Q788144: {label: tucano, regions: [América do Sul]}
+  Q15548027: {label: nambiquara, regions: [América do Sul]}
+  Q576879: {label: ianomâmi, regions: [América do Sul]}
+  Q17109056: {label: macu (nadahup), regions: [América do Sul]}
+  Q1062626: {label: chapacura, regions: [América do Sul]}
+  Q8045246: {label: xucuru, regions: [América do Sul]}
+  Q17107635: {label: arawá-katukina, regions: [América do Sul]}
+  Q1974973: {label: guaicuru, regions: [América do Sul]}
+  Q5684712: {label: puri, regions: [América do Sul]}
+  Q716831: {label: arutani-sapé, regions: [América do Sul]}
+  Q12634451: {label: quíchua, regions: [América do Sul]}
+  Q33010: {label: aimará, regions: [América do Sul]}
+  Q2475488: {label: uru-chipaya, regions: [América do Sul]}
+  Q6916032: {label: mosetén-chon, regions: [América do Sul]}
+  Q2447424: {label: mataguaio, regions: [América do Sul]}
+  Q3048461: {label: zamuco, regions: [América do Sul]}
+  Q26986: {label: na-dené, regions: [América do Norte]}
+  Q25946: {label: esquimó-aleúte, regions: [América do Norte, Europa, Ásia]}
+  Q721612: {label: álgica, regions: [América do Norte]}
+  Q115485: {label: penúti, regions: [América do Norte]}
+  # Africa
+  Q33838: {label: nígero-congolesa, regions: [África]}
+  Q33705: {label: nilo-saariana, regions: [África]}
+  # Asia (only families confined to the region)
+  Q32940: {label: andamanesa, regions: [Ásia]}
+  Q33612: {label: japônica, regions: []}
+  # broad families: label only
+  Q19860: {label: indo-europeia, regions: []}
+  Q25268: {label: afro-asiática, regions: []}
+  Q33311: {label: dravídica, regions: []}
+  Q33199: {label: austro-asiática, regions: []}
+  Q34090: {label: turcomana, regions: []}
+  Q34113: {label: urálica, regions: []}

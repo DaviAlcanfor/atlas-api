@@ -25,7 +25,7 @@ CONTRACT_HISTORICAL = {"ottoman-empire", "austria-hungary", "german-empire", "we
 def test_health_meta_and_counts(api_client: TestClient) -> None:
     assert api_client.get("/v1/health").json() == {"status": "ok", "db": "ok"}
     meta = Meta.model_validate(api_client.get("/v1/meta").json())
-    assert meta.counts.countries == 196 and meta.counts.polities == 204
+    assert meta.counts.countries == 197 and meta.counts.polities == 205
     assert meta.counts.events == 23 and meta.year_min == -3000
     assert meta.data_version not in ("", "empty")
 
@@ -33,7 +33,7 @@ def test_health_meta_and_counts(api_client: TestClient) -> None:
 def test_countries_list_and_markers(api_client: TestClient) -> None:
     items = CountryList.model_validate(api_client.get("/v1/countries").json()).items
     by_iso = {c.iso2: c for c in items}
-    assert len(items) == 196 and {"XK", "TW", "PS", "NO"} <= set(by_iso)
+    assert len(items) == 197 and {"XK", "TW", "PS", "NO", "DK"} <= set(by_iso)
     assert CONTRACT_MODERN <= set(by_iso)
     assert by_iso["MC"].marker is not None and by_iso["BR"].marker is None  # micro-state vs big
     assert sum(c.marker is not None for c in items) == 22
@@ -65,7 +65,7 @@ def test_polities_by_year(api_client: TestClient) -> None:
     every = PolityList.model_validate(api_client.get("/v1/polities?limit=1000").json())
     assert CONTRACT_HISTORICAL <= {p.id for p in every.items}
     page = api_client.get("/v1/polities?limit=5&offset=2").json()
-    assert len(page["items"]) == 5 and page["total"] == 204
+    assert len(page["items"]) == 5 and page["total"] == 205
 
 
 def test_polity_detail(api_client: TestClient) -> None:
@@ -127,7 +127,7 @@ def test_capital_coords_and_regime_id(api_client: TestClient) -> None:  # specs 
     assert -16 < br.capital_coords[0].lat < -15 and -48 < br.capital_coords[0].lng < -47
     assert br.regime_id == "republica-presidencialista" and br.regime == "República presidencialista"
     assert by_iso["JP"].regime_id == "monarquia-constitucional"
-    assert all(c.capital_coords for c in by_iso.values())  # 196/196 have coordinates
+    assert all(c.capital_coords for c in by_iso.values())  # 197/197 have coordinates
     assert sum(c.regime_id is not None for c in by_iso.values()) >= 150
     no = by_iso["CR"]  # Costa Rica has no P122 in Wikidata: null, never guessed
     assert no.regime_id is None and no.regime is None

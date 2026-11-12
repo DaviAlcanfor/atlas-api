@@ -4,19 +4,28 @@ returns contract (Pydantic) models, so routers stay thin. Business rules live in
 
 import logging
 import unicodedata
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
 import yaml
 from sqlalchemy import func, or_, select, text
-from sqlalchemy.orm import Session, selectinload
+from sqlalchemy.orm import Session, aliased, selectinload
 
 from atlas_api.db.models import (
+    Capital,
+    Composition,
     CountryFacts,
+    CountryLanguage,
+    CurrencyStat,
     Event,
+    FxRate,
     GlossaryTerm,
+    Indicator,
+    IndicatorDef,
+    IndicatorLatest,
+    IndicatorStat,
     Leader,
     Meta,
     Person,
@@ -31,25 +40,45 @@ from atlas_api.rules import has_content, name_as_of
 from atlas_api.schemas import (
     CapitalCoord,
     Clues,
+    CompareIndicator,
+    CompositionOut,
     CountryDetail,
+    CountryEconomy,
+    CountryProfile,
     CountrySummary,
     Counts,
     Currency,
+    CurrencyDetail,
+    CurrencyHistory,
+    CurrencyStats,
+    EconomyCompare,
+    EconomyIndicator,
+    HistoryItem,
     Image,
     Language,
+    LanguageSpoken,
     Link,
     Marker,
     NamePeriod,
     Party,
     PersonList,
+    Point,
     Politics,
     PolityDetail,
     PolityList,
     PolitySummary,
     Population,
+    ProfileGroup,
+    ProfileIndicator,
+    RateItem,
+    Rates,
     SearchItem,
+    Share,
     SnapshotInfo,
+    Speakers,
     Wikipedia,
+    WorldStats,
+    YearValue,
 )
 from atlas_api.schemas import Event as EventOut
 from atlas_api.schemas import GlossaryTerm as GlossaryTermOut
@@ -138,11 +167,13 @@ def _regime(p: Polity, f: CountryFacts | None) -> str | None:
     return f.regime if f and f.regime_id else p.regime
 
 
-def _capital_coords(f: CountryFacts | None) -> list[CapitalCoord]:
-    # ponytail: one capital (preferred rank) from the current columns; spec 005 phase 2 adds more.
-    if f is None or f.capital is None or f.capital_lat is None or f.capital_lng is None:
-        return []
-    return [CapitalCoord(name=f.capital, lat=f.capital_lat, lng=f.capital_lng)]
+def _capital_coords(s: Session) -> dict[str, list[CapitalCoord]]:
+    """iso2 -> every capital with coordinates (spec 019), in `capitals.ord` order."""
+    out: dict[str, list[CapitalCoord]] = {}
+    for c in s.scalars(select(Capital).where(Capital.lat.is_not(None), Capital.lng.is_not(None))
+                       .order_by(Capital.iso2, Capital.ord)):
+        out.setdefault(c.iso2, []).append(CapitalCoord(name=c.name, lat=c.lat or 0.0, lng=c.lng or 0.0))
+    return out
 
 
 def _clues(f: CountryFacts | None) -> Clues | None:
@@ -156,6 +187,7 @@ def _clues(f: CountryFacts | None) -> Clues | None:
 def list_countries(s: Session) -> list[CountrySummary]:
     event_counts = {pid: n for pid, n in s.execute(select(Event.polity_id, func.count()).group_by(Event.polity_id))}
     markers = load_markers()
+    capitals = _capital_coords(s)
     rows = s.execute(
         select(Polity, CountryFacts)
         .outerjoin(CountryFacts, CountryFacts.iso2 == Polity.iso2)
@@ -168,7 +200,7 @@ def list_countries(s: Session) -> list[CountrySummary]:
             capital=f.capital if f else None, region=f.region if f else None, regime=_regime(p, f),
             has_content=has_content(p.summary, event_counts.get(p.id, 0)),
             marker=markers.get(p.iso2 or ""),
-            regime_id=f.regime_id if f else None, capital_coords=_capital_coords(f),
+            regime_id=f.regime_id if f else None, capital_coords=capitals.get(p.iso2 or "", []),
         )
         for p, f in rows
     ]
@@ -205,6 +237,7 @@ def get_country(s: Session, iso2: str) -> CountryDetail | None:
         sources=[_source(x) for _, x in sorted(sources.items())],
         updated_at=_ts(p.updated_at) or "",
         regime_id=f.regime_id if f else None, clues=_clues(f),
+        languages_spoken=_languages_spoken(s, iso2),
     )
 
 
@@ -411,3 +444,184 @@ def snapshot_links(s: Session, year: int) -> list[SnapshotLinkOut] | None:
                      .order_by(SnapshotLink.source_name))
     return [SnapshotLinkOut(source_name=r.source_name, polity_id=r.polity_id, status=r.status)
             for r in rows]
+
+
+# --- v1.2 part A: profile (spec 015), economy + currencies (spec 009) -----------------------
+
+PROFILE_GROUPS: dict[str, tuple[str, ...]] = {
+    "life": ("SP.DYN.LE00.IN", "SP.DYN.IMRT.IN", "SP.DYN.TFRT.IN", "HDR.HDI"),
+    "society": ("SP.URB.TOTL.IN.ZS", "SE.ADT.LITR.ZS", "IT.NET.USER.ZS", "VC.IHR.PSRC.P5",
+                "HDR.MYS"),
+    "income": ("NY.GDP.PCAP.PP.CD", "SI.POV.GINI", "SI.POV.DDAY", "SL.UEM.TOTL.ZS"),
+    "environment": ("EN.GHG.CO2.PC.CE.AR5", "EG.FEC.RNEW.ZS", "AG.LND.FRST.ZS"),
+}
+ECONOMY_IDS = ("NY.GDP.MKTP.CD", "NY.GDP.PCAP.PP.CD", "NY.GDP.MKTP.KD.ZG", "FP.CPI.TOTL.ZG",
+               "SL.UEM.TOTL.ZS", "GC.DOD.TOTL.GD.ZS", "BN.CAB.XOKA.GD.ZS", "FI.RES.TOTL.CD",
+               "SI.POV.GINI", "PA.NUS.PPP")
+SERIES_YEARS = 20
+HISTORY_MAX_DAYS = 30 * 366
+WEEKLY_ABOVE_DAYS = 2 * 366
+RATE_LOOKBACK_DAYS = 7
+
+
+def _sources(s: Session, ids: set[str]) -> list[SourceOut]:
+    return [_source(x) for x in s.scalars(select(Source).where(Source.id.in_(ids)).order_by(Source.id))]
+
+
+def _languages_spoken(s: Session, iso2: str) -> list[LanguageSpoken]:
+    return [
+        LanguageSpoken(code=x.code, name=x.name, status=x.status, where=x.where,
+                       speakers=Speakers(value=x.speakers, year=x.speakers_year)
+                       if x.speakers is not None else None,
+                       family=x.family, endangerment=x.endangerment, wikipedia_url=x.wikipedia_url)
+        for x in s.scalars(select(CountryLanguage).where(CountryLanguage.iso2 == iso2)
+                           .order_by(CountryLanguage.ord))
+    ]
+
+
+def get_profile(s: Session, iso2: str) -> CountryProfile:
+    ids = [i for g in PROFILE_GROUPS.values() for i in g]
+    defs = {d.id: d for d in s.scalars(select(IndicatorDef).where(IndicatorDef.id.in_(ids)))}
+    stats = {x.id: x for x in s.scalars(select(IndicatorStat).where(IndicatorStat.id.in_(ids)))}
+    latest = {x.id: x for x in s.scalars(select(IndicatorLatest).where(
+        IndicatorLatest.iso2 == iso2, IndicatorLatest.id.in_(ids)))}
+    groups, used = [], set()
+    for gid, members in PROFILE_GROUPS.items():
+        items = []
+        for i in members:
+            x, d, st = latest.get(i), defs.get(i), stats.get(i)
+            if x is None or d is None:
+                continue  # no value for this country: the indicator is left out of the group
+            used.add(d.source_id)
+            items.append(ProfileIndicator(
+                id=i, label=d.label, unit=d.unit, value=x.value, year=x.year, source_id=d.source_id,
+                rank=x.rank, rank_of=st.n if st else None,
+                world=WorldStats(min=st.min, median=st.median, max=st.max) if st else None,
+                region_avg=x.region_avg))
+        groups.append(ProfileGroup(id=gid, indicators=items))
+    comp = list(s.scalars(select(Composition).where(Composition.iso2 == iso2)
+                          .order_by(Composition.kind, Composition.share.desc(), Composition.label)))
+    by = {k: [Share(label=c.label, share=c.share) for c in comp if c.kind == k] or None
+          for k in ("religion", "ethnicity")}
+    years = [c.year for c in comp if c.year is not None]
+    if comp:
+        used.add("wikidata")
+    return CountryProfile(
+        groups=groups,
+        composition=CompositionOut(religion=by["religion"], ethnicity=by["ethnicity"],
+                                   year=max(years) if years else None,
+                                   source_id="wikidata" if comp else None),
+        sources=_sources(s, used))
+
+
+def get_economy(s: Session, iso2: str) -> CountryEconomy:
+    defs = {d.id: d for d in s.scalars(select(IndicatorDef).where(IndicatorDef.id.in_(ECONOMY_IDS)))}
+    rows: dict[str, list[Indicator]] = {}
+    for r in s.scalars(select(Indicator).where(Indicator.iso2 == iso2, Indicator.id.in_(ECONOMY_IDS))
+                       .order_by(Indicator.id, Indicator.year)):
+        rows.setdefault(r.id, []).append(r)
+    out = []
+    for i in ECONOMY_IDS:
+        d = defs.get(i)
+        if d is None:
+            continue
+        series = rows.get(i, [])
+        last = series[-1] if series else None
+        recent = [p for p in series if last and p.year > last.year - SERIES_YEARS]
+        out.append(EconomyIndicator(
+            id=i, label=d.label, unit=d.unit, value=last.value if last else None,
+            year=last.year if last else None, source_id=d.source_id,
+            series=[Point(year=p.year, value=p.value) for p in recent]))
+    return CountryEconomy(indicators=out, sources=_sources(s, {d.source_id for d in defs.values()}))
+
+
+def compare_economy(s: Session, countries: list[str], ids: list[str]) -> EconomyCompare:
+    defs = {d.id: d for d in s.scalars(select(IndicatorDef).where(IndicatorDef.id.in_(ids)))}
+    latest = {(x.id, x.iso2): x for x in s.scalars(select(IndicatorLatest).where(
+        IndicatorLatest.id.in_(ids), IndicatorLatest.iso2.in_(countries)))}
+    items = []
+    for i in ids:
+        d = defs.get(i)
+        if d is None:
+            continue
+        vals: dict[str, YearValue | None] = {}
+        for c in countries:
+            x = latest.get((i, c))
+            vals[c] = YearValue(value=x.value, year=x.year) if x else None
+        items.append(CompareIndicator(id=i, label=d.label, unit=d.unit, values=vals))
+    return EconomyCompare(countries=countries, indicators=items,
+                          sources=_sources(s, {d.source_id for d in defs.values()}))
+
+
+def _currency_info(s: Session, code: str) -> tuple[str, str | None, list[str]] | None:
+    """(name, symbol, iso2 list) from country_facts.currencies (Wikidata P38), or None."""
+    name, symbol, isos = None, None, []
+    for iso2, curs in s.execute(select(CountryFacts.iso2, CountryFacts.currencies)
+                                .order_by(CountryFacts.iso2)):
+        for c in curs or []:
+            if c.get("code") == code:
+                isos.append(iso2)
+                name, symbol = name or c.get("name"), symbol or c.get("symbol")
+    return (name, symbol, isos) if name else None
+
+
+def currency_known(s: Session, code: str) -> bool:
+    return s.scalar(select(FxRate.code).where(FxRate.code == code).limit(1)) is not None
+
+
+def get_currency(s: Session, code: str) -> CurrencyDetail | None:
+    info = _currency_info(s, code)
+    if info is None:
+        return None
+    name, symbol, isos = info
+    last = s.scalar(select(func.max(FxRate.date)).where(FxRate.code == code))
+    rates, used = None, set()
+    if last is not None:
+        mine = s.scalars(select(FxRate).where(FxRate.code == code, FxRate.date == last)).one()
+        others = s.scalars(
+            select(FxRate).distinct(FxRate.code)
+            .where(FxRate.code != code, FxRate.date <= last,
+                   FxRate.date >= last - timedelta(days=RATE_LOOKBACK_DAYS))
+            .order_by(FxRate.code, FxRate.date.desc()))
+        items = []
+        for o in others:  # 1 unit of `code` = rate units of o.code (both quoted per 1 EUR)
+            items.append(RateItem(code=o.code, rate=o.rate / mine.rate))
+            used.add(o.source_id)
+        used.add(mine.source_id)
+        rates = Rates(date=last.isoformat(), base=code, items=items)
+    st = s.get(CurrencyStat, code)
+    return CurrencyDetail(
+        code=code, name=name, symbol=symbol, countries=isos, rates=rates,
+        stats=CurrencyStats(change_1y=st.change_1y, change_5y=st.change_5y,
+                            volatility_1y=st.volatility_1y, max_drawdown_1y=st.max_drawdown_1y)
+        if st else None,
+        sources=_sources(s, used | {"wikidata"}))
+
+
+def currency_history(s: Session, base: str, vs: list[str], start: date | None,
+                     end: date | None) -> CurrencyHistory:
+    """Cross rates base->vs per date (1 base = x vs); weekly (last point of each ISO week) when
+    the window is longer than 2 years. Caller validates codes and the window."""
+    a, b = aliased(FxRate), aliased(FxRate)
+    end = end or s.scalar(select(func.max(FxRate.date)).where(FxRate.code == base)) or date.today()
+    start = start or end - timedelta(days=365)
+    rows = s.execute(
+        select(a.date, b.code, (b.rate / a.rate).label("x"), a.source_id, b.source_id)
+        .join(b, b.date == a.date)
+        .where(a.code == base, b.code.in_(vs), a.date >= start, a.date <= end)
+        .order_by(a.date, b.code)).all()
+    by: dict[date, dict[str, float]] = {}
+    secondary = False
+    for d, code, x, sa, sb in rows:
+        by.setdefault(d, {})[code] = x
+        secondary = secondary or "exchange-api" in (sa, sb)
+    days = sorted(by)
+    if (end - start).days > WEEKLY_ABOVE_DAYS:
+        week: dict[tuple[int, int], date] = {}
+        for d in days:
+            week[d.isocalendar()[:2]] = d  # the last day seen in each ISO week wins
+        days = sorted(week.values())
+    src = s.get(Source, "exchange-api" if secondary else "ecb")
+    assert src is not None, "fx sources are written by import-facts together with the rates"
+    return CurrencyHistory(base=base, vs=vs, source=_source(src),
+                           items=[HistoryItem(date=d.isoformat(), rates=by[d]) for d in days])

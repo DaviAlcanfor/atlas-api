@@ -12,8 +12,13 @@ Same office for both roles (presidential systems): emitted ONCE as head_of_state
 Photos (P18): Commons licences are PER FILE. Docs read 2026-11-11 (MediaWiki API
 prop=imageinfo&iiprop=extmetadata): `LicenseShortName` and `Artist` (HTML) come from the file page
 templates. A photo is kept only when BOTH are present; otherwise image = null.
+
+Hotlinking (spec 019): Commons asks re-users to avoid it. When IMAGE_BUCKET_URL and
+SUPABASE_SERVICE_KEY are set, mirror_images() copies each 320px thumbnail once to the public
+Supabase Storage bucket `atlas-images` and `image.url` points there; unset = Commons URL (fallback).
 """
 
+import hashlib
 import html
 import json
 import re
@@ -22,7 +27,7 @@ import time
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
-from urllib.parse import unquote
+from urllib.parse import unquote, urlparse
 
 import httpx
 
@@ -190,6 +195,38 @@ def commons_images(client: httpx.Client, files: set[str], cache: Path,
         url = (info.get("thumburl") or info.get("url") or "").split("?", 1)[0]  # drop utm_* tracking
         if lic and artist and url:
             out[name] = {"url": url, "credit": f"{artist} / Wikimedia Commons", "license": lic}
+    return mirror_images(client, out, cache)
+
+
+BUCKET = "atlas-images"
+
+
+def mirror_images(client: httpx.Client, images: dict[str, dict[str, str]],
+                  cache: Path) -> dict[str, dict[str, str]]:
+    """Copy thumbnails to Supabase Storage (upsert) and repoint `url`; no-op without credentials.
+    Uploaded URLs are remembered in <cache>/mirrored.json, so each file is copied once."""
+    s = get_etl_settings()
+    if not (s.image_bucket_url and s.supabase_service_key):
+        return images
+    base, key = s.image_bucket_url.rstrip("/"), s.supabase_service_key.get_secret_value()
+    f = cache / "mirrored.json"
+    done: dict[str, str] = json.loads(f.read_text(encoding="utf-8")) if f.exists() else {}
+    out = {}
+    for name, img in images.items():
+        src = img["url"]
+        if src not in done:
+            r = client.get(src)
+            r.raise_for_status()
+            obj = hashlib.sha256(src.encode()).hexdigest()[:24] + Path(urlparse(src).path).suffix.lower()
+            up = client.post(f"{base}/object/{BUCKET}/{obj}", content=r.content, headers={
+                "Authorization": f"Bearer {key}", "x-upsert": "true",
+                "Content-Type": r.headers.get("content-type", "application/octet-stream")})
+            up.raise_for_status()
+            done[src] = f"{base}/object/public/{BUCKET}/{obj}"
+            f.parent.mkdir(parents=True, exist_ok=True)
+            f.write_text(json.dumps(done), encoding="utf-8")
+            time.sleep(0.2)  # polite to upload.wikimedia.org
+        out[name] = {**img, "url": done[src]}
     return out
 
 

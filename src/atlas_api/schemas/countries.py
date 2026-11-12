@@ -49,6 +49,25 @@ class Currency(BaseModel):
     symbol: str | None
 
 
+LanguageStatus = Literal["official", "co_official", "indigenous", "immigrant", "sign", "historical"]
+
+
+class Speakers(BaseModel):  # v1.2 (spec 017)
+    value: int
+    year: int | None
+
+
+class LanguageSpoken(BaseModel):  # v1.2 (spec 017)
+    code: str | None
+    name: str
+    status: LanguageStatus
+    where: str | None
+    speakers: Speakers | None
+    family: str | None
+    endangerment: str | None
+    wikipedia_url: str | None
+
+
 class Population(BaseModel):
     value: int
     year: int | None
@@ -76,6 +95,7 @@ class CountryDetail(BaseModel):
     updated_at: str
     regime_id: str | None  # v1.1 (spec 004)
     clues: Clues | None  # v1.1 (spec 003)
+    languages_spoken: list[LanguageSpoken]  # v1.2 (spec 017)
 
 
 class CountryList(BaseModel):

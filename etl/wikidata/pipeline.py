@@ -27,7 +27,14 @@ from etl.settings import get_etl_settings
 
 ENDPOINT = "https://query.wikidata.org/sparql"
 LANG = "pt-br,pt,en"
-STATE = "?c wdt:P31 wd:Q3624078; wdt:P297 ?iso2. FILTER NOT EXISTS { ?c wdt:P576 ?gone }"
+# Denmark (spec 019): the sovereign state is "Kingdom of Denmark" (Q756617, UN member) but it has
+# no ISO code; ISO 3166 "DK" is on Q35 ("Denmark", the part without Greenland / Faroe Islands,
+# which have their own ISO codes, like the World Bank's DNK). Q35 is P31 "autonomous country
+# within the Kingdom of Denmark", not Q3624078, so it was silently missing. We add Q35 by hand and
+# take its memberships from Q756617 (MEMBERSHIP_FROM below).
+STATE = ("{ ?c wdt:P31 wd:Q3624078 } UNION { VALUES ?c { wd:Q35 } } ?c wdt:P297 ?iso2. "
+         "FILTER NOT EXISTS { ?c wdt:P576 ?gone }")
+MEMBERSHIP_FROM = {"Q35": "Q756617"}
 LABEL = f'SERVICE wikibase:label {{ bd:serviceParam wikibase:language "{LANG}". }}'
 
 # Only the UN: Wikidata's P463 is complete for it (193 members) but incomplete for the rest
@@ -53,6 +60,13 @@ def _current(prop: str, label: bool = False) -> str:
     return (f"SELECT ?iso2 ?v {sel} ?rank WHERE {{ {STATE} ?c p:{prop} ?st. ?st ps:{prop} ?v; "
             "wikibase:rank ?rank. FILTER(?rank != wikibase:DeprecatedRank) "
             f"FILTER NOT EXISTS {{ ?st pq:P582 ?end }} {lab} }}")
+
+
+def _shares(prop: str) -> str:
+    """spec 015: statements of `prop` that carry a proportion (P1107), with their date (P585)."""
+    return (f"SELECT ?iso2 ?v ?vLabel ?share ?when WHERE {{ {STATE} ?c p:{prop} ?st. ?st ps:{prop} ?v; "
+            "pq:P1107 ?share; wikibase:rank ?rank. FILTER(?rank != wikibase:DeprecatedRank) "
+            f"OPTIONAL {{ ?st pq:P585 ?when }} {LABEL} }}")
 
 
 QUERIES: dict[str, str] = {
@@ -81,7 +95,9 @@ QUERIES: dict[str, str] = {
         f"OPTIONAL {{ ?cur wdt:P498 ?code }} OPTIONAL {{ ?cur wdt:P5061 ?symbol }} {LABEL} }}"
     ),
     "memberships": (
-        f"SELECT ?iso2 ?org WHERE {{ {STATE} ?c wdt:P463 ?org. "
+        f"SELECT ?iso2 ?org WHERE {{ {STATE} OPTIONAL {{ VALUES (?c ?sov) {{ "
+        + " ".join(f"(wd:{a} wd:{b})" for a, b in MEMBERSHIP_FROM.items())
+        + " } } BIND(COALESCE(?sov, ?c) AS ?m) ?m wdt:P463 ?org. "
         f"VALUES ?org {{ {' '.join('wd:' + q for q in ORGS)} }} }}"
     ),
     "continent": f"SELECT ?iso2 ?contLabel WHERE {{ {STATE} ?c wdt:P30 ?cont. {LABEL} }}",
@@ -100,7 +116,35 @@ QUERIES: dict[str, str] = {
         f"SELECT DISTINCT ?iso2 ?s ?sLabel ?code WHERE {{ {STATE} ?c wdt:P37 ?l. ?l wdt:P282 ?s0. "
         f"?s0 (wdt:P279|wdt:P282)* ?s. ?s wdt:P506 ?code. {LABEL} }}"
     ),
+    "iso3": f"SELECT ?iso2 ?v WHERE {{ {STATE} ?c wdt:P298 ?v }}",  # joins World Bank / UNDP rows
+    "religion": _shares("P140"),
+    "ethnicity": _shares("P172"),
 }
+SHARE_MIN, SHARE_MAX = 0.80, 1.05  # spec 015: outside this sum the breakdown is incomplete -> null
+
+
+def composition(rows: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    """ISO2 -> {year, items: [{label, share}]}: the most recent dated set (undated = oldest) whose
+    shares sum to 80-105%. Shares > 1 are read as percentages. Sorted by share desc."""
+    by: dict[str, dict[str, dict[str, float]]] = {}
+    for r in rows:
+        iso, label, when = _v(r, "iso2") or "", _v(r, "vLabel"), (_v(r, "when") or "")[:4]
+        try:
+            share = float(_v(r, "share") or "")
+        except ValueError:
+            continue
+        if _is_label(label) and share > 0:
+            by.setdefault(iso, {}).setdefault(when, {})[label or ""] = share / 100 if share > 1 else share
+    out = {}
+    for iso, years in by.items():
+        for when in sorted(years, key=lambda w: w or "0", reverse=True):
+            items = years[when]
+            if SHARE_MIN <= sum(items.values()) <= SHARE_MAX:
+                out[iso] = {"year": int(when) if when.isdigit() else None, "items": [
+                    {"label": k, "share": round(v, 4)}
+                    for k, v in sorted(items.items(), key=lambda kv: (-kv[1], kv[0]))]}
+                break
+    return out
 
 
 def _fetch(client: httpx.Client, name: str, cache: Path, refresh: bool) -> dict[str, Any]:
@@ -177,7 +221,7 @@ def build(
     for r in raw["states"]["rows"]:
         out[_v(r, "iso2") or ""] = {
             "iso2": _v(r, "iso2"), "qid": _qid(_v(r, "c")), "name": _v(r, "cLabel"),
-            "official_name": None, "capital": None, "capital_lat": None, "capital_lng": None,
+            "official_name": None, "capital": None, "capitals": [], "capital_lat": None, "capital_lng": None,
             "population": None, "population_year": None, "area_km2": None,
             "flag_url": FLAG_URL.format(code=(_v(r, "iso2") or "").lower()),
             "region": None, "languages": [], "currencies": [], "memberships": [], "flag_file": None,
@@ -199,17 +243,25 @@ def build(
     for iso, rec in out.items():  # curated pt-BR name first; never leave it empty
         rec["official_name"] = (pt_names or {}).get(iso) or rec["official_name"] or rec["name"]
 
-    best_cap: dict[str, tuple[int, dict[str, Any]]] = {}
+    # spec 019/005: every current (not ended, not deprecated) P36, preferred rank first, then by
+    # name; one entry per name. `capital` = the first one (ZA, BO, MY... have several).
+    caps: dict[str, dict[str, tuple[int, dict[str, Any]]]] = {}
     for r in raw["capital"]["rows"]:
-        iso = _v(r, "iso2") or ""
-        score = 1 if (_v(r, "rank") or "").endswith("PreferredRank") else 0
-        if iso in out and _is_label(_v(r, "capLabel")) and (iso not in best_cap or score > best_cap[iso][0]):
-            best_cap[iso] = (score, r)
-    for iso, (_, r) in best_cap.items():
-        out[iso]["capital"] = _v(r, "capLabel")
-        pt = _point(_v(r, "coord"))
-        if pt:
-            out[iso]["capital_lat"], out[iso]["capital_lng"] = pt
+        iso, name, rank = _v(r, "iso2") or "", _v(r, "capLabel"), _v(r, "rank") or ""
+        if iso not in out or not _is_label(name) or rank.endswith("DeprecatedRank"):
+            continue
+        score = 0 if rank.endswith("PreferredRank") else 1
+        by_name = caps.setdefault(iso, {})
+        if name not in by_name or score < by_name[name][0]:
+            by_name[name or ""] = (score, r)
+    for iso, by_name in caps.items():
+        for name, (_, r) in sorted(by_name.items(), key=lambda kv: (kv[1][0], kv[0])):
+            pt = _point(_v(r, "coord"))
+            out[iso]["capitals"].append({"name": name, "lat": pt[0] if pt else None,
+                                         "lng": pt[1] if pt else None})
+        first = out[iso]["capitals"][0]
+        out[iso]["capital"] = first["name"]
+        out[iso]["capital_lat"], out[iso]["capital_lng"] = first["lat"], first["lng"]
 
     best_pop: dict[str, tuple[tuple[int, str], dict[str, Any]]] = {}
     for r in raw["population"]["rows"]:
@@ -286,6 +338,13 @@ def build(
             out[iso]["clues"]["scripts"].append(label)
     for rec in out.values():
         rec["clues"]["scripts"].sort()
+    for r in rows("iso3"):
+        if (iso := _v(r, "iso2") or "") in out and not out[iso].get("iso3"):
+            out[iso]["iso3"] = _v(r, "v")
+    for kind in ("religion", "ethnicity"):
+        for iso, comp in composition(rows(kind)).items():
+            if iso in out:
+                out[iso].setdefault("composition", {})[kind] = comp
     return out
 
 
@@ -341,6 +400,8 @@ def run() -> None:
     for field in ("languages", "currencies", "memberships"):
         print(f"  {field}: {sum(bool(c[field]) for c in countries.values())}/{n}")
     print(f"  regime_id: {sum(c['regime_id'] is not None for c in countries.values())}/{n}")
+    for kind in ("religion", "ethnicity"):
+        print(f"  composition.{kind}: {sum(kind in c.get('composition', {}) for c in countries.values())}/{n}")
     for field in ("driving_side", "calling_code", "tld", "plate_code", "scripts"):
         print(f"  clues.{field}: {sum(bool(c['clues'][field]) for c in countries.values())}/{n}")
     print("regime report (content/regimes.yaml):")
