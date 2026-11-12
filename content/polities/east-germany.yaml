@@ -1,0 +1,9 @@
+# Anos vindos das fixtures da Fase 0 (NÃO curados). Sem fontes, sem eventos, sem sucessão.
+# TODO verify todas as datas antes de tratar como história curada.
+id: east-germany
+name: "Alemanha Oriental"
+type: republic
+start_year: 1949  # TODO verify  # DECISÃO PENDENTE (cadeia Alemanha)
+start_precision: exact
+end_year: 1990  # TODO verify
+end_precision: exact

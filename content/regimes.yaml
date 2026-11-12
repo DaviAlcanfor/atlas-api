@@ -1,0 +1,56 @@
+# Wikidata P122 ("basic form of government") -> regime_id (spec 004). Read by `python -m etl wikidata`.
+# RASCUNHO — revisão humana pendente (mapping chosen by an agent from the P122 values seen 2026-11-11).
+#
+# A country's P122 values are a SET of Q-ids (e.g. BR = presidencialismo + república federal + ...).
+# `rules` are tried IN ORDER; the first rule whose `when` Q-ids are ALL in the set wins.
+# `regime_id: null` = conflicting signals in Wikidata -> no regime (never guess).
+# Q-ids that appear in no rule are printed by the ETL as "unmapped" (e.g. Q179164 Estado unitário
+# describes territorial structure, not the form of government, so it is ignored on purpose).
+# Every regime_id must have an entry in content/glossary.yaml (kind: regime).
+
+labels:  # regime_id -> pt-BR label served as `regime`
+  republica-presidencialista: República presidencialista
+  republica-semipresidencialista: República semipresidencialista
+  republica-parlamentarista: República parlamentarista
+  republica: República
+  republica-popular: República popular
+  republica-islamica: República islâmica
+  monarquia-constitucional: Monarquia constitucional
+  monarquia-absoluta: Monarquia absoluta
+  teocracia: Teocracia
+  estado-de-partido-unico: Estado de partido único
+  junta-militar: Junta militar
+  sistema-diretorial: Sistema diretorial
+  governo-provisorio: Governo provisório
+
+rules:
+  - {when: [Q672729], regime_id: republica-islamica}          # república islâmica (IR)
+  - {when: [Q41614, Q184558], regime_id: null}                 # constitucional + absoluta ao mesmo tempo (AE)
+  - {when: [Q184558], regime_id: monarquia-absoluta}           # monarquia absoluta
+  - {when: [Q44405], regime_id: teocracia}                     # teocracia
+  - {when: [Q138567551], regime_id: teocracia}                 # teocracia islâmica
+  - {when: [Q25424534], regime_id: junta-militar}              # junta militar
+  - {when: [Q50686], regime_id: estado-de-partido-unico}       # unipartidarismo
+  - {when: [Q117405807], regime_id: estado-de-partido-unico}   # ditadura comunista
+  - {when: [Q842112], regime_id: estado-de-partido-unico}      # Estado socialista
+  - {when: [Q41614], regime_id: monarquia-constitucional}      # monarquia constitucional
+  - {when: [Q3330103], regime_id: monarquia-constitucional}    # monarquia parlamentarista
+  - {when: [Q3208952], regime_id: monarquia-constitucional}    # monarquia federal
+  - {when: [Q20105434], regime_id: monarquia-constitucional}   # coprincipado parlamentar (AD)
+  - {when: [Q7269], regime_id: monarquia-constitucional}       # monarquia (genérico)
+  - {when: [Q2523556], regime_id: sistema-diretorial}          # sistema diretorial (CH)
+  - {when: [Q49890, Q49892], regime_id: null}                  # semi e presidencialista ao mesmo tempo
+  - {when: [Q49890], regime_id: republica-semipresidencialista}
+  - {when: [Q49892], regime_id: republica-presidencialista}    # presidencialismo
+  - {when: [Q4446300], regime_id: republica-presidencialista}  # república superpresidencialista
+  - {when: [Q4198907], regime_id: republica-parlamentarista}   # república parlamentarista
+  - {when: [Q5440547], regime_id: republica-parlamentarista}   # república federal parlamentarista
+  - {when: [Q166747], regime_id: republica-parlamentarista}    # sistema parlamentarista (sem monarquia)
+  - {when: [Q3043547], regime_id: republica-parlamentarista}   # democracia parlamentar
+  - {when: [Q720477], regime_id: republica-parlamentarista}    # sistema Westminster (sem monarquia)
+  - {when: [Q59281], regime_id: governo-provisorio}            # governo provisório
+  - {when: [Q7270], regime_id: republica}                      # república (sem sistema de governo)
+  - {when: [Q512187], regime_id: republica}                    # república federal
+  - {when: [Q1520223], regime_id: republica}                   # república constitucional
+  - {when: [Q5255892], regime_id: republica}                   # república democrática
+  - {when: [Q465613], regime_id: republica-popular}            # república popular

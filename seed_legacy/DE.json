@@ -1,0 +1,29 @@
+{
+  "nome": "Alemanha",
+  "capital": "Berlim",
+  "regime": "República parlamentar federal",
+  "resumo": "Maior economia da Europa; federação de 16 estados.",
+  "historia": [
+    {
+      "ano": 1871,
+      "evento": "Unificação sob o Império Alemão"
+    },
+    {
+      "ano": 1933,
+      "evento": "Ascensão do regime nazista"
+    },
+    {
+      "ano": 1949,
+      "evento": "Divisão em República Federal (oeste) e RDA (leste)"
+    },
+    {
+      "ano": 1990,
+      "evento": "Reunificação alemã"
+    }
+  ],
+  "politica_atual": {
+    "sistema": "Chanceler lidera o governo; presidente tem papel cerimonial",
+    "nota": "Governos de coalizão são a regra; confira uma fonte atual."
+  },
+  "atualizado_em": "2026-11-10"
+}

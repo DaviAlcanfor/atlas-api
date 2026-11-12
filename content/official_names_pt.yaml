@@ -1,0 +1,165 @@
+# Nomes oficiais em português (pt-BR) por ISO2.
+# ATENÇÃO: traduzidos pelo assistente a partir do nome oficial que a Wikidata devolve
+# (ou, quando a Wikidata traz um nome desatualizado, a forma oficial atual). NÃO verificado
+# fonte a fonte: revisar. O ETL usa este arquivo antes do valor da Wikidata.
+# ATENÇÃO YAML: chaves precisam de aspas quando forem palavras booleanas ("NO" = Noruega).
+# Países cuja Wikidata já traz o nome em português ou igual ao nome comum não aparecem aqui.
+AE: Emirados Árabes Unidos
+AF: Emirado Islâmico do Afeganistão
+AG: Antígua e Barbuda
+AL: República da Albânia
+AM: República da Armênia
+AT: República da Áustria
+AU: Comunidade da Austrália
+AZ: República do Azerbaijão
+BA: Bósnia e Herzegovina
+BD: República Popular de Bangladesh
+BE: Reino da Bélgica
+BG: República da Bulgária
+BH: Reino do Bahrein
+BI: República do Burundi
+BJ: República do Benim
+BN: Brunei Darussalam
+BO: Estado Plurinacional da Bolívia
+BS: Comunidade das Bahamas
+BT: Reino do Butão
+BW: República de Botswana
+BY: República da Bielorrússia
+CA: Canadá
+CD: República Democrática do Congo
+CF: República Centro-Africana
+CG: República do Congo
+CI: República da Costa do Marfim
+CL: República do Chile
+CM: República dos Camarões
+CN: República Popular da China
+CO: República da Colômbia
+CR: República da Costa Rica
+CU: República de Cuba
+CY: República de Chipre
+CZ: República Tcheca
+DE: República Federal da Alemanha
+DJ: República do Djibuti
+DM: Comunidade da Dominica
+DZ: República Argelina Democrática e Popular
+EC: República do Equador
+EE: República da Estônia
+EG: República Árabe do Egito
+ER: Estado da Eritreia
+ES: Reino da Espanha
+ET: República Democrática Federal da Etiópia
+FI: República da Finlândia
+FJ: República de Fiji
+FM: Estados Federados da Micronésia
+FR: República Francesa
+GA: República Gabonesa
+GB: Reino Unido da Grã-Bretanha e Irlanda do Norte
+GD: Granada
+GE: Geórgia
+GM: República da Gâmbia
+GN: República da Guiné
+GQ: República da Guiné Equatorial
+GR: República Helênica
+GY: República Cooperativa da Guiana
+HR: República da Croácia
+HT: República do Haiti
+HU: Hungria
+IE: Irlanda
+IL: Estado de Israel
+IN: República da Índia
+IQ: República do Iraque
+IR: República Islâmica do Irã
+IS: Islândia
+IT: República Italiana
+JO: Reino Hachemita da Jordânia
+JP: Japão
+KE: República do Quênia
+KG: República do Quirguistão
+KH: Reino do Camboja
+KI: República do Quiribati
+KM: União das Comores
+KN: São Cristóvão e Neves
+KP: República Popular Democrática da Coreia
+KR: República da Coreia
+KW: Estado do Kuwait
+KZ: República do Cazaquistão
+LA: República Democrática Popular do Laos
+LB: República Libanesa
+LC: Santa Lúcia
+LI: Principado de Liechtenstein
+LK: República Socialista Democrática do Sri Lanka
+LS: Reino do Lesoto
+LT: República da Lituânia
+LU: Grão-Ducado de Luxemburgo
+LV: República da Letônia
+LY: Estado da Líbia
+MA: Reino do Marrocos
+MC: Principado de Mônaco
+MD: República da Moldávia
+MG: República de Madagascar
+MH: República das Ilhas Marshall
+ML: República do Mali
+MM: República da União de Mianmar
+MR: República Islâmica da Mauritânia
+MT: República de Malta
+MU: República de Maurício
+MV: República das Maldivas
+NA: República da Namíbia
+NE: República do Níger
+NG: República Federal da Nigéria
+NL: Reino dos Países Baixos
+"NO": Reino da Noruega
+NP: República Democrática Federal do Nepal
+NR: República de Nauru
+NZ: Nova Zelândia
+OM: Sultanato de Omã
+PE: República do Peru
+PG: Estado Independente da Papua-Nova Guiné
+PH: República das Filipinas
+PK: República Islâmica do Paquistão
+PL: República da Polônia
+PS: Estado da Palestina
+PY: República do Paraguai
+QA: Estado do Catar
+RO: Romênia
+RS: República da Sérvia
+RU: Federação Russa
+RW: República de Ruanda
+SA: Reino da Arábia Saudita
+SB: Ilhas Salomão
+SD: República do Sudão
+SE: Reino da Suécia
+SG: República de Singapura
+SI: República da Eslovênia
+SK: República Eslovaca
+SL: República de Serra Leoa
+SM: Sereníssima República de San Marino
+SN: República do Senegal
+SO: República Federal da Somália
+SS: República do Sudão do Sul
+SY: República Árabe Síria
+SZ: Reino de Essuatíni
+TD: República do Chade
+TG: República Togolesa
+TJ: República do Tajiquistão
+TM: Turcomenistão
+TN: República da Tunísia
+TR: República da Turquia
+TT: República de Trinidad e Tobago
+TW: República da China
+TZ: República Unida da Tanzânia
+UA: Ucrânia
+US: Estados Unidos da América
+UY: República Oriental do Uruguai
+UZ: República do Uzbequistão
+VA: Estado da Cidade do Vaticano
+VC: São Vicente e Granadinas
+VE: República Bolivariana da Venezuela
+VN: República Socialista do Vietnã
+VU: República de Vanuatu
+WS: Estado Independente de Samoa
+XK: República do Kosovo
+YE: República do Iêmen
+ZA: República da África do Sul
+ZM: República da Zâmbia
+ZW: República do Zimbábue

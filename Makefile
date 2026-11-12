@@ -8,6 +8,14 @@ typecheck:
 	uv run mypy
 openapi:
 	uv run python scripts/export_openapi.py
+etl-wikidata:
+	uv run --group etl python -m etl wikidata
+etl-wikidata-leaders:
+	uv run --group etl python -m etl wikidata-leaders
+etl-pantheon:
+	uv run --group etl python -m etl pantheon
+etl-worldbank:
+	uv run --group etl python -m etl worldbank
 etl-restcountries:
 	uv run python -m etl restcountries
 # Phase 1+: migrate, seed, import, import-facts, etl-modern-geometry, etl-snapshots, sync-geometry

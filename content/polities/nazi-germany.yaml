@@ -1,0 +1,9 @@
+# Anos vindos das fixtures da Fase 0 (NÃO curados). Sem fontes, sem eventos, sem sucessão.
+# TODO verify todas as datas antes de tratar como história curada.
+id: nazi-germany
+name: "Alemanha Nazista"
+type: other
+start_year: 1933  # TODO verify  # DECISÃO PENDENTE (cadeia Alemanha: Império -> Weimar -> Nazista -> RFA, RDA absorvida em 1990)
+start_precision: exact
+end_year: 1945  # TODO verify
+end_precision: exact
