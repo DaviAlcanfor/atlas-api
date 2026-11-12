@@ -10,11 +10,14 @@ from sqlalchemy import Engine, create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
 
-def make_engine(url: str) -> Engine:
+def make_engine(url: str, pool_size: int = 5, max_overflow: int = 2, pool_timeout: float = 3.0) -> Engine:
     # pool_pre_ping: test a pooled connection before using it (survives DB/pooler restarts).
     # connect_timeout: fail fast (seconds) when the DB is unreachable instead of hanging a request.
+    # pool_timeout: a request waits at most this long for a free connection, then
+    # sqlalchemy.exc.TimeoutError -> 503 problem+json (errors.py), never an endless queue.
     return create_engine(
-        url, pool_pre_ping=True, pool_size=5, max_overflow=5, connect_args={"connect_timeout": 5}
+        url, pool_pre_ping=True, pool_size=pool_size, max_overflow=max_overflow,
+        pool_timeout=pool_timeout, connect_args={"connect_timeout": 5},
     )
 
 

@@ -1,5 +1,6 @@
 """import-content: the ONLY writer of the database. Reads content/ (YAML), validates, upserts
-everything in ONE transaction (all or nothing) and recomputes meta.data_version.
+everything in ONE transaction (all or nothing) and recomputes meta.data_version
+(= hash of content/ + the last import-facts files, see set_version).
 
 content/
   sources.yaml      list of {id, title, url, license, retrieved_at}
@@ -152,6 +153,22 @@ def validate(content: dict[str, Any]) -> list[str]:
     return errs
 
 
+def set_version(session: Session, part: str, digest: str) -> str:
+    """Record the digest of one input ("content" or "facts") and recompute meta.data_version from
+    both, so `import-facts` invalidates ETags too (spec 019). generated_at moves only on change."""
+    session.merge(Meta(key=f"{part}_version", value=digest))
+    session.flush()
+    parts = [session.get(Meta, f"{k}_version") for k in ("content", "facts")]
+    blob = "|".join(m.value if m else "" for m in parts)
+    version = hashlib.sha256(blob.encode()).hexdigest()[:16]
+    cur = session.get(Meta, "data_version")
+    if cur is None or cur.value != version:
+        session.merge(Meta(key="data_version", value=version))
+        session.merge(Meta(key="generated_at", value=datetime.now(UTC).isoformat()))
+    session.flush()
+    return version
+
+
 def import_content(session: Session, root: Path) -> dict[str, Any]:
     """Caller owns the transaction (the CLI wraps this in session.begin())."""
     content = load_content(root)
@@ -212,12 +229,7 @@ def import_content(session: Session, root: Path) -> dict[str, Any]:
     session.flush()
 
     blob = json.dumps(content, sort_keys=True, default=str, ensure_ascii=False)
-    version = hashlib.sha256(blob.encode()).hexdigest()[:16]
-    cur = session.get(Meta, "data_version")
-    if cur is None or cur.value != version:
-        session.merge(Meta(key="data_version", value=version))
-        session.merge(Meta(key="generated_at", value=datetime.now(UTC).isoformat()))
-    session.flush()
+    version = set_version(session, "content", hashlib.sha256(blob.encode()).hexdigest()[:16])
     return {"polities": len(ids), "events": events, "unverified_events": unverified,
             "sources": len(content["sources"]), "succession": len(content["succession"]),
             "glossary_terms": len(content["glossary"]),

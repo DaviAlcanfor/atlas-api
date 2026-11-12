@@ -10,7 +10,16 @@ from atlas_api.cache import add_cache_headers
 from atlas_api.config import get_settings
 from atlas_api.db.session import make_engine, make_session_factory
 from atlas_api.errors import register_error_handlers
-from atlas_api.routers import countries, glossary, health, meta, polities, search, snapshots
+from atlas_api.routers import (
+    countries,
+    economy,
+    glossary,
+    health,
+    meta,
+    polities,
+    search,
+    snapshots,
+)
 
 
 def create_app(database_url: str | None = None) -> FastAPI:
@@ -18,7 +27,9 @@ def create_app(database_url: str | None = None) -> FastAPI:
     async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         """Startup: create the DB engine (the connection pool). Shutdown: close it."""
         logging.basicConfig(level=get_settings().log_level)
-        engine = make_engine(database_url or get_settings().database_url)
+        st = get_settings()
+        engine = make_engine(database_url or st.database_url, st.db_pool_size, st.db_max_overflow,
+                             st.db_pool_timeout)
         app.state.engine = engine
         app.state.session_factory = make_session_factory(engine)
         yield
@@ -40,7 +51,7 @@ def create_app(database_url: str | None = None) -> FastAPI:
         expose_headers=["ETag", "X-Data-Version"],
     )
     register_error_handlers(app)
-    for module in (health, meta, countries, polities, snapshots, search, glossary):
+    for module in (health, meta, countries, polities, snapshots, search, glossary, economy):
         app.include_router(module.router, prefix="/v1")
     return app
 
