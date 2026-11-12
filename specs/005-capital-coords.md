@@ -1,5 +1,5 @@
 # 005 — Coordenadas da capital
-Status: done (aguardando contrato v1.1) | Contrato: v1.1 | Web: atlas-web/specs/005-capital-subdivisions.md
+Status: done (aguardando deploy (contrato v1.1 aplicado)) | Contrato: v1.1 | Web: atlas-web/specs/005-capital-subdivisions.md
 
 ## Por quê
 O web quer marcar a capital no globo. Estados/províncias são geometria e ficam no web (regra do AGENTS.md).

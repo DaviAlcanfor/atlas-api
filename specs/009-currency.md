@@ -1,30 +1,39 @@
-# 009 — Moeda: cotações e PPP
-Status: draft | Contrato: v1.2 | Web: atlas-web/specs/009-currency.md
+# 009 - Moeda, câmbio e economia comparável
+Status: approved | Contrato: v1.2 | Web: atlas-web/specs/009-currency.md | Executor: Opus (ETL/estatísticas), Sonnet (endpoints)
 
 ## Dados
-| Fonte | Cobertura | Chave | Licença/termos (a confirmar) |
+| Uso | Fonte | Cobertura | Licença/termos (ler e citar antes de codar) |
 |---|---|---|---|
-| BCE via Frankfurter (api.frankfurter.app) | ~30 moedas, diária, desde 1999 | não | dados do BCE, reuso com citação |
-| fawazahmed0/exchange-api (jsDelivr) | 200+ moedas, diária | não | CC0; origem dos números pouco documentada |
-| World Bank `PA.NUS.PPP` | quase todos os países, anual | não | CC BY 4.0 (ETL do World Bank já existe) |
-Recomendado: BCE como principal; a segunda só para moedas fora do BCE, marcada como fonte secundária.
-Moedas de cada país já existem (`currencies` do Wikidata). Atenção: FR lista "franco CFP" (territórios ultramarinos), ver CR do web.
+| Cotações diárias + histórico | BCE via Frankfurter (api.frankfurter.app) | ~30 moedas, desde 1999 | dados do BCE, reuso com citação |
+| Moedas fora do BCE | fawazahmed0/exchange-api (jsDelivr) | 200+ moedas, diária | CC0; marcar como "fonte secundária" |
+| Economia | World Bank WDI (ETL já existe) | quase todos os países, anual | CC BY 4.0 |
 
-## Contract delta
+Indicadores WDI: NY.GDP.MKTP.CD (PIB), NY.GDP.PCAP.PP.CD (PIB pc PPP), NY.GDP.MKTP.KD.ZG (crescimento), FP.CPI.TOTL.ZG (inflação),
+SL.UEM.TOTL.ZS (desemprego), GC.DOD.TOTL.GD.ZS (dívida/PIB), BN.CAB.XOKA.GD.ZS (conta corrente/PIB), FI.RES.TOTL.CD (reservas),
+SI.POV.GINI (Gini), PA.NUS.PPP (PPP). Série de 20 anos.
+
+## Contract delta (v1.2)
 ```
-GET /v1/currencies/{code}                       -> { code, name, symbol, countries: string[], rates: { date, base, items: [{ code, rate }] }|null,
-                                                     ppp: { value, year, source_id }|null, sources: Source[] }
-GET /v1/currencies/{code}/history?vs=&from=&to= -> { base, vs, items: [{ date, rate }], source: Source }
-`code` = ISO 4217 (^[A-Z]{3}$), senão 422.
+GET /v1/currencies/{code}                       -> { code, name, symbol, countries, rates: { date, base, items: [{ code, rate }] }|null,
+                                                     stats: { change_1y, change_5y, volatility_1y, max_drawdown_1y }|null, sources }
+GET /v1/currencies/{code}/history?vs=&from=&to= -> { base, vs: string[], items: [{ date, rates: { [code]: number } }], source }
+                                                     vs: até 4 códigos; janela máx. 30 anos; pontos reduzidos a semanal acima de 2 anos
+GET /v1/countries/{iso2}/economy                -> { indicators: [{ id, label, unit, value, year, source_id, series: [{ year, value }] }], sources }
+GET /v1/economy/compare?countries=&ids=         -> { countries, indicators: [{ id, label, unit, values: { [iso2]: { value, year }|null } }], sources }
+                                                     countries: 2-5 ISO2; ids opcional (padrão: todos)
+`code` = ISO 4217 (^[A-Z]{3}$) senão 422.
 ```
 
 ## Design
-- Sem tabela de cotações: cliente HTTP na API com cache em memória TTL 12 h (`functools`/dict com timestamp; sem lib nova).
-  Reinício = busca de novo. Timeout 5 s; upstream fora = `rates: null` (nunca 500).
-- O processo da API passa a chamar upstream em tempo de requisição: isso é novo neste repo; o cliente fica em
-  `src/atlas_api/upstream/` e usa só `httpx` (verificar se já é dependência do grupo principal; senão `urllib`).
-- PPP: indicador novo no ETL do World Bank, gravado por `import-facts`.
+- Cotações: tabela `fx_rates(date, base='EUR', code, rate, source)` preenchida por `python -m etl fx` (histórico completo uma vez, depois
+  incremental diário no mesmo workflow agendado das notícias). Cross-rates calculados em SQL (A/B = EUR→B / EUR→A). Sem chamada a upstream
+  em tempo de requisição.
+- `stats` calculado no import: variação 1a/5a, volatilidade = desvio padrão anualizado dos retornos log diários (1 ano), maior queda (1 ano).
+- Economia: indicadores novos no ETL do World Bank existente; tabela `indicators(country, id, year, value, source)` (é também a base da
+  spec 012 / `observations`: usar o mesmo esquema para não duplicar).
+- Atenção: FR lista "franco CFP" (territórios ultramarinos) junto com o euro; tratar moeda principal = a de rank preferido.
 
 ## Tarefas
-- [ ] ler e citar termos; cliente + cache; endpoints; testes com respostas gravadas
-- [ ] PA.NUS.PPP no ETL do World Bank
+- [ ] ler termos BCE/Frankfurter/exchange-api; citar aqui
+- [ ] `etl fx` + tabela + stats; endpoints de moeda; testes com respostas gravadas
+- [ ] indicadores WDI novos + tabela `indicators`; endpoints de economia e comparação; testes

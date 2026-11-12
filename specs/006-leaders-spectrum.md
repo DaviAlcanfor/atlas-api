@@ -1,5 +1,5 @@
 # 006 — Governantes e espectro político
-Status: in progress (v1.1 feito, aguardando contrato; v1.2 não iniciado) | Contrato: v1.1 (governantes), v1.2 (espectro) | Web: atlas-web/specs/006-leaders-spectrum.md
+Status: in progress (v1.1 feito, aguardando deploy; v1.2 não iniciado) | Contrato: v1.1 (governantes), v1.2 (espectro) | Web: atlas-web/specs/006-leaders-spectrum.md
 
 ## Dados
 **Governantes** — Wikidata (CC0):
