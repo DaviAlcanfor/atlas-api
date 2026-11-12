@@ -17,11 +17,13 @@ from atlas_api.db.models import (
     Capital,
     Composition,
     CountryFacts,
+    CountryHistory,
     CountryLanguage,
     CurrencyStat,
     Event,
     FxRate,
     GlossaryTerm,
+    HistoryPeriod,
     Indicator,
     IndicatorDef,
     IndicatorLatest,
@@ -80,12 +82,14 @@ from atlas_api.schemas import (
     WorldStats,
     YearValue,
 )
+from atlas_api.schemas import CountryHistory as CountryHistoryOut
 from atlas_api.schemas import Event as EventOut
 from atlas_api.schemas import GlossaryTerm as GlossaryTermOut
 from atlas_api.schemas import Leader as LeaderOut
 from atlas_api.schemas import (
     Meta as MetaOut,
 )
+from atlas_api.schemas import Period as PeriodOut
 from atlas_api.schemas import Person as PersonOut
 from atlas_api.schemas import (
     SnapshotLink as SnapshotLinkOut,
@@ -625,3 +629,18 @@ def currency_history(s: Session, base: str, vs: list[str], start: date | None,
     assert src is not None, "fx sources are written by import-facts together with the rates"
     return CurrencyHistory(base=base, vs=vs, source=_source(src),
                            items=[HistoryItem(date=d.isoformat(), rates=by[d]) for d in days])
+
+
+def get_history(s: Session, iso2: str) -> CountryHistoryOut:
+    """spec 016 stage 1: condensed pt.wikipedia history article; no article = empty (summary null, no periods)."""
+    h = s.get(CountryHistory, iso2)
+    if h is None:
+        return CountryHistoryOut(summary=None, periods=[], sources=[])
+    rows = s.scalars(select(HistoryPeriod).where(HistoryPeriod.iso2 == iso2).order_by(HistoryPeriod.ord))
+    periods = [PeriodOut(id=f"{iso2.lower()}-{p.ord + 1}", title=p.title, year_start=p.year_start, year_end=p.year_end,
+                      summary=p.text, event_count=0) for p in rows]
+    rev = f" (revisão {h.revision})" if h.revision else ""
+    url = f"https://pt.wikipedia.org/w/index.php?oldid={h.revision}" if h.revision else h.article_url
+    src = SourceOut(id="wikipedia-pt", title=f"Wikipédia: {h.article_title}{rev}", url=url,
+                 license="CC BY-SA 4.0", retrieved_at=h.retrieved_at)
+    return CountryHistoryOut(summary=h.summary, periods=periods, sources=[src])

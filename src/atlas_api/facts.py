@@ -30,10 +30,12 @@ from atlas_api.db.models import (
     Capital,
     Composition,
     CountryFacts,
+    CountryHistory,
     CountryLanguage,
     CurrencyStat,
     FxRate,
     GlossaryTerm,
+    HistoryPeriod,
     Indicator,
     IndicatorDef,
     IndicatorLatest,
@@ -104,7 +106,10 @@ def import_facts(session: Session, path: Path) -> dict[str, Any]:
     fx = path.parent / "fx.json"
     if fx.exists():
         summary["fx_rates_imported"] = import_fx(session, fx)
-    read = [f for f in (path, leaders, people, langs, *ind_files, fx) if f.exists()]
+    history = path.parent / "history.json"
+    if history.exists():
+        summary["history_imported"] = import_history(session, history, known)
+    read = [f for f in (path, leaders, people, langs, *ind_files, fx, history) if f.exists()]
     digest = hashlib.sha256(b"".join(f.read_bytes() for f in read)).hexdigest()[:16]
     summary["data_version"] = set_version(session, "facts", digest)
     return summary
@@ -151,6 +156,28 @@ def import_people(session: Session, path: Path, known: set[str | None]) -> int:
                 image_credit=image.get("credit"), image_license=image.get("license"),
                 wikipedia_url=p.get("wikipedia_url")))
             n += 1
+    session.flush()
+    return n
+
+
+def import_history(session: Session, path: Path, known: set[str | None]) -> int:
+    """spec 016 stage 1: data_out/history.json -> country_history + history_periods (rebuilt)."""
+    data = json.loads(path.read_text(encoding="utf-8"))
+    session.execute(delete(HistoryPeriod))
+    session.execute(delete(CountryHistory))
+    session.flush()
+    n = 0
+    for iso2, h in data["countries"].items():
+        if iso2 not in known:
+            continue
+        session.add(CountryHistory(iso2=iso2, summary=h.get("summary"), article_title=h["title"],
+                                   article_url=h["url"], revision=h.get("revision"),
+                                   retrieved_at=h.get("retrieved_at")))
+        session.flush()
+        for i, p in enumerate(h["periods"]):
+            session.add(HistoryPeriod(iso2=iso2, ord=i, title=p["title"], year_start=p.get("year_start"),
+                                      year_end=p.get("year_end"), text=p["text"]))
+        n += 1
     session.flush()
     return n
 

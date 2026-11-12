@@ -411,3 +411,29 @@ class CurrencyStat(Base):
     change_5y: Mapped[float | None] = mapped_column(Float)
     volatility_1y: Mapped[float | None] = mapped_column(Float)
     max_drawdown_1y: Mapped[float | None] = mapped_column(Float)
+
+
+class CountryHistory(Base):
+    """spec 016 stage 1: condensed lead of pt.wikipedia "História de X" (CC BY-SA 4.0), with the exact revision."""
+
+    __tablename__ = "country_history"
+
+    iso2: Mapped[str] = mapped_column(CHAR(2), ForeignKey("polities.iso2"), primary_key=True)
+    summary: Mapped[str | None] = mapped_column(Text)
+    article_title: Mapped[str] = mapped_column(Text)
+    article_url: Mapped[str] = mapped_column(Text)
+    revision: Mapped[int | None] = mapped_column(BigInteger)
+    retrieved_at: Mapped[str | None] = mapped_column(Text)
+
+
+class HistoryPeriod(Base):
+    """spec 016 stage 1: one section of the history article; `ord` = article order."""
+
+    __tablename__ = "history_periods"
+
+    iso2: Mapped[str] = mapped_column(CHAR(2), ForeignKey("country_history.iso2"), primary_key=True)
+    ord: Mapped[int] = mapped_column(Integer, primary_key=True)
+    title: Mapped[str] = mapped_column(Text)
+    year_start: Mapped[int | None] = mapped_column(Integer)
+    year_end: Mapped[int | None] = mapped_column(Integer)
+    text: Mapped[str] = mapped_column(Text)

@@ -342,6 +342,49 @@
         }
       }
     },
+    "/v1/countries/{iso2}/history": {
+      "get": {
+        "tags": [
+          "countries"
+        ],
+        "summary": "Get History",
+        "operationId": "get_history_v1_countries__iso2__history_get",
+        "parameters": [
+          {
+            "name": "iso2",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z]{2}$",
+              "title": "Iso2"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CountryHistory"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/polities": {
       "get": {
         "tags": [
@@ -1301,6 +1344,42 @@
           "sources"
         ],
         "title": "CountryEconomy"
+      },
+      "CountryHistory": {
+        "properties": {
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "periods": {
+            "items": {
+              "$ref": "#/components/schemas/Period"
+            },
+            "type": "array",
+            "title": "Periods"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/Source"
+            },
+            "type": "array",
+            "title": "Sources"
+          }
+        },
+        "type": "object",
+        "required": [
+          "summary",
+          "periods",
+          "sources"
+        ],
+        "title": "CountryHistory"
       },
       "CountryList": {
         "properties": {
@@ -2349,6 +2428,58 @@
           "name"
         ],
         "title": "Party"
+      },
+      "Period": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "year_start": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year Start"
+          },
+          "year_end": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year End"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "event_count": {
+            "type": "integer",
+            "title": "Event Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "year_start",
+          "year_end",
+          "summary",
+          "event_count"
+        ],
+        "title": "Period"
       },
       "Person": {
         "properties": {

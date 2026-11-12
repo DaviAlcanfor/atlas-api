@@ -156,3 +156,18 @@ class PersonList(BaseModel):
     items: list[Person]
     method: str
     source: Source
+
+
+class Period(BaseModel):  # v1.3 proposal (spec 016, CR-004): year_start nullable (section titles do not always carry years)
+    id: str
+    title: str
+    year_start: int | None
+    year_end: int | None
+    summary: str
+    event_count: int
+
+
+class CountryHistory(BaseModel):  # v1.3 proposal (spec 016 stage 1, CR-004)
+    summary: str | None
+    periods: list[Period]
+    sources: list[Source]
