@@ -33,7 +33,7 @@ open an entry in `contract/CHANGE_REQUESTS.md`.
 
 | Piece | Code / data |
 |---|---|
-| `capital_coords` (005) | `queries._capital_coords`: one item from `country_facts.capital/capital_lat/capital_lng` (no migration) |
+| `capital_coords` (005) | v1.2/019: every current capital from the `capitals` table (was: one item from `country_facts`) |
 | `regime_id`, `regime` (004) | Wikidata P122 -> `content/regimes.yaml` rules (ETL `etl/wikidata/pipeline.py`) -> `country_facts.regime_id/regime` (migration 0003) |
 | `GlossaryTerm`, `/v1/glossary*` (004) | `content/glossary.yaml` -> `glossary_terms` (import-content); `routers/glossary.py`; `queries.list_glossary` |
 | `clues` (003) | Wikidata P1622/P474/P78/P395, P37->P282 -> `country_facts` clue columns (migration 0004) |
@@ -59,6 +59,29 @@ Implementation choices:
   start, one candidate only. Photo only when Commons gives LicenseShortName AND Artist, and the person has one P18.
 - People: Pantheon `bplace_country` (English) matched to ISO2 via Wikidata English labels/aliases + `NAME_FIXES`.
   `/people` answers 503 if the Pantheon file was never imported (so "no data" is not confused with "no people").
-- ETag caveat (pre-existing, not fixed here): `data_version` is a hash of `content/` only, so a new
-  `import-facts` (new leaders, people, clues) does NOT change the ETag and clients holding the old ETag keep getting
-  304. Until fixed, change something in `content/` when facts change, or make import-facts bump the version.
+- ETag: fixed in v1.2 / spec 019 (import-facts now changes `data_version`, see below).
+
+## v1.2 part A (CR-003 proposal, implemented locally, NOT in CONTRACT.md yet)
+
+| Piece | Code / data |
+|---|---|
+| ETag after import-facts (019) | `importer.set_version`: `data_version` = hash(`meta.content_version` + `meta.facts_version`); import-facts hashes the bytes of every `data_out/*.json` it read |
+| Denmark (019) | `etl/wikidata/pipeline.py` `STATE` adds Q35 (ISO DK) + memberships from Q756617; `content/polities/dinamarca.yaml` |
+| several capitals (019) | ETL `capitals` list -> `capitals` table (migration 0007) -> `CountrySummary.capital_coords` (all with coordinates) |
+| image bucket (019) | `etl/wikidata/leaders.mirror_images` (leaders + Pantheon), only with `IMAGE_BUCKET_URL` + `SUPABASE_SERVICE_KEY` |
+| `languages_spoken` (017) | `python -m etl wikidata-languages` -> `data_out/languages.json` -> `country_languages` (migration 0008); `content/language_families.yaml` |
+| `/countries/{iso2}/profile` (015) | `etl worldbank` + `etl undp` -> `indicators`, `indicator_defs`, `indicator_stats`, `indicator_latest`; Wikidata P140/P172 + P1107 -> `compositions` (migration 0009) |
+| `/countries/{iso2}/economy`, `/economy/compare` (009) | same `indicators` table; `queries.ECONOMY_IDS` |
+| `/currencies/{code}`, `/history` (009) | `python -m etl fx` -> `data_out/fx.json` -> `fx_rates` + `currency_stats` (migration 0010); cross rates in SQL (self-join on date) |
+
+Load order unchanged: `alembic upgrade head`, `import-content`, `import-facts` (now also reads `languages.json`,
+`worldbank.json`, `undp.json`, `fx.json` when present). ETL order: `wikidata` -> `wikidata-leaders`, `pantheon`,
+`wikidata-languages`, `worldbank` -> `undp` (needs worldbank's ISO3 map), `fx`.
+
+Implementation choices:
+- Profile/economy: the API only knows which ids belong to which group (`queries.PROFILE_GROUPS`, `ECONOMY_IDS`);
+  labels/units are rows of `indicator_defs` written by the ETL. Rank/world/regional stats are computed at import
+  over each country's latest value (`indicator_latest`, `indicator_stats`), never at request time.
+- `composition.year`: the most recent `year` among the listed shares (religion and ethnicity may differ).
+- Currency `name`/`symbol` come from the countries' Wikidata P38 (`country_facts.currencies`); a code no country uses
+  is 404 even if it has rates (legacy ECB codes such as GRD).

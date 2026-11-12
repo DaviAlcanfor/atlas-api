@@ -2,7 +2,7 @@
 
 API somente leitura que serve **países modernos**, **entidades políticas históricas** (impérios, reinos, estados extintos), suas **linhas do tempo** e o **mapeamento entre polígonos de mapas históricos e essas entidades**.
 
-> **Status:** em construção. As rotas leem dados reais do Postgres (196 países da Wikidata + 8 entidades históricas placeholders); snapshots, indicadores e notícias ainda não existem. O que falta está em [docs/TODO.md](docs/TODO.md).
+> **Status:** em construção. As rotas leem dados reais do Postgres (197 países da Wikidata + 8 entidades históricas placeholders); v1.2 parte A (idiomas, perfil, economia, câmbio) existe só localmente; snapshots e notícias ainda não existem. O que falta está em [docs/TODO.md](docs/TODO.md).
 
 ## Por que existe
 
@@ -67,6 +67,8 @@ Segredos **só** por variável de ambiente (ou `.env`, que o git ignora). Nunca 
 |---|---|---|
 | `DATABASE_URL` | Conexão com o Postgres | `postgresql+psycopg://usuário:senha@host:porta/banco`. Caracteres especiais na senha devem ser codificados (`@` → `%40`). |
 | `CORS_ORIGINS` | Origens permitidas | Separadas por vírgula. Ex.: `http://localhost:5173,https://seu-front.example` |
+| `DB_POOL_SIZE` / `DB_MAX_OVERFLOW` / `DB_POOL_TIMEOUT` | Pool de conexões por processo (padrão 5 / 2 / 3 s) | Sem conexão livre em `DB_POOL_TIMEOUT` s a API responde 503 em vez de travar. Total = processos × (size + overflow): manter abaixo do pool do Supabase (spec 019 item 5). |
+| `DATA_VERSION_TTL` | Cache do `data_version` (ETag) em segundos | Padrão 5; 0 = lê o banco a cada requisição. |
 | `LOG_LEVEL` | Nível de log | Padrão `INFO` |
 | `RESTCOUNTRIES_API_KEY` | Chave do REST Countries | Só o ETL de referência usa |
 | `WIKIDATA_CONTACT` | E-mail ou site para o User-Agent da Wikidata | Exigido pela política da Wikimedia; só o ETL usa |
@@ -149,18 +151,24 @@ CLI separada em [etl/](etl/), usa o grupo de dependências `etl` e lê o `.env` 
 
 **Wikidata** (`make etl-wikidata` → `data_out/wikidata.json`): uma consulta SPARQL pequena por propriedade, uma de cada vez, com User-Agent descritivo (contato em `WIKIDATA_CONTACT`) e respostas brutas em `etl_cache/wikidata/` com `retrieved_at`. Licença CC0; a Wikidata pede, sem exigir, a menção "Data from Wikidata".
 
-Planejados: World Bank, snapshots históricos e proposta de links para curadoria. A geometria **moderna** é do repositório web; aqui só entram os snapshots históricos.
+**v1.2 (parte A, specs 009/015/017/019)** — todos gravam em `data_out/` e são lidos por `import-facts`:
+- `python -m etl wikidata-languages [BR IN ...]` → `languages.json` (idiomas falados; com ISO2 = amostra em `languages_sample.json`). Famílias e regiões nativas em `content/language_families.yaml` (rascunho, revisão humana pendente).
+- `python -m etl worldbank` → `worldbank.json` (23 indicadores WDI desde 1990, arquivo bulk CSV por indicador, CC BY 4.0) e depois `python -m etl undp` → `undp.json` (IDH e anos médios de estudo, CC BY 3.0 IGO).
+- `python -m etl fx` → `fx.json` (câmbio BCE diário desde 1999 via Frankfurter + exchange-api semanal desde 2024-03 para moedas fora do BCE, fonte secundária). Rodar de novo = só o ano corrente e a data `latest` são rebaixados.
+- **Imagens (spec 019):** a Commons pede para evitar hotlink. Com `IMAGE_BUCKET_URL` (`https://<ref>.supabase.co/storage/v1`) e `SUPABASE_SERVICE_KEY` no ambiente, `wikidata-leaders` e `pantheon` copiam cada miniatura (320px) para o bucket público `atlas-images` (crie o bucket como público antes) e `image.url` passa a apontar para lá; uploads já feitos ficam em `etl_cache/.../mirrored.json`. **Sem as duas variáveis o passo é pulado** e a URL continua sendo a da Commons (fallback). A chave de serviço nunca vai para o git nem para o processo da API.
+
+Planejados: snapshots históricos e proposta de links para curadoria. A geometria **moderna** é do repositório web; aqui só entram os snapshots históricos.
 
 ## Seed dos países (política da opção A)
 
-Todo país moderno precisa de uma linha em `polities` (`country_facts.iso2` aponta para ela e `start_year` é obrigatório). Os 196 arquivos em `content/polities/` são **gerados** por `scripts/seed_countries.py` a partir da Wikidata, com:
+Todo país moderno precisa de uma linha em `polities` (`country_facts.iso2` aponta para ela e `start_year` é obrigatório). Os 197 arquivos em `content/polities/` são **gerados** por `scripts/seed_countries.py` a partir da Wikidata, com:
 
 - `start_year: 1946` e `start_precision: century` = **placeholder, data de formação ainda não curada**. É posterior a 1945 de propósito, para os países modernos não aparecerem em `/polities?year=` de anos anteriores; em troca, países formados depois de 1946 aparecem um pouco cedo. Para curar um país, edite o YAML.
 - `type: other` (não curado) e ids em português sem acento, exceto os 8 ids do contrato (`austria`, `brazil`, `germany`, ...).
 - Alemanha, Iugoslávia/Sérvia e nomes de cidades **ainda dependem da sua decisão**: hoje `germany` e `serbia` são só placeholders, sem sucessão.
 - Os 5 arquivos de `seed_legacy/` viram eventos com `# TODO verify` e sem fontes (texto escrito por IA de memória, **não verificado**); o resumo do importador conta esses eventos.
 
-Comandos (banco local): `python -m atlas_api.cli import-content` e `python -m atlas_api.cli import-facts` (lê `data_out/wikidata.json`).
+Comandos (banco local): `python -m atlas_api.cli import-content` e `python -m atlas_api.cli import-facts` (lê `data_out/wikidata.json` e, se existirem, `leaders`, `pantheon`, `languages`, `worldbank`, `undp`, `fx`; muda o `data_version`, logo o ETag).
 
 ## Como adicionar conteúdo (planejado)
 

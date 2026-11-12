@@ -11,6 +11,7 @@
           "system"
         ],
         "summary": "Health",
+        "description": "Never queues behind a busy pool: if every connection is in use it answers db=\"error\" at\nonce (the DB may be fine, but this process cannot reach it right now).",
         "operationId": "health_v1_health_get",
         "responses": {
           "200": {
@@ -238,6 +239,92 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PersonList"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/countries/{iso2}/profile": {
+      "get": {
+        "tags": [
+          "countries"
+        ],
+        "summary": "Get Profile",
+        "operationId": "get_profile_v1_countries__iso2__profile_get",
+        "parameters": [
+          {
+            "name": "iso2",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z]{2}$",
+              "title": "Iso2"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CountryProfile"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/countries/{iso2}/economy": {
+      "get": {
+        "tags": [
+          "countries"
+        ],
+        "summary": "Get Economy",
+        "operationId": "get_economy_v1_countries__iso2__economy_get",
+        "parameters": [
+          {
+            "name": "iso2",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z]{2}$",
+              "title": "Iso2"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CountryEconomy"
                 }
               }
             }
@@ -591,6 +678,206 @@
           }
         }
       }
+    },
+    "/v1/currencies/{code}": {
+      "get": {
+        "tags": [
+          "economy"
+        ],
+        "summary": "Get Currency",
+        "operationId": "get_currency_v1_currencies__code__get",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z]{3}$",
+              "title": "Code"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrencyDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/currencies/{code}/history": {
+      "get": {
+        "tags": [
+          "economy"
+        ],
+        "summary": "Currency History",
+        "operationId": "currency_history_v1_currencies__code__history_get",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z]{3}$",
+              "title": "Code"
+            }
+          },
+          {
+            "name": "vs",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "up to 4 ISO 4217 codes, comma-separated",
+              "title": "Vs"
+            },
+            "description": "up to 4 ISO 4217 codes, comma-separated"
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrencyHistory"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/economy/compare": {
+      "get": {
+        "tags": [
+          "economy"
+        ],
+        "summary": "Compare",
+        "operationId": "compare_v1_economy_compare_get",
+        "parameters": [
+          {
+            "name": "countries",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "2 to 5 ISO2 codes, comma-separated",
+              "title": "Countries"
+            },
+            "description": "2 to 5 ISO2 codes, comma-separated"
+          },
+          {
+            "name": "ids",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "indicator ids, comma-separated; default all",
+              "title": "Ids"
+            },
+            "description": "indicator ids, comma-separated; default all"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EconomyCompare"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -685,6 +972,106 @@
           "scripts"
         ],
         "title": "Clues"
+      },
+      "CompareIndicator": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          },
+          "values": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/YearValue"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object",
+            "title": "Values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "unit",
+          "values"
+        ],
+        "title": "CompareIndicator"
+      },
+      "CompositionOut": {
+        "properties": {
+          "religion": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/Share"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Religion"
+          },
+          "ethnicity": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/Share"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ethnicity"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          },
+          "source_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "religion",
+          "ethnicity",
+          "year",
+          "source_id"
+        ],
+        "title": "CompositionOut"
       },
       "CountryDetail": {
         "properties": {
@@ -856,6 +1243,13 @@
                 "type": "null"
               }
             ]
+          },
+          "languages_spoken": {
+            "items": {
+              "$ref": "#/components/schemas/LanguageSpoken"
+            },
+            "type": "array",
+            "title": "Languages Spoken"
           }
         },
         "type": "object",
@@ -879,9 +1273,34 @@
           "sources",
           "updated_at",
           "regime_id",
-          "clues"
+          "clues",
+          "languages_spoken"
         ],
         "title": "CountryDetail"
+      },
+      "CountryEconomy": {
+        "properties": {
+          "indicators": {
+            "items": {
+              "$ref": "#/components/schemas/EconomyIndicator"
+            },
+            "type": "array",
+            "title": "Indicators"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/Source"
+            },
+            "type": "array",
+            "title": "Sources"
+          }
+        },
+        "type": "object",
+        "required": [
+          "indicators",
+          "sources"
+        ],
+        "title": "CountryEconomy"
       },
       "CountryList": {
         "properties": {
@@ -898,6 +1317,34 @@
           "items"
         ],
         "title": "CountryList"
+      },
+      "CountryProfile": {
+        "properties": {
+          "groups": {
+            "items": {
+              "$ref": "#/components/schemas/ProfileGroup"
+            },
+            "type": "array",
+            "title": "Groups"
+          },
+          "composition": {
+            "$ref": "#/components/schemas/CompositionOut"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/Source"
+            },
+            "type": "array",
+            "title": "Sources"
+          }
+        },
+        "type": "object",
+        "required": [
+          "groups",
+          "composition",
+          "sources"
+        ],
+        "title": "CountryProfile"
       },
       "CountrySummary": {
         "properties": {
@@ -1046,6 +1493,255 @@
           "symbol"
         ],
         "title": "Currency"
+      },
+      "CurrencyDetail": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "symbol": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Symbol"
+          },
+          "countries": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Countries"
+          },
+          "rates": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Rates"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "stats": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CurrencyStats"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/Source"
+            },
+            "type": "array",
+            "title": "Sources"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "name",
+          "symbol",
+          "countries",
+          "rates",
+          "stats",
+          "sources"
+        ],
+        "title": "CurrencyDetail"
+      },
+      "CurrencyHistory": {
+        "properties": {
+          "base": {
+            "type": "string",
+            "title": "Base"
+          },
+          "vs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Vs"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/HistoryItem"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "source": {
+            "$ref": "#/components/schemas/Source"
+          }
+        },
+        "type": "object",
+        "required": [
+          "base",
+          "vs",
+          "items",
+          "source"
+        ],
+        "title": "CurrencyHistory"
+      },
+      "CurrencyStats": {
+        "properties": {
+          "change_1y": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Change 1Y"
+          },
+          "change_5y": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Change 5Y"
+          },
+          "volatility_1y": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Volatility 1Y"
+          },
+          "max_drawdown_1y": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Drawdown 1Y"
+          }
+        },
+        "type": "object",
+        "required": [
+          "change_1y",
+          "change_5y",
+          "volatility_1y",
+          "max_drawdown_1y"
+        ],
+        "title": "CurrencyStats"
+      },
+      "EconomyCompare": {
+        "properties": {
+          "countries": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Countries"
+          },
+          "indicators": {
+            "items": {
+              "$ref": "#/components/schemas/CompareIndicator"
+            },
+            "type": "array",
+            "title": "Indicators"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/Source"
+            },
+            "type": "array",
+            "title": "Sources"
+          }
+        },
+        "type": "object",
+        "required": [
+          "countries",
+          "indicators",
+          "sources"
+        ],
+        "title": "EconomyCompare"
+      },
+      "EconomyIndicator": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          },
+          "source_id": {
+            "type": "string",
+            "title": "Source Id"
+          },
+          "series": {
+            "items": {
+              "$ref": "#/components/schemas/Point"
+            },
+            "type": "array",
+            "title": "Series"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "unit",
+          "value",
+          "year",
+          "source_id",
+          "series"
+        ],
+        "title": "EconomyIndicator"
       },
       "Event": {
         "properties": {
@@ -1240,6 +1936,27 @@
         ],
         "title": "Health"
       },
+      "HistoryItem": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "rates": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Rates"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "rates"
+        ],
+        "title": "HistoryItem"
+      },
       "Image": {
         "properties": {
           "url": {
@@ -1280,6 +1997,103 @@
           "name"
         ],
         "title": "Language"
+      },
+      "LanguageSpoken": {
+        "properties": {
+          "code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "official",
+              "co_official",
+              "indigenous",
+              "immigrant",
+              "sign",
+              "historical"
+            ],
+            "title": "Status"
+          },
+          "where": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Where"
+          },
+          "speakers": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Speakers"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "family": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Family"
+          },
+          "endangerment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Endangerment"
+          },
+          "wikipedia_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Wikipedia Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "name",
+          "status",
+          "where",
+          "speakers",
+          "family",
+          "endangerment",
+          "wikipedia_url"
+        ],
+        "title": "LanguageSpoken"
       },
       "Leader": {
         "properties": {
@@ -1665,6 +2479,24 @@
         ],
         "title": "PersonList"
       },
+      "Point": {
+        "properties": {
+          "year": {
+            "type": "integer",
+            "title": "Year"
+          },
+          "value": {
+            "type": "number",
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "year",
+          "value"
+        ],
+        "title": "Point"
+      },
       "Politics": {
         "properties": {
           "system": {
@@ -2018,6 +2850,162 @@
         ],
         "title": "Population"
       },
+      "ProfileGroup": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "enum": [
+              "life",
+              "society",
+              "income",
+              "environment"
+            ],
+            "title": "Id"
+          },
+          "indicators": {
+            "items": {
+              "$ref": "#/components/schemas/ProfileIndicator"
+            },
+            "type": "array",
+            "title": "Indicators"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "indicators"
+        ],
+        "title": "ProfileGroup"
+      },
+      "ProfileIndicator": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          },
+          "value": {
+            "type": "number",
+            "title": "Value"
+          },
+          "year": {
+            "type": "integer",
+            "title": "Year"
+          },
+          "source_id": {
+            "type": "string",
+            "title": "Source Id"
+          },
+          "rank": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rank"
+          },
+          "rank_of": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rank Of"
+          },
+          "world": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WorldStats"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "region_avg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Region Avg"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "unit",
+          "value",
+          "year",
+          "source_id",
+          "rank",
+          "rank_of",
+          "world",
+          "region_avg"
+        ],
+        "title": "ProfileIndicator"
+      },
+      "RateItem": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "rate": {
+            "type": "number",
+            "title": "Rate"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "rate"
+        ],
+        "title": "RateItem"
+      },
+      "Rates": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "base": {
+            "type": "string",
+            "title": "Base"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RateItem"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "base",
+          "items"
+        ],
+        "title": "Rates"
+      },
       "SearchItem": {
         "properties": {
           "kind": {
@@ -2089,6 +3077,24 @@
           "items"
         ],
         "title": "SearchResults"
+      },
+      "Share": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "share": {
+            "type": "number",
+            "title": "Share"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "share"
+        ],
+        "title": "Share"
       },
       "SnapshotInfo": {
         "properties": {
@@ -2266,6 +3272,31 @@
         ],
         "title": "Source"
       },
+      "Speakers": {
+        "properties": {
+          "value": {
+            "type": "integer",
+            "title": "Value"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value",
+          "year"
+        ],
+        "title": "Speakers"
+      },
       "ValidationError": {
         "properties": {
           "loc": {
@@ -2323,6 +3354,47 @@
           "url"
         ],
         "title": "Wikipedia"
+      },
+      "WorldStats": {
+        "properties": {
+          "min": {
+            "type": "number",
+            "title": "Min"
+          },
+          "median": {
+            "type": "number",
+            "title": "Median"
+          },
+          "max": {
+            "type": "number",
+            "title": "Max"
+          }
+        },
+        "type": "object",
+        "required": [
+          "min",
+          "median",
+          "max"
+        ],
+        "title": "WorldStats"
+      },
+      "YearValue": {
+        "properties": {
+          "value": {
+            "type": "number",
+            "title": "Value"
+          },
+          "year": {
+            "type": "integer",
+            "title": "Year"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value",
+          "year"
+        ],
+        "title": "YearValue"
       }
     }
   }

@@ -18,15 +18,15 @@ Regras:
 | 006 | [Governantes e espectro político](006-leaders-spectrum.md) | v1.1 / v1.2 | in progress (v1.1 feito) |
 | 007 | [Pessoas importantes](007-notable-people.md) | v1.1 | done (aguardando deploy (contrato v1.1 aplicado)) |
 | 008 | [Notícias geopolíticas (GDELT + Jev)](008-news.md) | v1.2 | approved |
-| 009 | [Moeda, câmbio e economia](009-currency.md) | v1.2 | approved |
+| 009 | [Moeda, câmbio e economia](009-currency.md) | v1.2 | done local (CR-003 pendente) |
 | 010 | [Música](010-music.md) | v1.2 | approved |
 | 011 | [Vídeos de história](011-history-videos.md) | v1.2 | approved |
 | 012 | [Séries históricas padronizadas](012-historical-series.md) | v2 | approved |
-| 015 | [Perfil: como vive o povo](015-country-profile.md) | v1.2 | approved |
+| 015 | [Perfil: como vive o povo](015-country-profile.md) | v1.2 | done local (CR-003 pendente) |
 | 016 | [História expandida por períodos](016-history-expanded.md) | v1.2 | approved |
 | 017 | [Idiomas oficiais e outros](017-languages.md) | v1.2 | approved |
 | 018 | [Ideologias e pensadores](018-ideologies.md) | v1.2 | approved |
-| 019 | [Correções de dados (data_version, DK, imagens, capitais)](019-data-fixes.md) | - | approved |
+| 019 | [Correções de dados (data_version, DK, imagens, capitais, carga)](019-data-fixes.md) | - | done local (bucket de imagens: falta credencial) |
 
 001, 002, 013 e 014 são só do web. Plano de execução, checklist e avaliação de stack: `atlas-web/specs/PLAN.md` e `atlas-web/specs/ADR-001-stack.md`.
 
