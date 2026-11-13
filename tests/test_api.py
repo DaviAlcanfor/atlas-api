@@ -47,7 +47,7 @@ def test_country_detail_is_real_data(api_client: TestClient) -> None:
     assert c.flag_url == "https://flagcdn.com/br.svg" and c.capital == "Brasília"
     assert c.population and c.population.source_id == "wikidata" and c.population.year
     assert [x.code for x in c.currencies] == ["BRL"] and c.region == "América do Sul"
-    assert c.memberships == ["ONU"] and any(s.id == "wikidata" for s in c.sources)
+    assert {"ONU", "Mercosul", "BRICS"} <= set(c.memberships) and any(s.id == "wikidata" for s in c.sources)
     at = CountryDetail.model_validate(api_client.get("/v1/countries/AT").json())
     assert len(at.timeline) == 5 and all(e.source_ids == [] for e in at.timeline)  # unverified
     assert [e.year_start for e in at.timeline] == sorted(e.year_start for e in at.timeline)

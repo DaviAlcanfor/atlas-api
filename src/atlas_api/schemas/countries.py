@@ -197,6 +197,7 @@ class Subdivision(BaseModel):  # v1.3 proposal (spec 024, CR-004)
     area_km2: float | None
     population: SubdivisionPopulation | None
     flag: Image | None
+    area_codes: list[str]  # spec 026 (CR-004 addendum 4): telephone area codes (DDD); [] = no data
 
 
 class SubdivisionList(BaseModel):  # v1.3 proposal (spec 024, CR-004)

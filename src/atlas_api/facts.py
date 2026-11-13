@@ -248,7 +248,11 @@ def import_subdivisions(session: Session, path: Path, known: set[str | None]) ->
                 wikidata_id=x["wikidata_id"], iso2=iso2, ord=i, code=x.get("code"), name=x["name"],
                 capital=x.get("capital"), area_km2=x.get("area_km2"), population=pop.get("value"),
                 population_year=pop.get("year"), flag_url=flag.get("url"), flag_credit=flag.get("credit"),
-                flag_license=flag.get("license")))
+                flag_license=flag.get("license"), area_codes=x.get("area_codes") or None))
+    extra = data.get("area_codes_source")  # spec 026: curated area codes (Anatel)
+    if extra:
+        session.merge(Source(id=extra["id"], title=extra["title"], url=extra["url"], license=extra["license"],
+                             retrieved_at=datetime.fromisoformat(extra["retrieved_at"])))
     session.flush()
     return len(seen)
 

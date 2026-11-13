@@ -3967,6 +3967,13 @@
                 "type": "null"
               }
             ]
+          },
+          "area_codes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Area Codes"
           }
         },
         "type": "object",
@@ -3977,7 +3984,8 @@
           "capital",
           "area_km2",
           "population",
-          "flag"
+          "flag",
+          "area_codes"
         ],
         "title": "Subdivision"
       },

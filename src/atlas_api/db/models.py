@@ -456,6 +456,7 @@ class Subdivision(Base):
     flag_url: Mapped[str | None] = mapped_column(Text)
     flag_credit: Mapped[str | None] = mapped_column(Text)
     flag_license: Mapped[str | None] = mapped_column(Text)
+    area_codes: Mapped[list[str] | None] = mapped_column(JSONB)  # spec 026: DDD
 
 
 class HistoryEvent(Base):

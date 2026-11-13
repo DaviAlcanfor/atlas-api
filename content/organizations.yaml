@@ -1,0 +1,43 @@
+# Spec 026: curated membership lists (Wikidata P463 is complete only for the UN; see etl/wikidata/pipeline.py ORGS).
+# Key = the label stored in country_facts.memberships, which must equal a `membership` term's label in glossary.yaml.
+# Current full members only, by ISO 3166-1 alpha-2. Suspended members stay members (their membership is not ended),
+# except where noted. AGENT DRAFT (2026-11-13), pending human review like glossary.yaml.
+Mercosul:
+  source: {title: "Mercosul: países do Mercosul", url: "https://www.mercosur.int/pt-br/quem-somos/paises-do-mercosul/", retrieved: "2026-11-13"}
+  note: "Bolívia: membro pleno desde 2024. Venezuela: suspensa desde 2016, fora da lista."
+  members: [AR, BO, BR, PY, UY]
+BRICS:
+  source: {title: "BRICS (Wikipédia)", url: "https://pt.wikipedia.org/wiki/BRICS", retrieved: "2026-11-13"}
+  note: "Ampliações de 2024 (Egito, Etiópia, Irã, Emirados Árabes Unidos) e 2025 (Indonésia). A Arábia Saudita não confirmou a adesão: fora."
+  members: [BR, RU, IN, CN, ZA, EG, ET, IR, AE, ID]
+G7:
+  source: {title: "G7 (Wikipédia)", url: "https://pt.wikipedia.org/wiki/G7", retrieved: "2026-11-13"}
+  members: [CA, FR, DE, IT, JP, GB, US]
+G20:
+  source: {title: "G20 (Wikipédia)", url: "https://pt.wikipedia.org/wiki/G20", retrieved: "2026-11-13"}
+  note: "Os 19 países; a União Europeia e a União Africana também são membros, mas não são países."
+  members: [AR, AU, BR, CA, CN, FR, DE, IN, ID, IT, JP, KR, MX, RU, SA, ZA, TR, GB, US]
+União Europeia:
+  source: {title: "União Europeia: países", url: "https://european-union.europa.eu/principles-countries-history/eu-countries_pt", retrieved: "2026-11-13"}
+  members: [AT, BE, BG, HR, CY, CZ, DK, EE, FI, FR, DE, GR, HU, IE, IT, LV, LT, LU, MT, NL, PL, PT, RO, SK, SI, ES, SE]
+OTAN:
+  source: {title: "NATO member countries", url: "https://www.nato.int/cps/en/natohq/topics_52044.htm", retrieved: "2026-11-13"}
+  members: [AL, BE, BG, CA, HR, CZ, DK, EE, FI, FR, DE, GR, HU, IS, IT, LV, LT, LU, ME, NL, MK, NO, PL, PT, RO, SK, SI, ES, SE, TR, GB, US]
+OPEP:
+  source: {title: "OPEC Member Countries", url: "https://www.opec.org/opec_web/en/about_us/25.htm", retrieved: "2026-11-13"}
+  note: "Angola saiu em 2024."
+  members: [DZ, CG, GQ, GA, IR, IQ, KW, LY, NG, SA, AE, VE]
+ASEAN:
+  source: {title: "ASEAN Member States", url: "https://asean.org/member-states/", retrieved: "2026-11-13"}
+  note: "Timor-Leste entrou em outubro de 2025."
+  members: [BN, KH, ID, LA, MY, MM, PH, SG, TH, VN, TL]
+União Africana:
+  source: {title: "African Union: Member States", url: "https://au.int/en/member_states/countryprofiles2", retrieved: "2026-11-13"}
+  note: "Os 54 países africanos da ONU (membros suspensos incluídos). A República Árabe Saaraui Democrática também é membro, mas não tem código ISO."
+  members: [DZ, AO, BJ, BW, BF, BI, CV, CM, CF, TD, KM, CG, CD, CI, DJ, EG, GQ, ER, SZ, ET, GA, GM, GH, GN, GW, KE, LS, LR, LY, MG, MW, ML, MR, MU, MA, MZ, NA, NE, NG, RW, ST, SN, SC, SL, SO, ZA, SS, SD, TZ, TG, TN, UG, ZM, ZW]
+CPLP:
+  source: {title: "CPLP: Estados-membros", url: "https://www.cplp.org/id-2595.aspx", retrieved: "2026-11-13"}
+  members: [AO, BR, CV, GW, GQ, MZ, PT, ST, TL]
+OCDE:
+  source: {title: "OECD: Members and partners", url: "https://www.oecd.org/en/about/members-partners.html", retrieved: "2026-11-13"}
+  members: [AU, AT, BE, CA, CL, CO, CR, CZ, DK, EE, FI, FR, DE, GR, HU, IS, IE, IL, IT, JP, KR, LV, LT, LU, MX, NL, NZ, NO, PL, PT, SK, SI, ES, SE, CH, TR, GB, US]

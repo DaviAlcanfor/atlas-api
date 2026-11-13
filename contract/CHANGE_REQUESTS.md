@@ -288,3 +288,13 @@ the current (clients must show the party, e.g. "filiado ao Partido X", never pre
 continuous stretches in which a head of state/government (spec 006) belonged to a party of that current. Unknown id or a glossary
 term that is not a current -> 404.
 
+
+### CR-004 addendum 4 (2026-11-13): subdivision area codes (spec 026)
+The owner asked for "o DDD dos estados de todos os países" (2026-11-13). Additive field on `Subdivision`:
+```
+Subdivision     += { area_codes: string[] /* telephone area codes (DDD), sorted; [] = no data */ }
+```
+Brazil: curated table from Anatel (content/area_codes.yaml); elsewhere Wikidata P473 where present (low coverage, ~22% of units).
+`SubdivisionList.sources` includes `anatel` for BR. Also: `CountryDetail.memberships` now lists curated organizations
+(content/organizations.yaml: Mercosul, BRICS, G7, G20, União Europeia, OTAN, OPEP, ASEAN, União Africana, CPLP, OCDE) besides
+"ONU"; each value is the `label` of a `membership` glossary term. No type change.

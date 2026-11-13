@@ -76,3 +76,18 @@ def test_history_events(api_client: TestClient) -> None:
     imperio = next(p for p in h.periods if p.title == "Império")
     assert imperio.event_count >= 3  # Cisplatina, Farrapos, Paraguai... fall inside 1822-1889
     assert {s.id for s in h.sources} == {"wikipedia-pt", "wikidata"}
+
+
+def test_periods_take_each_subsection_opening() -> None:
+    """spec 026: a period with subsections = intro + "<subsection>: <first sentences>" each; 'D.' does not end a sentence."""
+    from etl.wikipedia.history import first_sentences
+
+    assert first_sentences("Em 1516, D. Manuel mandou expedições ao litoral. Depois vieram outras. " + LONG, 60) == (
+        "Em 1516, D. Manuel mandou expedições ao litoral.")
+    art = (f"História do Brasil começa cedo. {LONG}\n== Colônia (1500–1815) ==\n{LONG}\n== Reino (1815–1822) ==\n{LONG}\n"
+           f"== Império (1822–1889) ==\n=== Primeiro Reinado (1822–1831) ===\nPedro I governou até 1831, quando abdicou do trono. {LONG}\n"
+           f"=== Segundo Reinado (1840–1889) ===\nPedro II subiu ao trono em 1840, ainda adolescente. {LONG}")
+    h = split(art)
+    assert h["summary"] and h["summary"].startswith("A história do Brasil")
+    imperio = h["periods"][-1]["text"].split("\n\n")
+    assert imperio[0].startswith("Primeiro Reinado (1822–1831): Pedro I") and imperio[1].startswith("Segundo Reinado")
