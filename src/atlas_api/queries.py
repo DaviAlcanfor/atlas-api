@@ -80,7 +80,6 @@ from atlas_api.schemas import (
     SnapshotInfo,
     Speakers,
     SubdivisionList,
-    SubdivisionOut,
     SubdivisionPopulation,
     Wikipedia,
     WorldStats,
@@ -99,6 +98,7 @@ from atlas_api.schemas import (
     SnapshotLink as SnapshotLinkOut,
 )
 from atlas_api.schemas import Source as SourceOut
+from atlas_api.schemas import Subdivision as SubdivisionOut
 
 log = logging.getLogger("atlas_api")
 YEAR_MIN = -3000  # ponytail: fixed lower bound of the slider; move to config if it ever changes

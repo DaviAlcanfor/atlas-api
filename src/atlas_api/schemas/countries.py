@@ -178,7 +178,7 @@ class SubdivisionPopulation(BaseModel):  # v1.3 proposal (spec 024, CR-004)
     year: int | None
 
 
-class SubdivisionOut(BaseModel):  # v1.3 proposal (spec 024, CR-004)
+class Subdivision(BaseModel):  # v1.3 proposal (spec 024, CR-004)
     wikidata_id: str
     code: str | None
     name: str
@@ -189,5 +189,5 @@ class SubdivisionOut(BaseModel):  # v1.3 proposal (spec 024, CR-004)
 
 
 class SubdivisionList(BaseModel):  # v1.3 proposal (spec 024, CR-004)
-    items: list[SubdivisionOut]
+    items: list[Subdivision]
     sources: list[Source]
