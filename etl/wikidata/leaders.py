@@ -59,9 +59,10 @@ LEADERS_QUERY = """SELECT ?role ?office ?person ?personLabel ?start ?end ?party 
  {label} }}"""
 
 
-def _get_json(client: httpx.Client, url: str, params: dict[str, str]) -> Any:
-    """GET with retries: 429 waits Retry-After; 5xx / dropped connections back off 15 s, 30 s..."""
-    for attempt in range(1, 5):
+def _get_json(client: httpx.Client, url: str, params: dict[str, str], retries: int = 4) -> Any:
+    """GET with retries: 429 waits Retry-After; 5xx / dropped connections back off 15 s, 30 s...
+    `retries=1`: a 5xx fails at once (WDQS query timeouts are 500s: retrying the same query only burns minutes)."""
+    for attempt in range(1, retries + 1):
         try:
             r = client.get(url, params=params)
         except httpx.TransportError:
@@ -70,7 +71,7 @@ def _get_json(client: httpx.Client, url: str, params: dict[str, str]) -> Any:
         if r.status_code == 429:
             time.sleep(min(int(r.headers.get("Retry-After", "30")), 120))
             continue
-        if r.status_code >= 500 and attempt < 4:
+        if r.status_code >= 500 and attempt < retries:
             time.sleep(15 * attempt)
             continue
         r.raise_for_status()
@@ -78,10 +79,10 @@ def _get_json(client: httpx.Client, url: str, params: dict[str, str]) -> Any:
     raise RuntimeError(f"gave up after retries: {url}")
 
 
-def _cached(client: httpx.Client, f: Path, query: str, refresh: bool) -> list[Any]:
+def _cached(client: httpx.Client, f: Path, query: str, refresh: bool, retries: int = 4) -> list[Any]:
     if f.exists() and not refresh:
         return json.loads(f.read_text(encoding="utf-8"))["rows"]  # type: ignore[no-any-return]
-    rows = _get_json(client, ENDPOINT, {"query": query, "format": "json"})["results"]["bindings"]
+    rows = _get_json(client, ENDPOINT, {"query": query, "format": "json"}, retries)["results"]["bindings"]
     f.parent.mkdir(parents=True, exist_ok=True)
     f.write_text(json.dumps({"retrieved_at": datetime.now(UTC).isoformat(), "query": query,
                              "rows": rows}, ensure_ascii=False), encoding="utf-8")

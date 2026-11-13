@@ -43,6 +43,7 @@ STATUSES = ("official", "co_official", "sign", "historical", "indigenous", "immi
 ORDER = ("official", "co_official", "indigenous", "immigrant", "sign", "historical")  # contract sort
 FAMILIES = Path("content/language_families.yaml")
 WHERE_MAX = 3
+BATCH = 60  # Q-ids per attribute query (150 timed out often; each timeout used to cost ~5 min of retries)
 log = logging.getLogger("etl.languages")
 
 COUNTRY_QUERY = """SELECT ?l ?kind ?sub ?subLabel WHERE {{
@@ -78,14 +79,14 @@ SPEAKERS_QUERY = """SELECT ?l ?n ?when ?place WHERE {{ VALUES ?l {{ {ids} }}
 def _batched(client: httpx.Client, cache: Path, query: str, qids: list[str],
              refresh: bool) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
-    todo = [qids[i:i + 150] for i in range(0, len(qids), 150)]
+    todo = [qids[i:i + BATCH] for i in range(0, len(qids), BATCH)]
     while todo:
         batch = todo.pop(0)
         tag = hashlib.sha256((query + " ".join(batch)).encode()).hexdigest()[:12]
         q = query.format(ids=" ".join("wd:" + x for x in batch), label=LABEL)
         try:
-            rows += _cached(client, cache / f"_attr_{tag}.json", q, refresh)
-        except (httpx.HTTPStatusError, RuntimeError):  # 60 s timeout: split the batch in two
+            rows += _cached(client, cache / f"_attr_{tag}.json", q, refresh, retries=1)
+        except (httpx.HTTPStatusError, RuntimeError):  # 60 s query timeout: split now, never retry the same batch
             if len(batch) == 1:
                 log.warning("gave up on %s (query keeps timing out)", batch[0])
                 continue
