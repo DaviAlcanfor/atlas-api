@@ -89,3 +89,10 @@ def test_glossary_import_and_validation(session: Session, tmp_path: Path) -> Non
     with pytest.raises(ContentError) as e:
         import_content(session, tmp_path)
     assert len(e.value.problems) == 3  # kind, sources, regime x without a term
+
+
+def test_fx_part_changes_data_version(session: Session) -> None:  # spec 009: the daily import-fx must invalidate ETags
+    from atlas_api.importer import set_version
+    before = set_version(session, "fx", "a")
+    assert set_version(session, "fx", "b") != before
+    assert set_version(session, "fx", "b") == set_version(session, "fx", "b")

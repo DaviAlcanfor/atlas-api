@@ -20,6 +20,7 @@ latest: history for these currencies is weekly and starts in 2024-03. Marked sou
 """
 
 import json
+import os
 import sys
 import time
 from datetime import UTC, date, datetime, timedelta
@@ -98,8 +99,15 @@ def wednesdays(start: date, end: date) -> list[date]:
 
 def run() -> None:
     s = get_etl_settings()
-    countries = json.loads((s.out_dir / "wikidata.json").read_text(encoding="utf-8"))["countries"]
-    wanted = {c["code"] for x in countries.values() for c in x["currencies"] if c.get("code")}
+    wd = s.out_dir / "wikidata.json"
+    if wd.exists():
+        countries = json.loads(wd.read_text(encoding="utf-8"))["countries"]
+        wanted = {c["code"] for x in countries.values() for c in x["currencies"] if c.get("code")}
+    else:  # CI (daily job): codes from the database, written by `atlas_api.cli currency-codes` (FX_CODES_FILE)
+        codes = Path(os.environ.get("FX_CODES_FILE", "fx_codes.txt"))
+        if not codes.exists():
+            sys.exit(f"no {wd} and no {codes}: run `python -m atlas_api.cli currency-codes > {codes}` first")
+        wanted = {c.strip() for c in codes.read_text(encoding="utf-8").split() if c.strip()}
     refresh, cache, today = "--refresh" in sys.argv, s.cache_dir / "fx", datetime.now(UTC).date()
     with httpx.Client(headers={"User-Agent": "atlas-etl/0.1 (generic client)"}, timeout=120) as client:
         years = [_cached(cache / f"ecb_{y}.json", lambda y=y: _get(client, [FRANKFURTER], {
