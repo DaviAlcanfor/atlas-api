@@ -1,5 +1,7 @@
 """spec 012 stage 1: Cliopatria snapshot rules (offline)."""
-from etl.cliopatria.pipeline import alive, labels, lifespans, snapshot_years
+import itertools
+
+from etl.cliopatria.pipeline import alive, feature, labels, lifespans, snapshot_years
 
 
 def _row(name: str, a: int, b: int, kind: str = "POLITY") -> dict[str, object]:
@@ -26,3 +28,18 @@ def test_lifespan_spans_every_shape_and_labels_prefer_pt_br() -> None:
     rows = [{"q": q, "label": {"value": "Império Otomano", "xml:lang": "pt"}},
             {"q": q, "label": {"value": "Império Otomano (BR)", "xml:lang": "pt-br"}, "pt": {"value": "https://pt.wikipedia.org/wiki/X"}}]
     assert labels(rows) == {"Q1": {"name": "Império Otomano (BR)", "wikipedia_pt": "https://pt.wikipedia.org/wiki/X"}}
+
+
+def test_feature_rings_are_clockwise_for_d3_and_snapped() -> None:
+    from shapely.geometry import Polygon
+
+    ccw = Polygon([(0, 0), (1.004, 0), (1.004, 1), (0, 1)])  # RFC 7946 winding, off-grid coordinate
+    row = {"Name": "Kingdom of X", "geometry": ccw, "Wikidata": "Q1", "Wikipedia": "Kingdom of X", "MemberOf": "(Y Empire)"}
+    f = feature(row, (1500, 1600), {"name": "Reino de X"})
+    assert f is not None
+    ring = f["geometry"]["coordinates"][0]
+    signed = sum((x2 - x1) * (y2 + y1) for (x1, y1), (x2, y2) in itertools.pairwise(ring))
+    assert signed > 0  # shoelace: positive = clockwise
+    assert {c for pt in ring for c in pt} <= {0.0, 1.0}
+    assert f["properties"] == {"name": "Reino de X", "name_en": "Kingdom of X", "wikidata": "Q1", "from_year": 1500, "to_year": 1600,
+                               "member_of": "Y Empire", "wikipedia_url": "https://en.wikipedia.org/wiki/Kingdom_of_X"}

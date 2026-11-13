@@ -90,6 +90,9 @@ def feature(r: dict[str, Any], life: tuple[int, int], lab: dict[str, str]) -> di
         geom = shapely.set_precision(r["geometry"], FINE_GRID)
     if geom.is_empty:
         return None
+    # d3-geo (the web's picking and the globe's caps) reads rings on the sphere: exterior CLOCKWISE, the opposite of RFC 7946.
+    # A counter-clockwise ring would mean "the whole globe except this shape".
+    geom = shapely.orient_polygons(geom, exterior_cw=True)
     qid = r["Wikidata"] if r["Wikidata"].startswith("Q") else None
     wiki = lab.get("wikipedia_pt") or (f"https://en.wikipedia.org/wiki/{r['Wikipedia'].replace(' ', '_')}" if r["Wikipedia"] else None)
     return {"type": "Feature", "geometry": json.loads(shapely.to_geojson(geom)), "properties": {
