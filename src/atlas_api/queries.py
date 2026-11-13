@@ -112,7 +112,7 @@ from atlas_api.schemas import Source as SourceOut
 from atlas_api.schemas import Subdivision as SubdivisionOut
 
 log = logging.getLogger("atlas_api")
-YEAR_MIN = -3000  # ponytail: fixed lower bound of the slider; move to config if it ever changes
+YEAR_MIN = -3400  # ponytail: fixed lower bound of the slider = first Cliopatria year (spec 012); move to config if it ever changes
 MARKERS_FILE = Path("content/markers.yaml")
 
 

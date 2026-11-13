@@ -298,3 +298,20 @@ Brazil: curated table from Anatel (content/area_codes.yaml); elsewhere Wikidata 
 `SubdivisionList.sources` includes `anatel` for BR. Also: `CountryDetail.memberships` now lists curated organizations
 (content/organizations.yaml: Mercosul, BRICS, G7, G20, União Europeia, OTAN, OPEP, ASEAN, União Africana, CPLP, OCDE) besides
 "ONU"; each value is the `label` of a `membership` glossary term. No type change.
+
+## CR-005: historical snapshots from Cliopatria (spec 012 stage 1, proposed 2026-11-13)
+No new endpoint: `GET /v1/snapshots`, `/v1/snapshots/nearest` and `/v1/meta.snapshot_years` now return 130 real snapshots
+(3400 BCE to 2024). Changes to the v1.0 text:
+```
+meta.year_min: -3400 (was -3000)
+SnapshotInfo.geometry_url: "/data/historical/world_<year>.geojson", relative to the web origin (unchanged rule). GeoJSON
+  FeatureCollection of Polygon/MultiPolygon. feature.properties (replaces NAME/SUBJECTO/PARTOF/BORDERPRECISION):
+  { name: string /* pt-BR from Wikidata, else the source's English name */, name_en: string, wikidata: string|null,
+    from_year: int, to_year: int /* the entity's whole lifespan in the source, not this shape's */,
+    member_of: string|null /* empire/union it belongs to, English */, wikipedia_url: string|null /* pt, else en */ }
+SnapshotInfo.link_coverage: 0 and GET /v1/snapshots/{year}/links -> links: [] until stage 2 (polities linked by Wikidata id).
+```
+Source: Cliopatria v0.2.1 (Seshat Global History Databank), CC BY 4.0. Clients must show: "Fronteiras históricas: Cliopatria
+(Seshat Global History Databank), CC BY 4.0, simplificadas". Changes made to the source: coordinates snapped to a 0.01 degree
+grid, aggregate rows dropped, names translated. Not done from the first v2 proposal: TopoJSON and Supabase Storage (the files are
+small enough as GeoJSON, largest 492 KB, and the web repo serves them).

@@ -48,6 +48,7 @@ from atlas_api.db.models import (
     Meta,
     Person,
     Polity,
+    Snapshot,
     Source,
     Subdivision,
 )
@@ -123,7 +124,10 @@ def import_facts(session: Session, path: Path) -> dict[str, Any]:
     subs = path.parent / "subdivisions.json"
     if subs.exists():
         summary["subdivisions_imported"] = import_subdivisions(session, subs, known)
-    read = [f for f in (path, leaders, people, langs, *ind_files, fx, history, events, ideologies, subs) if f.exists()]
+    snaps = path.parent / "snapshots.json"
+    if snaps.exists():
+        summary["snapshots_imported"] = import_snapshots(session, snaps)
+    read = [f for f in (path, leaders, people, langs, *ind_files, fx, history, events, ideologies, subs, snaps) if f.exists()]
     digest = hashlib.sha256(b"".join(f.read_bytes() for f in read)).hexdigest()[:16]
     summary["data_version"] = set_version(session, "facts", digest)
     return summary
@@ -229,6 +233,19 @@ def import_ideologies(session: Session, path: Path, known: set[str | None]) -> i
         session.execute(insert(IdeologyParty), parties)
     session.flush()
     return len(figures)
+
+
+def import_snapshots(session: Session, path: Path) -> int:
+    """spec 012 stage 1: data_out/snapshots.json (etl cliopatria) -> snapshots (rebuilt; links cascade) + its source row."""
+    data = json.loads(path.read_text(encoding="utf-8"))
+    src = data["source"]
+    session.merge(Source(id=src["id"], title=src["title"], url=src["url"], license=src["license"],
+                         retrieved_at=datetime.fromisoformat(src["retrieved_at"])))
+    session.execute(delete(Snapshot))
+    for x in data["items"]:
+        session.add(Snapshot(year=x["year"], geometry_path=x["geometry_url"], feature_count=x["feature_count"]))
+    session.flush()
+    return len(data["items"])
 
 
 def import_subdivisions(session: Session, path: Path, known: set[str | None]) -> int:
