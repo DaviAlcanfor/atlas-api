@@ -31,7 +31,7 @@ POLITY_TYPES = (
 EVENT_KINDS = ("political", "war", "treaty", "cultural", "economic", "other")
 LINK_KINDS = ("renamed", "succeeded", "split", "merged", "absorbed", "conquered")
 LINK_STATUSES = ("curated", "auto", "unresolved")
-GLOSSARY_KINDS = ("regime", "system", "region", "membership", "currency", "other")
+GLOSSARY_KINDS = ("regime", "system", "region", "membership", "currency", "ideology", "other")  # ideology: spec 018
 DRIVING_SIDES = ("left", "right")
 LEADER_ROLES = ("head_of_state", "head_of_government")
 LANGUAGE_STATUSES = ("official", "co_official", "sign", "historical", "indigenous", "immigrant")
@@ -471,3 +471,49 @@ class HistoryEvent(Base):
     year_start: Mapped[int] = mapped_column(Integer)
     year_end: Mapped[int | None] = mapped_column(Integer)
     wikipedia_url: Mapped[str | None] = mapped_column(Text)
+
+
+class IdeologyPerson(Base):
+    """spec 018: a figure of one or more political currents (Wikidata; texts are Wikidata's own)."""
+
+    __tablename__ = "ideology_people"
+    __table_args__ = (CheckConstraint(_in("role", ("thinker", "leader", "activist", "other")), name="ck_ideology_people_role"),)
+
+    person_id: Mapped[str] = mapped_column(Text, primary_key=True)
+    name: Mapped[str] = mapped_column(Text)
+    role: Mapped[str] = mapped_column(Text)
+    birth_year: Mapped[int | None] = mapped_column(Integer)
+    death_year: Mapped[int | None] = mapped_column(Integer)
+    summary: Mapped[str | None] = mapped_column(Text)
+    works: Mapped[list[str]] = mapped_column(JSONB)
+    image_url: Mapped[str | None] = mapped_column(Text)
+    image_credit: Mapped[str | None] = mapped_column(Text)
+    image_license: Mapped[str | None] = mapped_column(Text)
+    wikipedia_url: Mapped[str | None] = mapped_column(Text)
+
+
+class IdeologyFigure(Base):
+    """spec 018: why a person shows under a current in a scope (ISO2 or 'WORLD'): declared, or member of a party of it."""
+
+    __tablename__ = "ideology_figures"
+    __table_args__ = (CheckConstraint(_in("via", ("declared", "party")), name="ck_ideology_figures_via"),)
+
+    ideology_id: Mapped[str] = mapped_column(Text, ForeignKey("glossary_terms.id"), primary_key=True)
+    scope: Mapped[str] = mapped_column(Text, primary_key=True)
+    person_id: Mapped[str] = mapped_column(Text, ForeignKey("ideology_people.person_id"), primary_key=True)
+    ord: Mapped[int] = mapped_column(Integer)
+    via: Mapped[str] = mapped_column(Text)
+    party_id: Mapped[str | None] = mapped_column(Text)
+    party_name: Mapped[str | None] = mapped_column(Text)
+
+
+class IdeologyParty(Base):
+    """spec 018: parties whose stated ideology (Wikidata P1142) is the current, per country (most linked first)."""
+
+    __tablename__ = "ideology_parties"
+
+    ideology_id: Mapped[str] = mapped_column(Text, ForeignKey("glossary_terms.id"), primary_key=True)
+    iso2: Mapped[str] = mapped_column(CHAR(2), ForeignKey("polities.iso2"), primary_key=True)
+    party_id: Mapped[str] = mapped_column(Text, primary_key=True)
+    name: Mapped[str] = mapped_column(Text)
+    ord: Mapped[int] = mapped_column(Integer)

@@ -37,6 +37,9 @@ from atlas_api.db.models import (
     GlossaryTerm,
     HistoryEvent,
     HistoryPeriod,
+    IdeologyFigure,
+    IdeologyParty,
+    IdeologyPerson,
     Indicator,
     IndicatorDef,
     IndicatorLatest,
@@ -114,10 +117,13 @@ def import_facts(session: Session, path: Path) -> dict[str, Any]:
     events = path.parent / "events.json"
     if events.exists():
         summary["history_events_imported"] = import_events(session, events, known)
+    ideologies = path.parent / "ideologies.json"
+    if ideologies.exists():
+        summary["ideology_figures_imported"] = import_ideologies(session, ideologies, known)
     subs = path.parent / "subdivisions.json"
     if subs.exists():
         summary["subdivisions_imported"] = import_subdivisions(session, subs, known)
-    read = [f for f in (path, leaders, people, langs, *ind_files, fx, history, events, subs) if f.exists()]
+    read = [f for f in (path, leaders, people, langs, *ind_files, fx, history, events, ideologies, subs) if f.exists()]
     digest = hashlib.sha256(b"".join(f.read_bytes() for f in read)).hexdigest()[:16]
     summary["data_version"] = set_version(session, "facts", digest)
     return summary
@@ -182,6 +188,47 @@ def import_events(session: Session, path: Path, known: set[str | None]) -> int:
             n += 1
     session.flush()
     return n
+
+
+def import_ideologies(session: Session, path: Path, known: set[str | None]) -> int:
+    """spec 018: data_out/ideologies.json -> ideology_people/figures/parties (rebuilt). Currents missing from the glossary
+    (content/ideologies.yaml not imported yet) are skipped: their rows would break the foreign key."""
+    data = json.loads(path.read_text(encoding="utf-8"))
+    for t in (IdeologyFigure, IdeologyParty, IdeologyPerson):
+        session.execute(delete(t))
+    session.flush()
+    terms = set(session.scalars(select(GlossaryTerm.id).where(GlossaryTerm.kind == "ideology")))
+    used: set[str] = set()
+    figures: list[dict[str, Any]] = []
+    parties: list[dict[str, Any]] = []
+    for ideo, d in data["ideologies"].items():
+        if ideo not in terms:
+            continue
+        scopes = [("WORLD", d["founders"])] + [(iso2, c["figures"]) for iso2, c in d["countries"].items() if iso2 in known]
+        for scope, figs in scopes:
+            for i, f in enumerate(figs):
+                party = f.get("party") or {}
+                figures.append({"ideology_id": ideo, "scope": scope, "person_id": f["id"], "ord": i, "via": f["via"],
+                                "party_id": party.get("id"), "party_name": party.get("name")})
+                used.add(f["id"])
+        for iso2, c in d["countries"].items():
+            if iso2 in known:
+                parties += [{"ideology_id": ideo, "iso2": iso2, "party_id": p["id"], "name": p["name"], "ord": i}
+                            for i, p in enumerate(c["parties"])]
+    for pid in sorted(used):
+        p = data["people"][pid]
+        image = p.get("image") or {}
+        session.add(IdeologyPerson(person_id=pid, name=p["name"], role=p["role"], birth_year=p.get("birth_year"),
+                                   death_year=p.get("death_year"), summary=p.get("summary"), works=p.get("works") or [],
+                                   image_url=image.get("url"), image_credit=image.get("credit"),
+                                   image_license=image.get("license"), wikipedia_url=p.get("wikipedia_url")))
+    session.flush()
+    if figures:
+        session.execute(insert(IdeologyFigure), figures)
+    if parties:
+        session.execute(insert(IdeologyParty), parties)
+    session.flush()
+    return len(figures)
 
 
 def import_subdivisions(session: Session, path: Path, known: set[str | None]) -> int:

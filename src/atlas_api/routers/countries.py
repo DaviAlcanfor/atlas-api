@@ -9,6 +9,7 @@ from atlas_api.schemas import (
     CountryDetail,
     CountryEconomy,
     CountryHistory,
+    CountryIdeologies,
     CountryList,
     CountryProfile,
     LeaderList,
@@ -86,3 +87,10 @@ def list_subdivisions(db: DbSession, iso2: Annotated[str, Path(pattern=r"^[A-Z]{
     if not queries.country_exists(db, iso2):
         raise NotFoundError(f"Unknown country {iso2}")
     return queries.list_subdivisions(db, iso2)
+
+
+@router.get("/{iso2}/ideologies")  # v1.3 proposal (spec 018, CR-004 addendum 3)
+def list_ideologies(db: DbSession, iso2: Annotated[str, Path(pattern=r"^[A-Z]{2}$")]) -> CountryIdeologies:
+    if not queries.country_exists(db, iso2):
+        raise NotFoundError(f"Unknown country {iso2}")
+    return queries.list_country_ideologies(db, iso2)

@@ -268,3 +268,23 @@ CountryHistory { summary: string|null, periods: Period[], events: HistoryEvent[]
 `events`: up to 40 notable dated events (Wikidata, >= 10 Wikipedia editions) of the country or of a DIRECT predecessor state, sorted
 by (year_start, id); automatic, never human-reviewed (clients must say so). `Period.event_count` = events whose year_start falls in
 the period's years (0 when the period has no years). `sources` gains `wikidata` when there are events.
+
+### CR-004 addendum 3 (2026-11-13): political currents (spec 018)
+`GlossaryKind` gains `"ideology"` (14 currents in `content/ideologies.yaml`). Two changes to the approved 018 delta, for neutrality:
+`IdeologyFigure` gains `via` and `party` (WHY the person is listed), and `milestones`/`timeline` stay empty for now.
+```
+PartyRef          { id: string /* Wikidata Q-id */, name: string }
+IdeologyFigure    { person_id, name, role: "thinker"|"leader"|"activist"|"other", birth_year: int|null, death_year: int|null,
+                    summary: string|null, works: string[] /* max 3 */, image: Image|null, wikipedia_url: string|null,
+                    via: "declared"|"party", party: PartyRef|null }
+CountryIdeology   { term: GlossaryTerm, figures: IdeologyFigure[] /* max 6, declared first */, parties: PartyRef[] /* max 5 */,
+                    milestones: Event[] }
+GET /v1/countries/{iso2}/ideologies -> { items: CountryIdeology[] /* most figures first */, sources: Source[] }
+GET /v1/ideologies/{id}             -> { term: GlossaryTerm, founders: IdeologyFigure[] /* declared only */, timeline: Event[],
+                                         governed: [{ iso2, from_year: int, to_year: int|null }], sources: Source[] }
+```
+`via: "declared"` = deceased person with the current in a referenced Wikidata P1142; `"party"` = member of a party whose P1142 is
+the current (clients must show the party, e.g. "filiado ao Partido X", never present it as a label on the person). `governed` =
+continuous stretches in which a head of state/government (spec 006) belonged to a party of that current. Unknown id or a glossary
+term that is not a current -> 404.
+

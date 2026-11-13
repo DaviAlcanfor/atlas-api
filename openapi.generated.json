@@ -428,6 +428,49 @@
         }
       }
     },
+    "/v1/countries/{iso2}/ideologies": {
+      "get": {
+        "tags": [
+          "countries"
+        ],
+        "summary": "List Ideologies",
+        "operationId": "list_ideologies_v1_countries__iso2__ideologies_get",
+        "parameters": [
+          {
+            "name": "iso2",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z]{2}$",
+              "title": "Iso2"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CountryIdeologies"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/polities": {
       "get": {
         "tags": [
@@ -964,6 +1007,48 @@
           }
         }
       }
+    },
+    "/v1/ideologies/{id}": {
+      "get": {
+        "tags": [
+          "ideologies"
+        ],
+        "summary": "Get Ideology",
+        "operationId": "get_ideology_v1_ideologies__id__get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdeologyDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1431,6 +1516,66 @@
           "sources"
         ],
         "title": "CountryHistory"
+      },
+      "CountryIdeologies": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CountryIdeology"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/Source"
+            },
+            "type": "array",
+            "title": "Sources"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "sources"
+        ],
+        "title": "CountryIdeologies"
+      },
+      "CountryIdeology": {
+        "properties": {
+          "term": {
+            "$ref": "#/components/schemas/GlossaryTerm"
+          },
+          "figures": {
+            "items": {
+              "$ref": "#/components/schemas/IdeologyFigure"
+            },
+            "type": "array",
+            "title": "Figures"
+          },
+          "parties": {
+            "items": {
+              "$ref": "#/components/schemas/PartyRef"
+            },
+            "type": "array",
+            "title": "Parties"
+          },
+          "milestones": {
+            "items": {
+              "$ref": "#/components/schemas/Event"
+            },
+            "type": "array",
+            "title": "Milestones"
+          }
+        },
+        "type": "object",
+        "required": [
+          "term",
+          "figures",
+          "parties",
+          "milestones"
+        ],
+        "title": "CountryIdeology"
       },
       "CountryList": {
         "properties": {
@@ -1975,6 +2120,7 @@
               "region",
               "membership",
               "currency",
+              "ideology",
               "other"
             ],
             "title": "Kind"
@@ -2029,6 +2175,36 @@
           "sources"
         ],
         "title": "GlossaryTerm"
+      },
+      "Governed": {
+        "properties": {
+          "iso2": {
+            "type": "string",
+            "title": "Iso2"
+          },
+          "from_year": {
+            "type": "integer",
+            "title": "From Year"
+          },
+          "to_year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "To Year"
+          }
+        },
+        "type": "object",
+        "required": [
+          "iso2",
+          "from_year",
+          "to_year"
+        ],
+        "title": "Governed"
       },
       "HTTPValidationError": {
         "properties": {
@@ -2158,6 +2334,166 @@
           "rates"
         ],
         "title": "HistoryItem"
+      },
+      "IdeologyDetail": {
+        "properties": {
+          "term": {
+            "$ref": "#/components/schemas/GlossaryTerm"
+          },
+          "founders": {
+            "items": {
+              "$ref": "#/components/schemas/IdeologyFigure"
+            },
+            "type": "array",
+            "title": "Founders"
+          },
+          "timeline": {
+            "items": {
+              "$ref": "#/components/schemas/Event"
+            },
+            "type": "array",
+            "title": "Timeline"
+          },
+          "governed": {
+            "items": {
+              "$ref": "#/components/schemas/Governed"
+            },
+            "type": "array",
+            "title": "Governed"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/Source"
+            },
+            "type": "array",
+            "title": "Sources"
+          }
+        },
+        "type": "object",
+        "required": [
+          "term",
+          "founders",
+          "timeline",
+          "governed",
+          "sources"
+        ],
+        "title": "IdeologyDetail"
+      },
+      "IdeologyFigure": {
+        "properties": {
+          "person_id": {
+            "type": "string",
+            "title": "Person Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "thinker",
+              "leader",
+              "activist",
+              "other"
+            ],
+            "title": "Role"
+          },
+          "birth_year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Birth Year"
+          },
+          "death_year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Death Year"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "works": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Works"
+          },
+          "image": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Image"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "wikipedia_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Wikipedia Url"
+          },
+          "via": {
+            "type": "string",
+            "enum": [
+              "declared",
+              "party"
+            ],
+            "title": "Via"
+          },
+          "party": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartyRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "person_id",
+          "name",
+          "role",
+          "birth_year",
+          "death_year",
+          "summary",
+          "works",
+          "image",
+          "wikipedia_url",
+          "via",
+          "party"
+        ],
+        "title": "IdeologyFigure"
       },
       "Image": {
         "properties": {
@@ -2551,6 +2887,24 @@
           "name"
         ],
         "title": "Party"
+      },
+      "PartyRef": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "PartyRef"
       },
       "Period": {
         "properties": {

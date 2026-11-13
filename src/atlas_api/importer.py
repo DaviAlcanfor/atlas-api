@@ -7,6 +7,7 @@ content/
   polities/*.yaml   one polity each (keys: see Polity model; plus names[] and events[])
   succession.yaml   list of {predecessor, successor, year, kind, note}
   glossary.yaml     {terms: [{id, kind, label, short, body, icon, sources[]}]} (spec 004)
+  ideologies.yaml   same shape, kind: ideology, + wikidata: [Q-ids] for the ETL (spec 018); merged into the glossary
   regimes.yaml      read by the Wikidata ETL; here only checked: every regime_id needs a term
 
 An event with empty source_ids counts as UNVERIFIED in the summary.
@@ -58,9 +59,10 @@ def load_content(root: Path) -> dict[str, Any]:
     succ = _yaml(root / "succession.yaml") if (root / "succession.yaml").exists() else []
     polities = [_yaml(p) for p in sorted((root / "polities").glob("*.yaml"))]
     glossary = _yaml(root / "glossary.yaml") if (root / "glossary.yaml").exists() else {}
+    ideologies = _yaml(root / "ideologies.yaml") if (root / "ideologies.yaml").exists() else {}  # spec 018
     regimes = _yaml(root / "regimes.yaml") if (root / "regimes.yaml").exists() else {}
     return {"sources": sources or [], "succession": succ or [], "polities": polities,
-            "glossary": (glossary or {}).get("terms") or [],
+            "glossary": [*((glossary or {}).get("terms") or []), *((ideologies or {}).get("terms") or [])],
             "regime_ids": sorted((regimes or {}).get("labels") or {})}
 
 

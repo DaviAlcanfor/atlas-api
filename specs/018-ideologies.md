@@ -1,5 +1,5 @@
 # 018 - Ideologias: pensadores e figuras por país
-Status: approved | Contrato: v1.2 | Web: atlas-web/specs/018-ideologies.md | Executor: Opus
+Status: in progress (fase 1 feita em 2026-11-13: catálogo, figuras, partidos, governos; marcos pendentes) | Contrato: v1.2 | Web: atlas-web/specs/018-ideologies.md | Executor: Opus
 
 ## Dados
 - Correntes (catálogo fixo, `content/ideologies.yaml`): capitalismo, liberalismo, liberalismo econômico/libertarianismo, conservadorismo,
@@ -27,6 +27,20 @@ GET /v1/countries/{iso2}/ideologies -> { items: [{ term: GlossaryTerm, figures: 
 GET /v1/ideologies/{id}             -> { term, founders: IdeologyFigure[], timeline: Event[], governed: [{ iso2, from_year, to_year }], sources }
 ```
 
+## Fase 1 (2026-11-13): o que mudou em relação ao plano, por neutralidade
+- Catálogo: `content/ideologies.yaml`, 14 verbetes no mesmo formato (o que defende / origem e onde governou / defensores e críticos,
+  com repressão dita do mesmo jeito para qualquer lado). RASCUNHO para revisão humana.
+- **Figuras: não usar P1142 da pessoa viva, nem subcorrentes via P279\*.** Testado: P279\* pôs um presidente dos EUA em fascismo e
+  Frederico II em liberalismo; P1142 direto em pessoas vivas também traz rótulos contestados (mesmo com referência). Critério final:
+  (a) pessoa falecida com a corrente em P1142 referenciado; (b) membro (P102) de partido cujo P1142 é a corrente, país = do partido.
+  Cada figura diz por quê (`via`, `party`). Lista mundial = só (a). Subcorrentes só listadas à mão (nazismo Q7310 em fascismo).
+  Limite conhecido: (b) usa a ideologia ATUAL do partido (Lincoln aparece como conservador republicano).
+- `governed`: mandatos de chefes de Estado/governo (spec 006) com partido daquela corrente, juntados em trechos contínuos.
+- Marcos por corrente (`milestones`, `timeline`): vazios nesta fase.
+- `python -m etl wikidata-ideologies` -> `data_out/ideologies.json` (2.914 pessoas); migração 0014; endpoints; testes.
+
 ## Tarefas
-- [ ] catálogo + verbetes (rascunho neutro); SPARQL de figuras e partidos testado em BR, US, RU, CN, DE, CL
-- [ ] tabelas, import, endpoints, testes
+- [x] catálogo + verbetes (rascunho neutro); SPARQL de figuras e partidos testado (BR, US, DE e as 14 correntes)
+- [x] tabelas, import, endpoints, testes
+- [ ] revisão humana dos verbetes (dono)
+- [ ] marcos por corrente
