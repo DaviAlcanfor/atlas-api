@@ -190,3 +190,80 @@ GET /v1/currencies/{code}/history?vs=&from=&to=
 ## Seed ids (must exist, same ids in both agents' fixtures)
 Modern: austria (AT), brazil (BR), germany (DE), egypt (EG), japan (JP), turkey (TR), russia (RU), serbia (RS)
 Historical: ottoman-empire, austria-hungary, german-empire, weimar-republic, nazi-germany, east-germany, soviet-union, yugoslavia
+
+## v1.3 (CR-004 and addenda 1-4; applied 2026-11-13 under the owner's bulk approval of spec 026)
+All additive: a v1.2 client keeps working. Text as approved in contract/CHANGE_REQUESTS.md.
+
+### Base (CR-004)
+Shared types:
+```
+Period         { id: string /* "<iso2 lower>-<n>", article order */, title: string, year_start: int|null, year_end: int|null,
+                 summary: string /* paragraphs separated by a blank line */, event_count: int }
+CountryHistory { summary: string|null, periods: Period[], sources: Source[] }
+```
+Endpoint:
+```
+GET /v1/countries/{iso2}/history     -> CountryHistory
+                                        Condensed (never rewritten) from the pt.wikipedia article "História de X" linked by
+                                        Wikidata P2184; when there is none, the "História" section of the country article.
+                                        `sources[0]` = that article at the exact revision (url ?oldid=), license CC BY-SA 4.0:
+                                        clients must show it next to the text. Both year fields null = the title has no years;
+                                        year_start null + year_end set = "até <year_end>"; year_end null + year_start set = to present.
+                                        No article = { summary: null, periods: [], sources: [] }. Unknown iso2 -> 404.
+```
+
+### CR-004 addendum (2026-11-12): subdivisions (spec 024 stage 1)
+Shared types:
+```
+Subdivision     { wikidata_id: string /* key: the web's admin-1 polygons carry it as `wikidataid` */, code: string|null /* ISO 3166-2 */,
+                  name: string, capital: string|null, area_km2: number|null, population: { value: int, year: int|null }|null,
+                  flag: Image|null /* Commons, per-file credit + licence */ }
+SubdivisionList { items: Subdivision[], sources: Source[] }
+```
+Endpoint:
+```
+GET /v1/countries/{iso2}/subdivisions -> SubdivisionList
+                                        In the order of the web's admin-1 file. No head of government (Wikidata's are stale).
+                                        Country without subdivisions -> { items: [], sources: [] }. Unknown iso2 -> 404.
+```
+
+### CR-004 addendum 2 (2026-11-13): history events (spec 016 stage 2)
+Changes `CountryHistory` (additive field) and gives `Period.event_count` a value:
+```
+HistoryEvent   { id: string /* Wikidata Q-id */, title: string, summary: string|null, kind: EventKind /* same enum as Event */,
+                 year_start: int, year_end: int|null, wikipedia_url: string|null }
+CountryHistory { summary: string|null, periods: Period[], events: HistoryEvent[], sources: Source[] }
+```
+`events`: up to 40 notable dated events (Wikidata, >= 10 Wikipedia editions) of the country or of a DIRECT predecessor state, sorted
+by (year_start, id); automatic, never human-reviewed (clients must say so). `Period.event_count` = events whose year_start falls in
+the period's years (0 when the period has no years). `sources` gains `wikidata` when there are events.
+
+### CR-004 addendum 3 (2026-11-13): political currents (spec 018)
+`GlossaryKind` gains `"ideology"` (14 currents in `content/ideologies.yaml`). Two changes to the approved 018 delta, for neutrality:
+`IdeologyFigure` gains `via` and `party` (WHY the person is listed), and `milestones`/`timeline` stay empty for now.
+```
+PartyRef          { id: string /* Wikidata Q-id */, name: string }
+IdeologyFigure    { person_id, name, role: "thinker"|"leader"|"activist"|"other", birth_year: int|null, death_year: int|null,
+                    summary: string|null, works: string[] /* max 3 */, image: Image|null, wikipedia_url: string|null,
+                    via: "declared"|"party", party: PartyRef|null }
+CountryIdeology   { term: GlossaryTerm, figures: IdeologyFigure[] /* max 6, declared first */, parties: PartyRef[] /* max 5 */,
+                    milestones: Event[] }
+GET /v1/countries/{iso2}/ideologies -> { items: CountryIdeology[] /* most figures first */, sources: Source[] }
+GET /v1/ideologies/{id}             -> { term: GlossaryTerm, founders: IdeologyFigure[] /* declared only */, timeline: Event[],
+                                         governed: [{ iso2, from_year: int, to_year: int|null }], sources: Source[] }
+```
+`via: "declared"` = deceased person with the current in a referenced Wikidata P1142; `"party"` = member of a party whose P1142 is
+the current (clients must show the party, e.g. "filiado ao Partido X", never present it as a label on the person). `governed` =
+continuous stretches in which a head of state/government (spec 006) belonged to a party of that current. Unknown id or a glossary
+term that is not a current -> 404.
+
+
+### CR-004 addendum 4 (2026-11-13): subdivision area codes (spec 026)
+The owner asked for "o DDD dos estados de todos os países" (2026-11-13). Additive field on `Subdivision`:
+```
+Subdivision     += { area_codes: string[] /* telephone area codes (DDD), sorted; [] = no data */ }
+```
+Brazil: curated table from Anatel (content/area_codes.yaml); elsewhere Wikidata P473 where present (low coverage, ~22% of units).
+`SubdivisionList.sources` includes `anatel` for BR. Also: `CountryDetail.memberships` now lists curated organizations
+(content/organizations.yaml: Mercosul, BRICS, G7, G20, União Europeia, OTAN, OPEP, ASEAN, União Africana, CPLP, OCDE) besides
+"ONU"; each value is the `label` of a `membership` glossary term. No type change.

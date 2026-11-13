@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from etl.wikidata.pipeline import build, map_regime, regime_report
 
 
@@ -84,3 +86,19 @@ def test_build_regime_and_clues() -> None:
     assert do["clues"]["tld"] == ".do" and do["clues"]["scripts"] == []
     report = regime_report(out, REGIMES)
     assert "  unmapped Q179164: JP" in report and report[-1].endswith("(0): ")
+
+
+def test_curated_memberships_join_wikidata_and_match_glossary() -> None:
+    """spec 026: every curated organization has a glossary term with the same label; merge keeps order, skips unknown ISO2."""
+    import yaml
+    from etl.wikidata.pipeline import ORGANIZATIONS, add_curated_memberships
+
+    orgs = yaml.safe_load(ORGANIZATIONS.read_text(encoding="utf-8"))
+    glossary = yaml.safe_load(Path("content/glossary.yaml").read_text(encoding="utf-8"))
+    terms = glossary["terms"] if isinstance(glossary, dict) else glossary
+    assert set(orgs) <= {t["label"] for t in terms if t["kind"] == "membership"}
+    assert all(len(set(o["members"])) == len(o["members"]) for o in orgs.values())
+    countries = {"BR": {"memberships": ["ONU"]}, "VE": {"memberships": ["ONU"]}}
+    add_curated_memberships(countries, orgs)
+    assert {"ONU", "Mercosul", "BRICS", "G20", "CPLP"} == set(countries["BR"]["memberships"])
+    assert "Mercosul" not in countries["VE"]["memberships"]  # suspended since 2016

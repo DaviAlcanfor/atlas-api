@@ -1,0 +1,37 @@
+# Spec 026: telephone area codes (DDD) per ISO 3166-2 subdivision. Wins over Wikidata P473 (which has 1 of 27 Brazilian states).
+# Brazil: Anatel, Plano Geral de Códigos Nacionais (one code can reach across a border, e.g. 61 also serves Goiás towns around
+# Brasília; listed only under the unit it is assigned to). Facts from a federal regulator; no reuse restriction on the numbers.
+source:
+  id: anatel
+  title: "Anatel: Códigos Nacionais (DDD)"
+  url: "https://www.gov.br/anatel/pt-br/regulado/numeracao"
+  license: "Dado público (órgão federal)"
+  retrieved_at: "2026-11-13T00:00:00+00:00"
+codes:
+  BR-AC: ["68"]
+  BR-AL: ["82"]
+  BR-AP: ["96"]
+  BR-AM: ["92", "97"]
+  BR-BA: ["71", "73", "74", "75", "77"]
+  BR-CE: ["85", "88"]
+  BR-DF: ["61"]
+  BR-ES: ["27", "28"]
+  BR-GO: ["62", "64"]
+  BR-MA: ["98", "99"]
+  BR-MT: ["65", "66"]
+  BR-MS: ["67"]
+  BR-MG: ["31", "32", "33", "34", "35", "37", "38"]
+  BR-PA: ["91", "93", "94"]
+  BR-PB: ["83"]
+  BR-PR: ["41", "42", "43", "44", "45", "46"]
+  BR-PE: ["81", "87"]
+  BR-PI: ["86", "89"]
+  BR-RJ: ["21", "22", "24"]
+  BR-RN: ["84"]
+  BR-RS: ["51", "53", "54", "55"]
+  BR-RO: ["69"]
+  BR-RR: ["95"]
+  BR-SC: ["47", "48", "49"]
+  BR-SP: ["11", "12", "13", "14", "15", "16", "17", "18", "19"]
+  BR-SE: ["79"]
+  BR-TO: ["63"]

@@ -680,9 +680,10 @@ def list_subdivisions(s: Session, iso2: str) -> SubdivisionList:
     items = [SubdivisionOut(
         wikidata_id=x.wikidata_id, code=x.code, name=x.name, capital=x.capital, area_km2=x.area_km2,
         population=SubdivisionPopulation(value=x.population, year=x.population_year) if x.population is not None else None,
-        flag=Image(url=x.flag_url, credit=x.flag_credit or "", license=x.flag_license or "") if x.flag_url else None)
+        flag=Image(url=x.flag_url, credit=x.flag_credit or "", license=x.flag_license or "") if x.flag_url else None,
+        area_codes=x.area_codes or [])
         for x in rows]
-    return SubdivisionList(items=items, sources=_sources(s, {"wikidata"}) if items else [])
+    return SubdivisionList(items=items, sources=_sources(s, {"wikidata", "anatel"} if iso2 == "BR" else {"wikidata"}) if items else [])  # Anatel table: Brazil only
 
 
 # --- ideologies (spec 018) ------------------------------------------------------------------------------------------------

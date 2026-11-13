@@ -8,7 +8,8 @@ API:Etiquette (descriptive User-Agent with contact, requests in series), Wikiped
 
 Condensing is mechanical, never generative: summary = first paragraphs of the lead (<= SUMMARY_CHARS, cut at a sentence end);
 period = each level-2 section that is not reference matter, title as written (years parsed from it when present),
-text = its first paragraphs (<= PERIOD_CHARS). Raw extracts are cached in etl_cache/wikipedia/history/<ISO2>.json.
+text = its first paragraphs (<= PERIOD_CHARS) and, when it has subsections (spec 026), one more paragraph per subsection:
+"<subsection title>: <its first sentences>" (<= SUB_CHARS each, <= PERIOD_WITH_SUBS in all). Raw extracts are cached in etl_cache/wikipedia/history/<ISO2>.json.
 """
 
 import json
@@ -28,6 +29,10 @@ from etl.wikidata.leaders import _cached, _get_json
 WIKI_API = "https://pt.wikipedia.org/w/api.php"
 SUMMARY_CHARS = 1100
 PERIOD_CHARS = 650
+SUB_CHARS = 380  # spec 026: per subsection
+PERIOD_WITH_SUBS = 2600
+NL2 = "\n\n"
+_SENTENCE = re.compile(r"(?<=[.!?])(?<!\b[A-ZÀ-Ý]\.)\s+(?=[A-ZÀ-Ý])")  # not after "D." (D. Pedro)
 ARTICLES_QUERY = """SELECT ?iso2 ?pt WHERE { ?c wdt:P297 ?iso2; wdt:P2184 ?h.
  ?pt schema:about ?h; schema:isPartOf <https://pt.wikipedia.org/> }"""
 SKIP = re.compile(r"^(ver também|notas?|referências|bibliografia|ligações externas|leitura (adicional|complementar)|"
@@ -77,10 +82,35 @@ def _sections(text: str, level: int) -> list[tuple[str, str]]:
     return list(zip(parts[1::2], parts[2::2], strict=True))
 
 
-def _periods(sections: list[tuple[str, str]]) -> list[dict[str, Any]]:
+def first_sentences(text: str, limit: int) -> str:
+    """The first paragraph's leading sentences while they fit in `limit` (at least one, cut like condense())."""
+    first = condense(text, 10**6).split(NL2, 1)[0]
+    out = ""
+    for sent in _SENTENCE.split(first):
+        if out and len(out) + len(sent) + 1 > limit:
+            break
+        out = f"{out} {sent}" if out else sent
+    return out if len(out) <= limit else condense(out, limit)
+
+
+def period_text(body: str, level: int) -> str:
+    """spec 026: intro paragraphs + one "<title>: <first sentences>" paragraph per subsection (level + 1), by whole paragraphs."""
+    subs = [(t.strip(), b) for t, b in _sections(body, level + 1) if not SKIP.match(t.strip())]
+    intro = re.split(rf"^{'=' * (level + 1)} ", body, maxsplit=1, flags=re.MULTILINE)[0] if subs else body
+    firsts = [(t, first_sentences(b, SUB_CHARS)) for t, b in subs]
+    paras = [x for x in [condense(intro, PERIOD_CHARS), *(f"{t}: {f}" for t, f in firsts if f)] if x]
+    out = ""
+    for x in paras:
+        if out and len(out) + len(x) + 2 > PERIOD_WITH_SUBS:
+            break
+        out = f"{out}{NL2}{x}" if out else x
+    return out
+
+
+def _periods(sections: list[tuple[str, str]], level: int) -> list[dict[str, Any]]:
     out = []
     for title, body in sections:
-        text = condense(body, PERIOD_CHARS)
+        text = period_text(body, level)
         if text and not SKIP.match(title.strip()):
             clean, start, end = parse_years(title)
             out.append({"title": clean, "year_start": start, "year_end": end, "text": text})
@@ -94,13 +124,15 @@ def split(extract: str, country_article: bool = False) -> dict[str, Any]:
         body = next((b for t, b in _sections(extract, 2) if t.strip().lower() == "história"), None)
         if body is None:
             return {"summary": None, "periods": []}
-        return {"summary": condense(body, SUMMARY_CHARS) or None, "periods": _periods(_sections(body, 3))}
+        intro = re.split(r"^=== ", body, maxsplit=1, flags=re.MULTILINE)[0]
+        return {"summary": condense(intro, SUMMARY_CHARS) or None, "periods": _periods(_sections(body, 3), 3)}
     lead = re.split(r"^==", extract, maxsplit=1, flags=re.MULTILINE)[0]
     kept = "".join(f"== {t} ==\n{b}" for t, b in _sections(extract, 2) if not SKIP.match(t.strip()))
-    periods = _periods(_sections(kept, 2))
+    periods = _periods(_sections(kept, 2), 2)
     if len(periods) < 3:
-        periods = _periods(_sections(kept, 3)) or periods
-    return {"summary": condense(lead, SUMMARY_CHARS) or None, "periods": periods}
+        periods = _periods(_sections(kept, 3), 3) or periods
+    summary = re.sub(r"^História d", "A história d", condense(lead, SUMMARY_CHARS))  # spec 026: the lead drops the article
+    return {"summary": summary or None, "periods": periods}
 
 
 def fetch(client: httpx.Client, title: str, f: Path, refresh: bool) -> dict[str, Any]:

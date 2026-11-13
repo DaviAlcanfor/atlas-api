@@ -46,6 +46,7 @@ ORGS = {"Q1065": "ONU"}
 FLAG_URL = "https://flagcdn.com/{code}.svg"
 OFFICIAL_NAMES_PT = Path("content/official_names_pt.yaml")
 REGIMES = Path("content/regimes.yaml")
+ORGANIZATIONS = Path("content/organizations.yaml")  # spec 026: curated lists for every organization but the UN
 DRIVING_SIDE = {"Q11920728": "left", "Q14565199": "right"}
 # ISO 15924 codes dropped from `scripts`: Braille (not on street signs), English shorthand /
 # historic alphabets Wikidata lists for English (Deseret, Shavian) and composite codes
@@ -364,6 +365,15 @@ def regime_report(countries: dict[str, dict[str, Any]], regimes: dict[str, Any])
     return lines
 
 
+def add_curated_memberships(countries: dict[str, Any], orgs: dict[str, Any]) -> None:
+    """spec 026: content/organizations.yaml (label -> members) joins the Wikidata ones; unknown ISO2 codes are ignored."""
+    for label, org in orgs.items():
+        for iso2 in org["members"]:
+            mem = countries.get(iso2, {}).get("memberships")
+            if mem is not None and label not in mem:
+                mem.append(label)
+
+
 def run() -> None:
     s = get_etl_settings()
     if not s.wikidata_contact:
@@ -384,6 +394,7 @@ def run() -> None:
         sys.exit(f"regimes.yaml: rules use regime_ids without a label: {sorted(unknown)}")
     logging.basicConfig(level=logging.WARNING, format="  %(message)s")
     countries = build(raw, pt_names, regimes)
+    add_curated_memberships(countries, yaml.safe_load(ORGANIZATIONS.read_text(encoding="utf-8")) if ORGANIZATIONS.exists() else {})
     s.out_dir.mkdir(parents=True, exist_ok=True)
     payload = {
         "source": {"id": "wikidata", "title": "Wikidata", "url": "https://www.wikidata.org/",
