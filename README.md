@@ -1,209 +1,194 @@
 # Atlas API
 
-API somente leitura que serve **países modernos**, **entidades políticas históricas** (impérios, reinos, estados extintos), suas **linhas do tempo** e o **mapeamento entre polígonos de mapas históricos e essas entidades**.
+**API REST somente leitura com fatos, história, política e economia dos países do mundo, reunidos de fontes abertas, com a fonte e a licença de cada dado.**
 
-> **Status:** em construção. As rotas leem dados reais do Postgres (197 países da Wikidata + 8 entidades históricas placeholders); v1.2 parte A (idiomas, perfil, economia, câmbio) existe só localmente; snapshots e notícias ainda não existem. O que falta está em [docs/TODO.md](docs/TODO.md).
+[Documentação interativa](https://atlas-api.fastapicloud.dev/docs) · [Site do Atlas](https://atlas-web-ruddy.vercel.app) · [Repositório do site](https://github.com/DaviAlcanfor/atlas-web)
 
-## Por que existe
+```bash
+curl https://atlas-api.fastapicloud.dev/v1/countries/BR/subdivisions
+```
 
-A mesma terra muda de "dono" político ao longo do tempo (Império Otomano → República da Turquia; Iugoslávia → vários estados). O dataset de mapas históricos ([historical-basemaps](https://github.com/aourednik/historical-basemaps)) só tem nomes por ano, sem códigos ISO. Esta API guarda:
+```json
+{
+  "items": [
+    {
+      "wikidata_id": "Q175", "code": "BR-SP", "name": "São Paulo", "capital": "São Paulo",
+      "area_km2": 248209.4, "population": { "value": 46179008, "year": 2026 },
+      "flag": { "url": "https://…/Bandeira_do_estado_de_São_Paulo.svg.png", "credit": "… / Wikimedia Commons", "license": "Public domain" }
+    }
+  ],
+  "sources": [{ "id": "wikidata", "title": "Wikidata", "license": "CC0 1.0", "…": "…" }]
+}
+```
 
-1. entidades políticas com tempo de vida e períodos de nome;
-2. ligações de sucessão entre elas;
-3. um mapeamento curado (ano do snapshot, nome do polígono) → entidade;
-4. linhas do tempo com precisão de data.
+## O que a API oferece
 
-O valioso é o **modelo de dados e a curadoria**, não a camada HTTP.
+- **197 países e 3.754 estados e províncias:** capital, população com ano, área, regime político, idiomas, moedas, organizações, bandeira e código ISO.
+- **Política:** governantes atuais e anteriores (10.766 mandatos) e um glossário de formas de governo.
+- **Como vive o povo:** 25 indicadores (23 do Banco Mundial, 2 do PNUD) (expectativa de vida, IDH, renda, escolaridade...), com a posição do país no ranking mundial e a média da região.
+- **Economia e câmbio:** PIB, inflação, comércio e cotações diárias desde 1999, com comparação entre países.
+- **História:** resumo e períodos condensados da Wikipédia (190 países), marcos curados e linhagem entre entidades políticas.
+- **Pessoas importantes:** as figuras mais conhecidas de cada país, segundo o Pantheon (7.749 pessoas).
+
+Três regras valem para todos os endpoints:
+- **Nada é inventado:** dado ausente é `null`.
+- **Toda resposta traz `sources`,** com título, URL, licença e data de coleta.
+- **Texto não verificado é marcado como tal.**
+
+## Endpoints
+
+Todos são `GET`, com prefixo `/v1`. O contrato completo está em [`contract/CONTRACT.md`](contract/CONTRACT.md), e a referência navegável em [`/docs`](https://atlas-api.fastapicloud.dev/docs).
+
+| Rota | Retorna |
+|---|---|
+| `/countries` | lista de países (nome, região, regime, capitais com coordenadas, marcador de micro-estado) |
+| `/countries/{iso2}` | detalhe do país: fatos, idiomas falados por status, moedas, política atual, marcos, pistas de GeoGuessr |
+| `/countries/{iso2}/profile` | indicadores sociais com ranking mundial e média regional; composição religiosa e étnica |
+| `/countries/{iso2}/economy` | indicadores econômicos com série histórica |
+| `/countries/{iso2}/leaders?role=` | chefes de Estado e de governo, com foto, partido e mandato |
+| `/countries/{iso2}/people?domain=&limit=` | pessoas importantes por área (política, ciência, artes, esportes...) |
+| `/countries/{iso2}/history` | resumo da história e períodos com datas |
+| `/countries/{iso2}/subdivisions` | estados e províncias com bandeira |
+| `/economy/compare?countries=&ids=` | 2 a 5 países lado a lado |
+| `/currencies/{code}` · `/currencies/{code}/history?vs=&from=&to=` | cotações atuais, variação e volatilidade · histórico diário (semanal em janelas longas) |
+| `/glossary` · `/glossary/{id}` | verbetes (formas de governo, regiões, organizações) com exemplos |
+| `/polities?year=` · `/polities/{id}` | entidades políticas (inclusive extintas), com nomes ao longo do tempo e sucessão |
+| `/snapshots` · `/snapshots/nearest?year=` · `/snapshots/{year}/links` | mapas históricos (base da futura viagem no tempo) |
+| `/search?q=` · `/meta` · `/health` | busca sem acento · versão dos dados · estado do serviço |
+
+**Erros:** `application/problem+json` (`404` para id ou ano desconhecido, `422` para parâmetro inválido, `503` com o banco indisponível).
+
+**Cache:** toda resposta leva `ETag` (derivado da versão dos dados), `X-Data-Version` e `Cache-Control: public, max-age=300, stale-while-revalidate=86400`. Um `If-None-Match` igual recebe `304`.
+
+## Arquitetura
+
+```mermaid
+flowchart LR
+  subgraph Fontes abertas
+    WD[Wikidata] --- WB[Banco Mundial] --- UN[PNUD] --- WP[Wikipédia] --- ECB[BCE] --- PT[Pantheon] --- CM[Commons]
+  end
+  Fontes -->|"python -m etl …"<br/>cache + polidez| OUT[data_out/*.json]
+  CUR[content/*.yaml<br/>curadoria] --> IMP
+  OUT --> IMP["atlas_api.cli import-content<br/>import-facts"]
+  IMP -->|uma transação| DB[(PostgreSQL)]
+  DB --> API[FastAPI<br/>somente leitura]
+  API --> WEB[Atlas web]
+```
+
+- **ETL separado da API.** O ETL (`etl/`) tem dependências próprias e nunca é importado pelo processo da API, que fica leve e sobe rápido. Cada fonte tem um módulo que respeita as regras de uso dela (User-Agent com contato, uma consulta por vez, cache das respostas brutas) e grava um JSON em `data_out/`.
+- **Um único escritor.** O banco só é escrito pelos comandos `import-content` (curadoria em `content/`) e `import-facts` (saídas do ETL), sempre numa transação. A API não tem rotas de escrita. Cada importação gera uma nova versão dos dados, que vira o `ETag`.
+- **Migrações automáticas.** Ao subir, a API leva o schema ao `head` do Alembic, com um advisory lock do Postgres para réplicas que sobem juntas. Por isso as migrações são sempre aditivas. Os dados continuam sendo importados à parte.
+- **Resiliência.** Cada processo tem um pool de conexões pequeno e limitado, com espera curta: num pico, a API responde `503` rápido em vez de travar. Se o banco estiver fora na subida, a API sobe mesmo assim.
 
 ## Stack
 
-Python 3.12+ · [uv](https://docs.astral.sh/uv/) · FastAPI · Pydantic v2 · SQLAlchemy 2 (síncrono, psycopg 3) · Alembic · PostgreSQL (Docker local, Supabase em produção) · pytest · ruff · mypy (strict).
+Python 3.12 · FastAPI · Pydantic v2 · SQLAlchemy 2 (psycopg 3) · Alembic · PostgreSQL (Supabase em produção) · pytest com Postgres real · ruff · mypy (strict) · hospedagem no FastAPI Cloud
 
-SQLAlchemy síncrono basta aqui: a carga é de leitura, com consultas curtas, e o FastAPI roda endpoints síncronos em um pool de threads.
+## Rodando localmente
 
-## Estrutura
-
-```
-contract/            CONTRACT.md (CONGELADO: nunca editar) e CHANGE_REQUESTS.md
-docs/                CONTRACT_NOTES.md (contrato → código) e TODO.md (o que falta)
-src/atlas_api/
-  main.py            fábrica do app + lifespan
-  config.py          configurações (pydantic-settings)
-  deps.py            injeção de dependências (Depends)
-  errors.py          exceções de domínio → application/problem+json
-  schemas/           modelos Pydantic = contrato campo a campo
-  routers/           um arquivo por recurso (/v1/...)
-  db/                modelos ORM e sessão
-  fixtures/          dados de exemplo em JSON (provisório, some na Fase 1)
-etl/                 CLI separada de ETL (não é importada pela API)
-migrations/          migrations do Alembic
-scripts/             utilitários (ex.: exportar o OpenAPI)
-tests/
-```
-
-Regra de ouro: o processo da API **nunca importa** o grupo de dependências `etl` (pandas, geopandas...). Assim a imagem de deploy fica pequena e o cold start rápido.
-
-## Começando
-
-Pré-requisitos: Python 3.12+, `uv`, Docker Desktop.
+Pré-requisitos: Python 3.12 ou 3.13, [uv](https://docs.astral.sh/uv/) e Docker.
 
 ```bash
-uv sync                       # instala dependências (inclui dev)
-cp .env.example .env          # preencha os valores (veja abaixo)
-docker compose up -d --wait   # Postgres local        (make db-up)
-uv run alembic upgrade head   # cria as tabelas        (make migrate)
-uv run uvicorn atlas_api.main:app --reload --app-dir src   # (make dev)
+uv sync                                   # dependências da API e de desenvolvimento
+cp .env.example .env                      # ajuste os valores (tabela abaixo)
+docker compose up -d --wait               # Postgres local
+uv run alembic upgrade head               # schema (a API também faz isso ao subir)
+uv run python -m atlas_api.cli import-content   # curadoria de content/
+uv run uvicorn atlas_api.main:app --reload --app-dir src   # http://localhost:8000/docs
 ```
 
-Docs interativas em <http://localhost:8000/docs>.
-
-> No Windows sem `make`, use as linhas `uv run ...` de cada alvo do [Makefile](Makefile).
-
-### Variáveis de ambiente
-
-Segredos **só** por variável de ambiente (ou `.env`, que o git ignora). Nunca commite um `.env` real.
-
-| Variável | Para quê | Observação |
-|---|---|---|
-| `DATABASE_URL` | Conexão com o Postgres | `postgresql+psycopg://usuário:senha@host:porta/banco`. Caracteres especiais na senha devem ser codificados (`@` → `%40`). |
-| `CORS_ORIGINS` | Origens permitidas | Separadas por vírgula. Ex.: `http://localhost:5173,https://seu-front.example` |
-| `DB_POOL_SIZE` / `DB_MAX_OVERFLOW` / `DB_POOL_TIMEOUT` | Pool de conexões por processo (padrão 5 / 2 / 3 s) | Sem conexão livre em `DB_POOL_TIMEOUT` s a API responde 503 em vez de travar. Total = processos × (size + overflow): manter abaixo do pool do Supabase (spec 019 item 5). |
-| `DATA_VERSION_TTL` | Cache do `data_version` (ETag) em segundos | Padrão 5; 0 = lê o banco a cada requisição. |
-| `LOG_LEVEL` | Nível de log | Padrão `INFO` |
-| `RESTCOUNTRIES_API_KEY` | Chave do REST Countries | Só o ETL de referência usa |
-| `WIKIDATA_CONTACT` | E-mail ou site para o User-Agent da Wikidata | Exigido pela política da Wikimedia; só o ETL usa |
-| `WEB_PUBLIC_DATA_DIR` | Pasta pública do front | Para copiar a geometria (Fase 3) |
-
-**Supabase:** use o *Session pooler* (porta 5432, usuário `postgres.<ref>`). O host direto (`db.<ref>.supabase.co`) é só IPv6 e falha em muitas redes. Evite o modo *transaction* (porta 6543): costuma quebrar prepared statements do psycopg 3.
-
-## Comandos
+Para preencher os fatos, rode o ETL e depois o `import-facts` (seção abaixo).
 
 | Comando | O que faz |
 |---|---|
-| `make dev` | Sobe a API com reload |
-| `make test` | Roda os testes |
-| `make lint` | ruff |
-| `make typecheck` | mypy (strict) |
-| `make openapi` | Gera `openapi.generated.json` |
-| `make db-up` | Sobe o Postgres local |
-| `make migrate` | Aplica as migrations |
-| `make etl-restcountries` | Baixa fatos de países (ver ETL) |
+| `make dev` | API com reload |
+| `make test` | pytest contra um Postgres local descartável (cria `atlas_test`) |
+| `make lint` · `make typecheck` | ruff · mypy strict |
+| `make openapi` | gera `openapi.generated.json`, de onde o site gera os tipos |
+| `make db-up` · `make migrate` | Postgres local · migrações manuais |
 
-Ainda por criar (ver TODO): `seed`, `import`, `etl-modern-geometry`, `etl-snapshots`, `etl-link-snapshots`, `sync-geometry`.
+> **Windows:** sem `make`, use a linha `uv run …` de cada alvo do [Makefile](Makefile). Se o OneDrive travar o `.venv`, chame os executáveis direto (`.venv/Scripts/python.exe`).
 
-## Contrato da API
+### Variáveis de ambiente
 
-O contrato oficial é [contract/CONTRACT.md](contract/CONTRACT.md) e é **congelado**: o front mantém uma cópia idêntica. Problema no contrato? Registre em `contract/CHANGE_REQUESTS.md` (o quê, por quê, correção proposta) e avise; não contorne em silêncio. Como o contrato se mapeia ao código: [docs/CONTRACT_NOTES.md](docs/CONTRACT_NOTES.md).
+Segredos só por variável de ambiente ou `.env`, que o git ignora.
 
-Endpoints (todos GET, prefixo `/v1`):
-
-| Rota | Retorno |
+| Variável | Para quê |
 |---|---|
-| `/health` | `{status, db}` |
-| `/meta` | versão dos dados, intervalo de anos, anos de snapshot, contagens |
-| `/countries` · `/countries/{iso2}` | lista e detalhe de países modernos |
-| `/polities?year=&limit=&offset=` | entidades (filtráveis por ano) |
-| `/polities/{id}` | detalhe com nomes, sucessores, linha do tempo, fontes |
-| `/snapshots` · `/snapshots/nearest?year=` · `/snapshots/{year}/links` | mapas históricos e mapeamento |
-| `/search?q=&limit=` | busca (países e entidades) |
+| `DATABASE_URL` | Postgres (`postgresql+psycopg://usuário:senha@host:porta/banco`; codifique caracteres especiais da senha) |
+| `CORS_ORIGINS` | origens permitidas, separadas por vírgula |
+| `AUTO_MIGRATE` | `false` desliga a migração na subida (padrão `true`) |
+| `DB_POOL_SIZE` · `DB_MAX_OVERFLOW` · `DB_POOL_TIMEOUT` | pool por processo (padrão 5 · 2 · 3 s). Total = processos × (size + overflow), abaixo do limite do pooler |
+| `DATA_VERSION_TTL` | segundos de cache da versão dos dados (padrão 5) |
+| `ATLAS_DB_PORT` | porta local do Postgres no `docker compose` (padrão 5432) |
+| `WIKIDATA_CONTACT` | e-mail ou site para o User-Agent da Wikimedia (só o ETL) |
+| `IMAGE_BUCKET_URL` · `SUPABASE_SERVICE_KEY` | espelham fotos e bandeiras do Commons num bucket público (só o ETL; sem elas, as URLs apontam para o Commons) |
+| `ADMIN1_DIR` | pasta com os polígonos de estados do site (padrão `../geo/public/data/admin1`) |
 
-Erros: `application/problem+json` com `{type, title, status, detail}` (404 id/ano desconhecido, 422 parâmetro inválido). Geometria **não** é servida pela API; o front a lê de `/data/...`.
+**Supabase:** use o *Session pooler* (porta 5432). O host direto é só IPv6, e o modo *transaction* (porta 6543) quebra prepared statements do psycopg 3.
 
-Cabeçalhos de cache (`ETag`, `X-Data-Version`, `Cache-Control`, 304) estão previstos no contrato e **ainda não implementados** (Fase 4).
+## Dados: ETL e importação
+
+```bash
+python -m etl wikidata                # fatos dos países            -> data_out/wikidata.json
+python -m etl wikidata-leaders        # governantes e fotos         -> leaders.json
+python -m etl wikidata-languages      # idiomas por status          -> languages.json
+python -m etl wikidata-subdivisions   # estados e bandeiras         -> subdivisions.json
+python -m etl wikipedia-history       # resumos de história         -> history.json
+python -m etl pantheon                # pessoas importantes         -> pantheon.json
+python -m etl worldbank && python -m etl undp   # indicadores       -> worldbank.json, undp.json
+python -m etl fx                      # câmbio diário               -> fx.json
+python -m atlas_api.cli import-facts  # lê o que existir em data_out/ e grava numa transação
+```
+
+Os comandos aceitam códigos ISO2 para uma amostra (`python -m etl wikipedia-history BR JP`) e `--refresh` para ignorar o cache. Antes de integrar uma fonte nova, os termos de uso e a licença dela são lidos e citados na spec correspondente. Esse registro está em [`specs/`](specs/README.md).
+
+**Publicar dados em produção:** rode `import-facts` com `DATABASE_URL` apontando para o banco de produção, a partir de um checkout do código que está no ar. O modelo está em [`scripts/prod-migrate-example.ps1`](scripts/prod-migrate-example.ps1).
 
 ## Modelo de dados
 
-Tabelas (PostgreSQL, com CHECKs e índices; definidas em [src/atlas_api/db/models.py](src/atlas_api/db/models.py)):
-
-| Tabela | Conteúdo |
+| Tabelas | Conteúdo |
 |---|---|
-| `polities` | Entidades políticas: tipo, início/fim, precisão, ISO2, regime, resumo, bloco de política atual |
-| `polity_names` | Períodos de nome (ex.: Constantinopla → Istambul) |
-| `succession` | Ligações predecessor → sucessor (`renamed`, `succeeded`, `split`, `merged`, `absorbed`, `conquered`) |
-| `events` · `event_sources` · `sources` | Linha do tempo com precisão de data e fontes citáveis |
-| `snapshots` · `snapshot_links` | Mapas históricos e o mapeamento (ano, nome do polígono) → entidade, com status `curated`/`auto`/`unresolved` |
-| `country_facts` | Fatos de países modernos (capital, população, idiomas...) vindos da Wikidata (CC0) |
-| `meta` | `data_version` (hash do conteúdo) e `generated_at` |
+| `polities` · `polity_names` · `succession` | entidades políticas, nomes ao longo do tempo e sucessão (renomeada, sucedida, dividida, unida, absorvida, conquistada) |
+| `events` · `sources` · `event_sources` | marcos com precisão de data e fontes citáveis |
+| `country_facts` · `capitals` · `country_languages` · `compositions` | fatos dos países |
+| `leaders` · `people` | governantes e pessoas importantes |
+| `indicator_defs` · `indicators` · `indicator_latest` · `indicator_stats` | séries e estatísticas pré-calculadas (ranking, mediana mundial, média regional) |
+| `fx_rates` · `currency_stats` | câmbio |
+| `country_history` · `history_periods` · `subdivisions` · `glossary_terms` | história condensada, estados e glossário |
+| `snapshots` · `snapshot_links` · `meta` | mapas históricos e versão dos dados |
 
-O **único escritor** do banco será o comando de importação de conteúdo (`import-content`, idempotente, em uma transação). Não há endpoints de escrita nem autenticação na v1.
+**Regras de tempo:**
+- Não existe ano zero: 1 a.C. é `-1`.
+- Uma entidade existe no ano Y quando `start_year ≤ Y ≤ end_year`, com fim nulo significando "até hoje".
+- O nome no ano Y é o do período que cobre Y.
+- O snapshot mais próximo desempata para o anterior.
 
-## Regras do "ano Y"
+## Qualidade
 
-- **Sem ano zero:** 1 a.C. = `-1`, 1 d.C. = `1`. A distância entre anos deve pular o zero (documentar no helper `year_distance`).
-- **Existe no ano Y** ⇔ `start_year <= Y` e (`end_year` é nulo ou `Y <= end_year`). Os dois extremos são **inclusivos**; `end_year` é o último ano de existência.
-- **Nome no ano Y:** o período de `polity_names` que cobre Y; se nenhum, `polities.name`.
-- **Snapshot mais próximo:** menor distância absoluta; empate vai para o **anterior**; sempre devolve `distance_years`.
-- **`has_content`:** a entidade tem resumo ou ao menos um evento.
-- Linhas do tempo ordenadas por `year_start` e depois `id`. Sucessão **acíclica**.
-- **Nunca inventar dado:** ausente = `null`.
-
-## ETL
-
-CLI separada em [etl/](etl/), usa o grupo de dependências `etl` e lê o `.env` sozinha.
-
-> **Não usado para o banco; mantido só para referência.** Os termos do REST Countries (Seção 5 e 6) proíbem guardar os dados além de 3 dias e agregá-los em produto downstream. Os fatos persistentes virão da Wikidata (CC0) e do World Bank (Fase 2).
-
-**REST Countries** (referência; `make etl-restcountries` → `data_out/facts.json`):
-- Usa o endpoint de lista paginado (≈3 requisições para todos os países) e cacheia as respostas brutas em `etl_cache/` por até 3 dias.
-- Plano Free: 1.000 req/mês, 20 req/10 s, uso não comercial.
-- Os termos limitam o cache a 3 dias, exigem atribuição ("REST Countries" com link) e restringem re-expor os dados como API/dataset próprio. **Avalie isso antes do deploy público** (ver [docs/TODO.md](docs/TODO.md)).
-- O API não informa o ano da população: `population_year` fica `null`.
-
-**Wikidata** (`make etl-wikidata` → `data_out/wikidata.json`): uma consulta SPARQL pequena por propriedade, uma de cada vez, com User-Agent descritivo (contato em `WIKIDATA_CONTACT`) e respostas brutas em `etl_cache/wikidata/` com `retrieved_at`. Licença CC0; a Wikidata pede, sem exigir, a menção "Data from Wikidata".
-
-**v1.2 (parte A, specs 009/015/017/019)** — todos gravam em `data_out/` e são lidos por `import-facts`:
-- `python -m etl wikidata-languages [BR IN ...]` → `languages.json` (idiomas falados; com ISO2 = amostra em `languages_sample.json`). Famílias e regiões nativas em `content/language_families.yaml` (rascunho, revisão humana pendente).
-- `python -m etl worldbank` → `worldbank.json` (23 indicadores WDI desde 1990, arquivo bulk CSV por indicador, CC BY 4.0) e depois `python -m etl undp` → `undp.json` (IDH e anos médios de estudo, CC BY 3.0 IGO).
-- `python -m etl fx` → `fx.json` (câmbio BCE diário desde 1999 via Frankfurter + exchange-api semanal desde 2024-03 para moedas fora do BCE, fonte secundária). Rodar de novo = só o ano corrente e a data `latest` são rebaixados.
-- **Imagens (spec 019):** a Commons pede para evitar hotlink. Com `IMAGE_BUCKET_URL` (`https://<ref>.supabase.co/storage/v1`) e `SUPABASE_SERVICE_KEY` no ambiente, `wikidata-leaders` e `pantheon` copiam cada miniatura (320px) para o bucket público `atlas-images` (crie o bucket como público antes) e `image.url` passa a apontar para lá; uploads já feitos ficam em `etl_cache/.../mirrored.json`. **Sem as duas variáveis o passo é pulado** e a URL continua sendo a da Commons (fallback). A chave de serviço nunca vai para o git nem para o processo da API.
-
-Planejados: snapshots históricos e proposta de links para curadoria. A geometria **moderna** é do repositório web; aqui só entram os snapshots históricos.
-
-## Seed dos países (política da opção A)
-
-Todo país moderno precisa de uma linha em `polities` (`country_facts.iso2` aponta para ela e `start_year` é obrigatório). Os 197 arquivos em `content/polities/` são **gerados** por `scripts/seed_countries.py` a partir da Wikidata, com:
-
-- `start_year: 1946` e `start_precision: century` = **placeholder, data de formação ainda não curada**. É posterior a 1945 de propósito, para os países modernos não aparecerem em `/polities?year=` de anos anteriores; em troca, países formados depois de 1946 aparecem um pouco cedo. Para curar um país, edite o YAML.
-- `type: other` (não curado) e ids em português sem acento, exceto os 8 ids do contrato (`austria`, `brazil`, `germany`, ...).
-- Alemanha, Iugoslávia/Sérvia e nomes de cidades **ainda dependem da sua decisão**: hoje `germany` e `serbia` são só placeholders, sem sucessão.
-- Os 5 arquivos de `seed_legacy/` viram eventos com `# TODO verify` e sem fontes (texto escrito por IA de memória, **não verificado**); o resumo do importador conta esses eventos.
-
-Comandos (banco local): `python -m atlas_api.cli import-content` e `python -m atlas_api.cli import-facts` (lê `data_out/wikidata.json` e, se existirem, `leaders`, `pantheon`, `languages`, `worldbank`, `undp`, `fx`; muda o `data_version`, logo o ETag).
-
-## Como adicionar conteúdo (planejado)
-
-O fluxo abaixo vale a partir da Fase 1, quando o importador existir:
-
-- **Entidade:** novo arquivo `content/polities/<id>.yaml` (campos, períodos de nome, eventos com precisão e ids de fontes, bloco de política). Fontes em `content/sources.yaml`.
-- **Sucessão:** nova linha em `content/succession.yaml` (o importador rejeita ciclos).
-- **Link de snapshot:** linha em `content/snapshot_links.csv` (`snapshot_year,source_name,polity_id,status,note`). Linhas `curated` nunca são sobrescritas pelo ETL.
-- Depois rode `python -m atlas_api.cli import-content`.
-
-Datas incertas devem ganhar `# TODO verify` em vez de palpite.
-
-## Deploy (planejado)
-
-Alvo: FastAPI Cloud (`fastapi deploy`) + Supabase Postgres, na mesma região. Pontos a confirmar na doc do FastAPI Cloud: variáveis/segredos, região, formato do `.fastapicloudignore`. O plano Hobby faz *scale-to-zero*, então a primeira requisição depois de ociosidade pode ser lenta. Runbook será escrito na Fase 4.
+- **Testes:** cerca de 90 testes de ponta a ponta contra um Postgres real, com os dados reais de `content/` e `data_out/`.
+- **Código:** mypy strict e ruff.
+- **Contrato:** o contrato é congelado e espelhado no site. Mudanças entram por change request em [`contract/CHANGE_REQUESTS.md`](contract/CHANGE_REQUESTS.md), e o OpenAPI gerado alimenta a checagem de tipos do front.
+- **Specs:** cada funcionalidade tem uma spec em [`specs/`](specs/README.md), com o mesmo número no repositório do site.
 
 ## Limitações conhecidas
 
-- Fronteiras históricas são **aproximadas** e os snapshots **não são contínuos** (só alguns anos existem).
-- Fronteiras disputadas (Kosovo, Taiwan, Crimeia) exigem escolha política; a escolha feita será documentada aqui quando o conteúdo for curado. `XK` é o código não oficial do Kosovo.
-- Modelar sucessões (Alemanha, Iugoslávia, nomes de cidades) força decisões políticas; elas dependem de aprovação e serão listadas.
-- Hoje os dados são **placeholders**, não história curada.
+- **Governadores** ficaram de fora dos estados: no Wikidata eles estão desatualizados.
+- **Regime político** vem de um seed antigo ainda não verificado. O glossário e os textos de `content/` são rascunhos à espera de revisão humana.
+- **Datas de formação** dos países modernos são um placeholder (1946) até a curadoria.
+- **Mapas históricos** (viagem no tempo) ainda não foram importados; a fonte escolhida é o [Cliopatria](https://github.com/Seshat-Global-History-Databank/cliopatria) (CC BY 4.0).
 
-## Licenças e atribuições
+## Fontes e licenças
 
-### Fontes de dados e atribuição que o front deve mostrar
-
-| Fonte | Uso | Licença (lida em 2026-11-11) | Atribuição |
+| Fonte | Uso | Licença | Atribuição |
 |---|---|---|---|
-| [Wikidata](https://www.wikidata.org/) | fatos dos países | CC0 (dados estruturados) | Não exigida; pedida: "Data from Wikidata" |
-| [Flagpedia / flagcdn.com](https://flagpedia.net/) | `flag_url` | "in the public domain and can be used freely without restriction" (termos do site) | Backlink para flagpedia.net apreciado, não exigido |
-| World Bank Indicators | `indicators` (Fase 2, ainda não feito) | CC BY 4.0 (página de datasets, "Last Updated: Mar 23, 2018") | Obrigatória: "The World Bank: nome do dataset: fonte" |
-| historical-basemaps | snapshots (Fase 3) | GPL-3.0, a avaliar | A definir |
-| REST Countries | **não usado** no banco | termos proíbem reter além de 3 dias | n/a |
+| [Wikidata](https://www.wikidata.org/) | fatos, governantes, idiomas, estados | CC0 | pedida, não exigida |
+| [Wikimedia Commons](https://commons.wikimedia.org/) | fotos e bandeiras de estados | por arquivo (autor e licença em cada `image`/`flag`) | obrigatória, por arquivo |
+| [Wikipédia](https://pt.wikipedia.org/) | resumos de história | CC BY-SA 4.0 | título e link da revisão em `sources` |
+| [Banco Mundial (WDI)](https://data.worldbank.org/) | indicadores | CC BY 4.0 | obrigatória |
+| [PNUD (HDR)](https://hdr.undp.org/) | IDH, anos de estudo | CC BY 3.0 IGO | obrigatória |
+| [Banco Central Europeu](https://www.ecb.europa.eu/) via Frankfurter · exchange-api | câmbio | reuso livre com citação | fonte em `source` |
+| [Pantheon](https://pantheon.world/) | pessoas importantes | CC BY-SA 4.0 | obrigatória |
+| [flagcdn / Flagpedia](https://flagpedia.net/) | bandeiras de países | domínio público | não exigida |
 
-`content/official_names_pt.yaml` tem nomes oficiais traduzidos pelo assistente, **não verificados**. `memberships` traz só a ONU (a Wikidata é incompleta para as demais organizações).
-
-O código está sob a licença do arquivo [LICENSE](LICENSE). Os mapas do historical-basemaps são GPL-3.0; um `NOTICE.md` com atribuição e as implicações será adicionado na Fase 3 (questão a avaliar, não decidida).
+O código está sob a licença [MIT](LICENSE).
