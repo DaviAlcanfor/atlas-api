@@ -1,5 +1,5 @@
 # 026 - Organizações, DDD dos estados, resumo da história melhor
-Status: in progress (aprovada pelo dono em 2026-11-13) | Contrato: v1.3 (CR-004 addendum 4) | Web: atlas-web/specs/026-polish-round-3.md
+Status: done (verificado local; produção depende do deploy e da importação de dados) (aprovada pelo dono em 2026-11-13) | Contrato: v1.3 (CR-004 addendum 4) | Web: atlas-web/specs/026-polish-round-3.md
 
 ## Pedidos
 1. "As organizações do Brasil não estão todas: não tem Mercosul e BRICS, só a ONU."
@@ -24,7 +24,7 @@ Subdivision { ...; area_codes: string[] /* telephone area codes (DDD); [] = no d
 `SubdivisionList.sources` passa a incluir a Anatel quando algum item usa a tabela curada.
 
 ## Tarefas
-- [ ] `content/organizations.yaml` + merge no ETL + verbetes no glossário
-- [ ] migração 0015 (`subdivisions.area_codes`), ETL (P473 + curado), import, schema, testes
-- [ ] condensação dos períodos com subseções + testes
-- [ ] CR-004 addendum 4; regenerar `openapi.generated.json`
+- [x] `content/organizations.yaml` + merge no ETL + verbetes no glossário
+- [x] migração 0015 (`subdivisions.area_codes`), ETL (P473 + curado), import, schema, testes
+- [x] condensação dos períodos com subseções + testes
+- [x] CR-004 addendum 4; regenerar `openapi.generated.json`
