@@ -26,7 +26,7 @@ def test_health_meta_and_counts(api_client: TestClient) -> None:
     assert api_client.get("/v1/health").json() == {"status": "ok", "db": "ok"}
     meta = Meta.model_validate(api_client.get("/v1/meta").json())
     assert meta.counts.countries == 197 and meta.counts.polities == 205
-    assert meta.counts.events == 23 and meta.year_min == -3000
+    assert meta.counts.events == 23 and meta.year_min == -3400
     assert meta.data_version not in ("", "empty")
 
 
@@ -87,11 +87,18 @@ def test_search_accent_insensitive_prefix_first(api_client: TestClient) -> None:
     assert api_client.get("/v1/search?q=%25%25").json()["items"] == []
 
 
-def test_snapshots_empty_until_phase_3(api_client: TestClient) -> None:
-    assert api_client.get("/v1/snapshots").json() == {"items": []}
-    assert api_client.get("/v1/meta").json()["snapshot_years"] == []
-    assert api_client.get("/v1/snapshots/nearest?year=1900").status_code == 404
-    assert api_client.get("/v1/snapshots/1900/links").status_code == 404
+@pytest.mark.skipif(not Path("data_out/snapshots.json").exists(), reason="run `python -m etl cliopatria` first")
+def test_snapshots_from_cliopatria(api_client: TestClient) -> None:
+    """spec 012 stage 1: one snapshot per year of the ETL's list; nearest picks the closest (ties -> earlier)."""
+    items = api_client.get("/v1/snapshots").json()["items"]
+    years = [x["year"] for x in items]
+    assert years == sorted(years) and years[0] == -3400 and years[-1] == 2024 and 0 not in years and 1914 in years
+    assert all(x["feature_count"] > 0 and x["geometry_url"].endswith(f"world_{x['year']}.geojson") for x in items)
+    assert api_client.get("/v1/meta").json()["snapshot_years"] == years
+    near = api_client.get("/v1/snapshots/nearest?year=1916").json()
+    assert near["snapshot"]["year"] == 1915 and near["distance_years"] == 1
+    assert api_client.get("/v1/snapshots/nearest?year=-3400").status_code == 200
+    assert api_client.get("/v1/snapshots/1914/links").json()["links"] == []  # links to polities: stage 2
 
 
 def test_errors_are_problem_json(api_client: TestClient) -> None:

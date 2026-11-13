@@ -1,5 +1,5 @@
 # 012 - Viagem no tempo: fronteiras, países antigos e séries históricas
-Status: approved (pesquisa de fontes feita em 2026-11-12) | Contrato: v2 | Web: atlas-web/specs/012-time-travel.md | Executor: Opus
+Status: in progress (etapa 1 feita em 2026-11-13: retratos + /v1/snapshots; faltam entidades/links, fatos e séries) | Contrato: v2 | Web: atlas-web/specs/012-time-travel.md | Executor: Opus
 
 ## Por quê
 Slider de ano que troca o mapa para as fronteiras da época e mostra cada entidade como era (nome, bandeira, governante, capital,
@@ -54,8 +54,11 @@ GET /v1/metrics; GET /v1/polities/{id}/series/{metric}; GET /v1/map?metric=&year
 Atribuição obrigatória no front: "Fronteiras: Cliopatria (Seshat Global History Databank), CC BY 4.0, simplificadas".
 
 ## Tarefas
-- [ ] reler termos e citar; fixar versão + sha256
-- [ ] `etl cliopatria` (retratos, simplificação, tamanhos medidos) + upload para Storage
+- [x] reler termos e citar; fixar versão + sha256 (v0.2.1, sha256 no `etl/cliopatria/pipeline.py`; LICENSE.md lido em 2026-11-13)
+- [x] `etl cliopatria`: 130 retratos, 35,8 MB no total, maior 492 KB (medido 2026-11-13); 1.123 de 1.420 entidades com nome pt-BR.
+      Decisões da etapa 1 (CR-005): GeoJSON em vez de TopoJSON (já cabe no limite só com grade de 0,01 grau) e arquivos no repo
+      web (`public/data/historical`) em vez do Storage (nunca configurado; menos uma peça). Agregados "(British Empire)" saem
+      porque se sobrepõem aos componentes, que guardam `member_of`. `snapshots` importado por `import-facts`.
 - [ ] polities/snapshots/links no banco; migração dos 8 placeholders
 - [ ] `etl wikidata-polities` (bandeira, capital, governo, governantes com datas)
 - [ ] endpoints v2 + testes; CR-004 com o texto exato do contrato v2

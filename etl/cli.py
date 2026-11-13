@@ -3,6 +3,7 @@ import argparse
 import sys
 from collections.abc import Callable
 
+from etl.cliopatria import pipeline as cliopatria
 from etl.fx import pipeline as fx
 from etl.pantheon import pipeline as pantheon
 from etl.restcountries import pipeline as restcountries
@@ -22,7 +23,7 @@ COMMANDS: dict[str, Callable[[], None]] = {
     "wikidata-leaders": wikidata_leaders.run, "wikidata-events": wikidata_events.run,
     "wikidata-ideologies": wikidata_ideologies.run, "wikidata-subdivisions": wikidata_subdivisions.run, "pantheon": pantheon.run,
     "wikidata-languages": wikidata_languages.run, "undp": undp.run, "fx": fx.run,
-    "wikipedia-history": wikipedia_history.run,
+    "wikipedia-history": wikipedia_history.run, "cliopatria": cliopatria.run,
 }
 
 

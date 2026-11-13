@@ -19,6 +19,7 @@ class EtlSettings(BaseSettings):
     supabase_service_key: SecretStr | None = None
     cache_dir: Path = Path("etl_cache")
     out_dir: Path = Path("data_out")
+    historical_dir: Path = Path("../geo/public/data/historical")  # spec 012: Cliopatria snapshots, served by the web repo
     admin1_dir: Path = Path("../geo/public/data/admin1")  # spec 024: the web repo's admin-1 polygons (their wikidataid)
 
 
