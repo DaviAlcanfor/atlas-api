@@ -3,6 +3,8 @@
 # - `family` of a language = label of the FIRST entry below that is a P279+ ancestor of it;
 #   entries without `label` only classify (sub-families placed under a broad label).
 # - status "indigenous" when a matching entry lists the country's region (country_facts.region).
+# - `foreign_in`: regions where the family arrived by colonisation/migration; there its languages are never "indigenous",
+#   even with Wikidata P2341 (Hunsrik and Talian took shape in Brazil but are immigrant languages).
 #   Broad families that spread by migration/colonisation (indo-europeia, afro-asiática, turcomana,
 #   dravídica, sino-tibetana...) have NO regions on purpose: otherwise French in Germany or
 #   Tamil in Malaysia would be "indigenous". Their languages are indigenous only via P2341.
@@ -41,7 +43,7 @@ families:
   Q32940: {label: andamanesa, regions: [Ásia]}
   Q33612: {label: japônica, regions: []}
   # broad families: label only
-  Q19860: {label: indo-europeia, regions: []}
+  Q19860: {label: indo-europeia, regions: [], foreign_in: [América do Sul, América do Norte, Oceania]}
   Q25268: {label: afro-asiática, regions: []}
   Q33311: {label: dravídica, regions: []}
   Q33199: {label: austro-asiática, regions: []}
