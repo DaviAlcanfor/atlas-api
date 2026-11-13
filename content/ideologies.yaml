@@ -1,0 +1,274 @@
+# RASCUNHO — revisão humana pendente (spec 018). Escrito por agente em 2026-11-13, texto próprio (não copiado).
+# Regra de neutralidade (spec 018): mesma estrutura e tamanho para todas as correntes, sem adjetivos de valor; cada verbete tem
+# (1) o que a corrente defende, (2) origem e onde governou, (3) o que dizem defensores e críticos, com fatos de repressão
+# ditos do mesmo modo para qualquer lado. Fontes: os artigos da Wikipédia ligados ao item do Wikidata (títulos conferidos em
+# 2026-11-13 pelos sitelinks). `wikidata`: Q-ids usados pelo ETL de figuras e partidos (subcorrentes entram via P279).
+# O importador junta estes verbetes ao glossário com kind: ideology.
+
+terms:
+  - id: capitalismo
+    kind: ideology
+    label: Capitalismo
+    wikidata: [Q6206]
+    short: Sistema econômico baseado na propriedade privada dos meios de produção e na troca em mercados.
+    body: >-
+      Empresas e pessoas são donas de fábricas, terras e capital e produzem para vender, buscando lucro; preços e salários se
+      formam sobretudo pela oferta e pela procura.
+
+      Ganhou forma na Europa entre os séculos XVI e XIX, com o comércio de longa distância e a Revolução Industrial, e hoje é a
+      base da economia da maior parte dos países, em versões com mais ou menos intervenção do Estado.
+
+      Defensores associam o sistema ao crescimento econômico, à inovação e à liberdade de escolha. Críticos apontam desigualdade
+      de renda, crises periódicas e concentração de poder econômico.
+    icon: null
+    sources:
+      - {id: wp-pt-capitalismo, title: "Capitalismo (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Capitalismo", license: "CC BY-SA 4.0", retrieved_at: "2026-11-13T00:00:00Z"}
+      - {id: wp-en-capitalism, title: "Capitalism (Wikipedia)", url: "https://en.wikipedia.org/wiki/Capitalism", license: "CC BY-SA 4.0", retrieved_at: "2026-11-13T00:00:00Z"}
+
+  - id: liberalismo
+    kind: ideology
+    label: Liberalismo
+    wikidata: [Q6216]
+    short: Corrente que põe no centro as liberdades individuais, o governo limitado por leis e a igualdade perante a lei.
+    body: >-
+      Defende direitos individuais (expressão, religião, propriedade), separação de poderes, eleições e um Estado que respeita
+      limites constitucionais. Há vertentes que aceitam mais ou menos intervenção do Estado na economia.
+
+      Surgiu nos séculos XVII e XVIII, com pensadores como John Locke e Adam Smith, e inspirou as revoluções americana e francesa
+      e muitas constituições modernas.
+
+      Defensores veem nele a base das democracias constitucionais. Críticos à esquerda dizem que trata como iguais pessoas com
+      recursos muito desiguais; críticos conservadores dizem que enfraquece tradições e laços comunitários.
+    icon: null
+    sources:
+      - {id: wp-pt-liberalismo, title: "Liberalismo (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Liberalismo", license: "CC BY-SA 4.0", retrieved_at: "2026-11-13T00:00:00Z"}
+      - {id: wp-en-liberalism, title: "Liberalism (Wikipedia)", url: "https://en.wikipedia.org/wiki/Liberalism", license: "CC BY-SA 4.0", retrieved_at: "2026-11-13T00:00:00Z"}
+
+  - id: libertarianismo
+    kind: ideology
+    label: Libertarianismo
+    wikidata: [Q178598]
+    short: Corrente que busca reduzir o Estado ao mínimo para maximizar a liberdade individual, inclusive econômica.
+    body: >-
+      Defende mercados livres, impostos e regulações mínimos e a não interferência do Estado em escolhas pessoais; as vertentes
+      mais radicais (anarcocapitalismo) propõem eliminar o Estado.
+
+      Ganhou força no século XX, sobretudo nos Estados Unidos, com autores como Friedrich Hayek, Murray Rothbard e Robert Nozick.
+
+      Defensores argumentam que a liberdade econômica e a pessoal são inseparáveis e que o mercado aloca recursos melhor que o
+      governo. Críticos apontam o risco de desigualdade, de serviços públicos insuficientes e de falhas de mercado sem correção.
+    icon: null
+    sources:
+      - {id: wp-pt-libertarianismo, title: "Libertarianismo (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Libertarianismo", license: "CC BY-SA 4.0", retrieved_at: "2026-11-13T00:00:00Z"}
+      - {id: wp-en-libertarianism, title: "Libertarianism (Wikipedia)", url: "https://en.wikipedia.org/wiki/Libertarianism", license: "CC BY-SA 4.0", retrieved_at: "2026-11-13T00:00:00Z"}
+
+  - id: conservadorismo
+    kind: ideology
+    label: Conservadorismo
+    wikidata: [Q7169]
+    short: Corrente que valoriza tradições, instituições estabelecidas e mudanças graduais em vez de rupturas.
+    body: >-
+      Defende a preservação de instituições como família, religião e nação, a ordem social e reformas lentas; as posições
+      econômicas variam entre países e épocas.
+
+      Ganhou forma no fim do século XVIII como reação à Revolução Francesa, com Edmund Burke, e hoje dá nome a partidos de
+      centro-direita e de direita em muitos países.
+
+      Defensores dizem que protege o que funciona e evita experimentos sociais arriscados. Críticos dizem que dificulta mudanças
+      necessárias e pode preservar desigualdades e exclusões antigas.
+    icon: null
+    sources:
+      - {id: wp-pt-conservadorismo, title: "Conservadorismo (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Conservadorismo", license: "CC BY-SA 4.0", retrieved_at: "2026-11-13T00:00:00Z"}
+      - {id: wp-en-conservatism, title: "Conservatism (Wikipedia)", url: "https://en.wikipedia.org/wiki/Conservatism", license: "CC BY-SA 4.0", retrieved_at: "2026-11-13T00:00:00Z"}
+
+  - id: social-democracia
+    kind: ideology
+    label: Social-democracia
+    wikidata: [Q121254]
+    short: Corrente que combina democracia e economia de mercado com Estado de bem-estar social e redistribuição de renda.
+    body: >-
+      Defende serviços públicos universais (saúde, educação, previdência), direitos trabalhistas, impostos progressivos e
+      regulação dos mercados, dentro de uma democracia multipartidária.
+
+      Nasceu no movimento socialista do fim do século XIX e, ao longo do século XX, passou a buscar reformas pelo voto em vez de
+      revolução; governou por longos períodos nos países nórdicos e em boa parte da Europa Ocidental.
+
+      Defensores associam o modelo a baixa desigualdade e alta qualidade de vida. Críticos à direita apontam carga tributária e
+      gasto público altos; críticos à esquerda dizem que ela abandonou a transformação do capitalismo.
+    icon: null
+    sources:
+      - {id: wp-pt-social-democracia, title: "Social-democracia (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Social-democracia", license: "CC BY-SA 4.0", retrieved_at: "2026-11-13T00:00:00Z"}
+      - {id: wp-en-social-democracy, title: "Social democracy (Wikipedia)", url: "https://en.wikipedia.org/wiki/Social_democracy", license: "CC BY-SA 4.0", retrieved_at: "2026-11-13T00:00:00Z"}
+
+  - id: socialismo
+    kind: ideology
+    label: Socialismo
+    wikidata: [Q7272]
+    short: Conjunto de correntes que defendem propriedade social ou coletiva dos meios de produção e menor desigualdade.
+    body: >-
+      Propõe que a produção seja controlada pela sociedade (Estado, cooperativas ou trabalhadores) e não por proprietários
+      privados; vai de versões democráticas e reformistas a versões revolucionárias.
+
+      Surgiu no século XIX, em reação às condições de trabalho da Revolução Industrial, com autores como Robert Owen, Pierre-Joseph
+      Proudhon e Karl Marx, e influenciou sindicatos, partidos e governos no mundo todo.
+
+      Defensores dizem que reduz a exploração e a desigualdade. Críticos apontam problemas de eficiência e de incentivo e, nas
+      versões de partido único, a falta de liberdades políticas.
+    icon: null
+    sources:
+      - {id: wp-pt-socialismo, title: "Socialismo (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Socialismo", license: "CC BY-SA 4.0", retrieved_at: "2026-11-13T00:00:00Z"}
+      - {id: wp-en-socialism, title: "Socialism (Wikipedia)", url: "https://en.wikipedia.org/wiki/Socialism", license: "CC BY-SA 4.0", retrieved_at: "2026-11-13T00:00:00Z"}
+
+  - id: comunismo
+    kind: ideology
+    label: Comunismo
+    wikidata: [Q6186, Q7264]
+    short: Corrente que busca uma sociedade sem classes e sem propriedade privada dos meios de produção; inclui o marxismo.
+    body: >-
+      Baseada sobretudo nas obras de Karl Marx e Friedrich Engels, propõe abolir a propriedade privada dos meios de produção e,
+      no fim, o próprio Estado. As vertentes marxistas-leninistas defenderam um partido único de vanguarda para chegar lá.
+
+      Governou a União Soviética (1917-1991), a China (desde 1949), países do Leste Europeu, Cuba, Vietnã e outros; vários desses
+      governos promoveram industrialização rápida e alfabetização em massa.
+
+      Defensores destacam a busca de igualdade e esses avanços sociais. Críticos e historiadores registram repressão política,
+      campos de trabalho forçado (como o Gulag) e fomes com milhões de mortes (como na Ucrânia em 1932-1933 e na China em
+      1959-1961) sob esses governos.
+    icon: null
+    sources:
+      - {id: wp-pt-comunismo, title: "Comunismo (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Comunismo", license: "CC BY-SA 4.0", retrieved_at: "2026-11-13T00:00:00Z"}
+      - {id: wp-en-communism, title: "Communism (Wikipedia)", url: "https://en.wikipedia.org/wiki/Communism", license: "CC BY-SA 4.0", retrieved_at: "2026-11-13T00:00:00Z"}
+
+  - id: anarquismo
+    kind: ideology
+    label: Anarquismo
+    wikidata: [Q6199]
+    short: Corrente que rejeita o Estado e outras formas de autoridade hierárquica e propõe organização voluntária.
+    body: >-
+      Propõe substituir o Estado por associações livres e cooperativas; há vertentes coletivistas, comunistas, individualistas
+      e sindicalistas.
+
+      Surgiu no século XIX, com Proudhon, Mikhail Bakunin e Piotr Kropotkin; teve força em sindicatos da Espanha, da Itália e da
+      América Latina (incluindo o Brasil do início do século XX) e organizou regiões durante a Guerra Civil Espanhola.
+
+      Defensores dizem que a autoridade concentrada gera abusos e que a cooperação voluntária é possível. Críticos dizem que,
+      sem Estado, não há como garantir segurança e direitos, e lembram atentados cometidos por militantes anarquistas.
+    icon: null
+    sources:
+      - {id: wp-pt-anarquismo, title: "Anarquismo (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Anarquismo", license: "CC BY-SA 4.0", retrieved_at: "2026-11-13T00:00:00Z"}
+      - {id: wp-en-anarchism, title: "Anarchism (Wikipedia)", url: "https://en.wikipedia.org/wiki/Anarchism", license: "CC BY-SA 4.0", retrieved_at: "2026-11-13T00:00:00Z"}
+
+  - id: fascismo
+    kind: ideology
+    label: Fascismo
+    wikidata: [Q6223, Q7310]  # Q7310 nazismo: vertente do fascismo na leitura acadêmica usual (ver o verbete)
+    short: Corrente nacionalista e autoritária que defende um Estado total, um líder único e a supressão da oposição.
+    body: >-
+      Propõe a nação acima do indivíduo, um partido único, culto ao líder, militarismo e controle da economia e da sociedade
+      pelo Estado, rejeitando tanto o liberalismo quanto o comunismo.
+
+      Surgiu na Itália, com Benito Mussolini (no poder de 1922 a 1943); o nazismo alemão (1933-1945) é a vertente mais conhecida,
+      e regimes parecidos existiram em outros países europeus nas décadas de 1930 e 1940.
+
+      Seus defensores à época apresentavam o regime como resposta à crise e à divisão social. Historiadores registram a
+      perseguição de opositores, guerras de agressão e o Holocausto, o genocídio de cerca de seis milhões de judeus e de outros
+      grupos pela Alemanha nazista.
+    icon: null
+    sources:
+      - {id: wp-pt-fascismo, title: "Fascismo (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Fascismo", license: "CC BY-SA 4.0", retrieved_at: "2026-11-13T00:00:00Z"}
+      - {id: wp-en-fascism, title: "Fascism (Wikipedia)", url: "https://en.wikipedia.org/wiki/Fascism", license: "CC BY-SA 4.0", retrieved_at: "2026-11-13T00:00:00Z"}
+
+  - id: nacionalismo
+    kind: ideology
+    label: Nacionalismo
+    wikidata: [Q6235]
+    short: Corrente que põe a nação, sua identidade e sua soberania como valor político central.
+    body: >-
+      Defende que cada nação tenha seu próprio Estado e governe a si mesma, e que os interesses nacionais tenham prioridade;
+      combina-se tanto com posições de esquerda quanto de direita.
+
+      Ganhou força no século XIX, com as unificações da Itália e da Alemanha, e no século XX moveu as independências da Ásia e da
+      África.
+
+      Defensores destacam a autodeterminação dos povos e a coesão social. Críticos apontam que versões exclusivistas levaram a
+      guerras, perseguição de minorias e limpezas étnicas.
+    icon: null
+    sources:
+      - {id: wp-pt-nacionalismo, title: "Nacionalismo (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Nacionalismo", license: "CC BY-SA 4.0", retrieved_at: "2026-11-13T00:00:00Z"}
+      - {id: wp-en-nationalism, title: "Nationalism (Wikipedia)", url: "https://en.wikipedia.org/wiki/Nationalism", license: "CC BY-SA 4.0", retrieved_at: "2026-11-13T00:00:00Z"}
+
+  - id: populismo
+    kind: ideology
+    label: Populismo
+    wikidata: [Q180490]
+    short: Estilo político que opõe um "povo" unido a uma "elite" vista como corrupta ou distante.
+    body: >-
+      Mais um modo de fazer política do que um programa: apresenta o líder ou o partido como voz direta do povo contra as elites
+      e pode aparecer combinado com ideias de esquerda ou de direita.
+
+      Tem exemplos no movimento agrário dos Estados Unidos no século XIX, em governos latino-americanos do século XX e em vários
+      partidos e governos do século XXI.
+
+      Defensores dizem que dá voz a grupos ignorados pela política tradicional. Críticos dizem que tende a enfraquecer
+      instituições, imprensa e controles sobre o poder.
+    icon: null
+    sources:
+      - {id: wp-pt-populismo, title: "Populismo (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Populismo", license: "CC BY-SA 4.0", retrieved_at: "2026-11-13T00:00:00Z"}
+      - {id: wp-en-populism, title: "Populism (Wikipedia)", url: "https://en.wikipedia.org/wiki/Populism", license: "CC BY-SA 4.0", retrieved_at: "2026-11-13T00:00:00Z"}
+
+  - id: politica-verde
+    kind: ideology
+    label: Política verde
+    wikidata: [Q1661415]
+    short: Corrente que põe a proteção ambiental e a sustentabilidade no centro da política.
+    body: >-
+      Defende reduzir a poluição e as emissões, proteger a biodiversidade e mudar a economia para respeitar os limites do
+      planeta, geralmente junto com democracia participativa e justiça social.
+
+      Ganhou forma nos anos 1970 e 1980, com o movimento ambientalista e partidos verdes como o alemão (1980), que depois chegou a
+      governos de coalizão em vários países europeus.
+
+      Defensores dizem que a crise climática exige mudanças profundas. Críticos apontam custos econômicos de medidas rápidas e
+      divergem sobre o ritmo e os instrumentos da transição.
+    icon: null
+    sources:
+      - {id: wp-pt-politica-verde, title: "Política verde (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Pol%C3%ADtica_verde", license: "CC BY-SA 4.0", retrieved_at: "2026-11-13T00:00:00Z"}
+      - {id: wp-en-green-politics, title: "Green politics (Wikipedia)", url: "https://en.wikipedia.org/wiki/Green_politics", license: "CC BY-SA 4.0", retrieved_at: "2026-11-13T00:00:00Z"}
+
+  - id: democracia-crista
+    kind: ideology
+    label: Democracia cristã
+    wikidata: [Q209158]
+    short: Corrente que aplica princípios do cristianismo, sobretudo a doutrina social da Igreja, à política democrática.
+    body: >-
+      Defende economia de mercado com responsabilidade social, valorização da família e de comunidades intermediárias e
+      cooperação entre classes sociais.
+
+      Ganhou força na Europa depois da Segunda Guerra Mundial, com partidos que governaram a Alemanha Ocidental e a Itália por
+      décadas, e também teve partidos fortes na América Latina, como no Chile.
+
+      Defensores destacam seu papel na reconstrução europeia e na integração do continente. Críticos à esquerda apontam posições
+      conservadoras em temas de costumes; críticos laicos questionam a presença da religião na política.
+    icon: null
+    sources:
+      - {id: wp-pt-democracia-crista, title: "Democracia cristã (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Democracia_crist%C3%A3", license: "CC BY-SA 4.0", retrieved_at: "2026-11-13T00:00:00Z"}
+      - {id: wp-en-christian-democracy, title: "Christian democracy (Wikipedia)", url: "https://en.wikipedia.org/wiki/Christian_democracy", license: "CC BY-SA 4.0", retrieved_at: "2026-11-13T00:00:00Z"}
+
+  - id: islamismo-politico
+    kind: ideology
+    label: Islamismo político
+    wikidata: [Q189746]
+    short: Conjunto de correntes que defendem organizar o Estado e a lei segundo princípios do islã.
+    body: >-
+      Vai de partidos que disputam eleições, com programas religiosos conservadores, a movimentos que defendem a aplicação
+      integral da lei islâmica (xaria) e, em grupos extremistas, o uso da violência.
+
+      Ganhou forma no século XX, com a Irmandade Muçulmana (Egito, 1928) e a Revolução Iraniana de 1979, que criou uma república
+      islâmica.
+
+      Defensores dizem que dá identidade e justiça a sociedades muçulmanas. Críticos apontam restrições a mulheres, minorias
+      religiosas e dissidentes e, nos grupos armados, atentados contra civis.
+    icon: null
+    sources:
+      - {id: wp-pt-islamismo-politico, title: "Islamismo político (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Islamismo_pol%C3%ADtico", license: "CC BY-SA 4.0", retrieved_at: "2026-11-13T00:00:00Z"}
+      - {id: wp-en-islamism, title: "Islamism (Wikipedia)", url: "https://en.wikipedia.org/wiki/Islamism", license: "CC BY-SA 4.0", retrieved_at: "2026-11-13T00:00:00Z"}

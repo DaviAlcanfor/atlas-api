@@ -16,6 +16,7 @@ from atlas_api.routers import (
     economy,
     glossary,
     health,
+    ideologies,
     meta,
     polities,
     search,
@@ -57,7 +58,7 @@ def create_app(database_url: str | None = None) -> FastAPI:
         expose_headers=["ETag", "X-Data-Version"],
     )
     register_error_handlers(app)
-    for module in (health, meta, countries, polities, snapshots, search, glossary, economy):
+    for module in (health, meta, countries, polities, snapshots, search, glossary, economy, ideologies):
         app.include_router(module.router, prefix="/v1")
     return app
 

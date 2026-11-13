@@ -25,6 +25,9 @@ from atlas_api.db.models import (
     GlossaryTerm,
     HistoryEvent,
     HistoryPeriod,
+    IdeologyFigure,
+    IdeologyParty,
+    IdeologyPerson,
     Indicator,
     IndicatorDef,
     IndicatorLatest,
@@ -48,6 +51,8 @@ from atlas_api.schemas import (
     CompositionOut,
     CountryDetail,
     CountryEconomy,
+    CountryIdeologies,
+    CountryIdeology,
     CountryProfile,
     CountrySummary,
     Counts,
@@ -57,7 +62,9 @@ from atlas_api.schemas import (
     CurrencyStats,
     EconomyCompare,
     EconomyIndicator,
+    Governed,
     HistoryItem,
+    IdeologyDetail,
     Image,
     Language,
     LanguageSpoken,
@@ -65,6 +72,7 @@ from atlas_api.schemas import (
     Marker,
     NamePeriod,
     Party,
+    PartyRef,
     PersonList,
     Point,
     Politics,
@@ -90,6 +98,7 @@ from atlas_api.schemas import CountryHistory as CountryHistoryOut
 from atlas_api.schemas import Event as EventOut
 from atlas_api.schemas import GlossaryTerm as GlossaryTermOut
 from atlas_api.schemas import HistoryEvent as HistoryEventOut
+from atlas_api.schemas import IdeologyFigure as IdeologyFigureOut
 from atlas_api.schemas import Leader as LeaderOut
 from atlas_api.schemas import (
     Meta as MetaOut,
@@ -674,3 +683,66 @@ def list_subdivisions(s: Session, iso2: str) -> SubdivisionList:
         flag=Image(url=x.flag_url, credit=x.flag_credit or "", license=x.flag_license or "") if x.flag_url else None)
         for x in rows]
     return SubdivisionList(items=items, sources=_sources(s, {"wikidata"}) if items else [])
+
+
+# --- ideologies (spec 018) ------------------------------------------------------------------------------------------------
+PARTIES_SHOWN = 5
+
+
+def _figures(s: Session, ideology_ids: list[str], scope: str) -> dict[str, list[IdeologyFigureOut]]:
+    rows = s.execute(select(IdeologyFigure, IdeologyPerson).join(IdeologyPerson, IdeologyPerson.person_id == IdeologyFigure.person_id)
+                     .where(IdeologyFigure.scope == scope, IdeologyFigure.ideology_id.in_(ideology_ids))
+                     .order_by(IdeologyFigure.ideology_id, IdeologyFigure.ord)).all()
+    out: dict[str, list[IdeologyFigureOut]] = {}
+    for f, p in rows:
+        image = Image(url=p.image_url, credit=p.image_credit or "", license=p.image_license or "") if p.image_url else None
+        out.setdefault(f.ideology_id, []).append(IdeologyFigureOut(
+            person_id=p.person_id, name=p.name, role=p.role, birth_year=p.birth_year, death_year=p.death_year,
+            summary=p.summary, works=p.works, image=image, wikipedia_url=p.wikipedia_url, via=f.via,
+            party=PartyRef(id=f.party_id, name=f.party_name) if f.party_id and f.party_name else None))
+    return out
+
+
+def list_country_ideologies(s: Session, iso2: str) -> CountryIdeologies:
+    """spec 018: currents present in the country (figures or parties), most figures first, then A-Z."""
+    terms = {t.id: t for t in s.scalars(select(GlossaryTerm).where(GlossaryTerm.kind == "ideology"))}
+    figs = _figures(s, list(terms), iso2)
+    parties: dict[str, list[PartyRef]] = {}
+    for p in s.scalars(select(IdeologyParty).where(IdeologyParty.iso2 == iso2).order_by(IdeologyParty.ideology_id, IdeologyParty.ord)):
+        if len(parties.setdefault(p.ideology_id, [])) < PARTIES_SHOWN:
+            parties[p.ideology_id].append(PartyRef(id=p.party_id, name=p.name))
+    ids = sorted(set(figs) | set(parties), key=lambda i: (-len(figs.get(i, [])), terms[i].label))
+    ex = _examples(s, [terms[i] for i in ids]) if ids else {}
+    items = [CountryIdeology(term=_term(terms[i], ex[i]), figures=figs.get(i, []), parties=parties.get(i, []), milestones=[])
+             for i in ids]
+    return CountryIdeologies(items=items, sources=_sources(s, {"wikidata"}) if items else [])
+
+
+def _merge_terms(terms: list[tuple[str, int, int | None]]) -> list[Governed]:
+    """(iso2, from, to) mandates -> one row per continuous stretch in a country (to None = still in office)."""
+    out: list[Governed] = []
+    for iso2, start, end in sorted(terms, key=lambda t: (t[0], t[1])):
+        last = out[-1] if out and out[-1].iso2 == iso2 else None
+        if last and (last.to_year is None or start <= last.to_year + 1):
+            last.to_year = None if last.to_year is None or end is None else max(last.to_year, end)
+        else:
+            out.append(Governed(iso2=iso2, from_year=start, to_year=end))
+    return out
+
+
+def get_ideology(s: Session, ideology_id: str) -> IdeologyDetail | None:
+    """spec 018: the current worldwide. governed = heads of state/government (spec 006) whose party has this current."""
+    t = s.get(GlossaryTerm, ideology_id)
+    if t is None or t.kind != "ideology":
+        return None
+    party_ids = set(s.scalars(select(IdeologyParty.party_id).where(IdeologyParty.ideology_id == ideology_id)))
+    mandates = []
+    if party_ids:
+        for ld in s.scalars(select(Leader).where(Leader.party_id.in_(party_ids), Leader.start.is_not(None))):
+            y0 = int(ld.start[:4]) if ld.start and ld.start[:4].isdigit() else None
+            y1 = int(ld.end[:4]) if ld.end and ld.end[:4].isdigit() else None
+            if y0:
+                mandates.append((ld.iso2, y0, y1))
+    sources = _sources(s, {"wikidata"})
+    return IdeologyDetail(term=_term(t, _examples(s, [t])[t.id]), founders=_figures(s, [ideology_id], "WORLD").get(ideology_id, []),
+                          timeline=[], governed=_merge_terms(mandates), sources=sources)
