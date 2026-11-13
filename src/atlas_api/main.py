@@ -10,6 +10,7 @@ from atlas_api.cache import add_cache_headers
 from atlas_api.config import get_settings
 from atlas_api.db.session import make_engine, make_session_factory
 from atlas_api.errors import register_error_handlers
+from atlas_api.migrate import upgrade_to_head
 from atlas_api.routers import (
     countries,
     economy,
@@ -25,11 +26,16 @@ from atlas_api.routers import (
 def create_app(database_url: str | None = None) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
-        """Startup: create the DB engine (the connection pool). Shutdown: close it."""
+        """Startup: create the DB engine (the connection pool) and migrate the schema to head. Shutdown: close it."""
         logging.basicConfig(level=get_settings().log_level)
         st = get_settings()
         engine = make_engine(database_url or st.database_url, st.db_pool_size, st.db_max_overflow,
                              st.db_pool_timeout)
+        if st.auto_migrate:
+            try:
+                upgrade_to_head(engine)
+            except Exception:  # DB down at boot: serve anyway (requests get 503), never crash-loop the deploy
+                logging.getLogger(__name__).exception("startup migration failed; serving without it")
         app.state.engine = engine
         app.state.session_factory = make_session_factory(engine)
         yield

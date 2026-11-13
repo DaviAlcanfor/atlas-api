@@ -6,7 +6,7 @@ services:
       POSTGRES_PASSWORD: atlas
       POSTGRES_DB: atlas
     ports:
-      - "5432:5432"
+      - "${ATLAS_DB_PORT:-5432}:5432"  # ATLAS_DB_PORT in .env when 5432 is taken by another project
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:

@@ -39,6 +39,10 @@ Status: draft -> approved (only the user approves) -> in progress -> done. No fe
 A spec's "Contract delta" is a proposal: approved specs of one phase become ONE change request; the user updates the contract in both repos.
 
 ## Production
+- Schema migrations run AT STARTUP (`src/atlas_api/migrate.py`, advisory lock; `AUTO_MIGRATE=false` to skip): merging a PR with a new
+  migration no longer breaks production. Keep migrations ADDITIVE (the old release runs while the new one boots). DATA is still manual:
+  `import-content` / `import-facts` against `SUPABASE_DATABASE_URL` from a worktree of the deployed code (see `scripts/prod-migrate-example.ps1`).
+- Local DB port: `ATLAS_DB_PORT` in `.env` (default 5432) when another project holds 5432; tests use the host/port of `DATABASE_URL`.
 FastAPI Cloud app `atlas-api`, id `20c95458-4e88-4e5f-93df-aae35082d818`, https://atlas-api.fastapicloud.dev. Front: https://atlas-web-ruddy.vercel.app.
 `CORS_ORIGINS` is set on FastAPI Cloud, not in code (current: `http://localhost:5173,https://atlas-web-ruddy.vercel.app`).
 A new front domain must be added: `.venv/Scripts/fastapi.exe cloud env set CORS_ORIGINS "<csv>" --app-id <id>` (redeploys).

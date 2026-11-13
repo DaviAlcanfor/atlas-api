@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg://atlas:atlas@localhost:5432/atlas"
     cors_origins: Annotated[list[str], NoDecode] = []
     log_level: str = "INFO"
+    auto_migrate: bool = True  # bring the schema to Alembic head at startup (migrate.py); AUTO_MIGRATE=false to skip
     # spec 019 item 5: a SMALL bounded pool per process + a short wait, so a burst gets fast 503s
     # instead of hanging. Total DB connections = processes x (pool_size + max_overflow): keep it under
     # the Supabase pooler limit. pool_timeout = seconds a request waits for a free connection.
