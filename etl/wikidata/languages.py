@@ -166,9 +166,12 @@ def classify(country_q: str, region: str | None, cand: list[dict[str, Any]],
             continue  # a variety of an official language (pt-BR of pt)
         hits = [f for f in families if f in a["ancestors"]]  # yaml order
         native = any(set(families[f].get("regions") or []) & regions for f in hits)
+        # a family that arrived by colonisation/migration in this region (e.g. Indo-European in the Americas) is never indigenous
+        # there, even when Wikidata's P2341 says so (Hunsrik and Talian took shape in Brazil but are immigrant languages)
+        foreign = any(set(families[f].get("foreign_in") or []) & regions for f in hits)
         status = ("official" if q in official else "co_official" if q in where
                   else "sign" if a["sign"] else "historical" if a["dead"]
-                  else "indigenous" if q in indig or native else "immigrant")
+                  else "indigenous" if (q in indig and not foreign) or native else "immigrant")
         places = sorted(where.get(q, set())) if status == "co_official" else []
         out.append({
             "qid": q, "code": _code(a["codes"]), "name": a["name"], "status": status,

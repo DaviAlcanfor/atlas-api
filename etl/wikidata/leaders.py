@@ -75,7 +75,13 @@ def _get_json(client: httpx.Client, url: str, params: dict[str, str], retries: i
             time.sleep(15 * attempt)
             continue
         r.raise_for_status()
-        return r.json()
+        try:
+            return r.json()
+        except ValueError as e:  # WDQS timing out mid-stream sends 200 + truncated JSON + an error text: a failure, not data
+            if attempt < retries:
+                time.sleep(15 * attempt)
+                continue
+            raise RuntimeError(f"truncated response from {url}") from e
     raise RuntimeError(f"gave up after retries: {url}")
 
 
