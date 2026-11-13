@@ -143,6 +143,8 @@ python -m atlas_api.cli import-facts  # lê o que existir em data_out/ e grava n
 
 Os comandos aceitam códigos ISO2 para uma amostra (`python -m etl wikipedia-history BR JP`) e `--refresh` para ignorar o cache. Antes de integrar uma fonte nova, os termos de uso e a licença dela são lidos e citados na spec correspondente. Esse registro está em [`specs/`](specs/README.md).
 
+**Câmbio diário:** o workflow [`fx-daily`](.github/workflows/fx-daily.yml) roda em dias úteis às 15:30 UTC (depois da publicação do BCE): lê as moedas dos países no banco (`atlas_api.cli currency-codes`), baixa as cotações (`etl fx`) e importa só o câmbio (`import-fx`). Precisa do secret `DATABASE_URL` no repositório.
+
 **Publicar dados em produção:** rode `import-facts` com `DATABASE_URL` apontando para o banco de produção, a partir de um checkout do código que está no ar. O modelo está em [`scripts/prod-migrate-example.ps1`](scripts/prod-migrate-example.ps1).
 
 ## Modelo de dados

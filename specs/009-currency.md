@@ -71,4 +71,4 @@ GET /v1/economy/compare?countries=&ids=         -> { countries, indicators: [{ i
 - [x] ler termos BCE/Frankfurter/exchange-api; citar aqui
 - [x] `etl fx` + tabela + stats; endpoints de moeda; testes (`tests/test_v12_api.py` no banco real, `tests/test_v12_build.py` sem rede)
 - [x] indicadores WDI novos + tabela `indicators`; endpoints de economia e comparação; testes
-- [ ] agendar `etl fx` diário (junto do job de notícias da spec 008, fase P5)
+- [x] agendar `etl fx` diário: `.github/workflows/fx-daily.yml` (dias úteis, 15:30 UTC), `atlas_api.cli currency-codes` + `etl fx` + `import-fx` (só câmbio; versão dos dados ganha a parte "fx"). Precisa do secret `DATABASE_URL` no GitHub

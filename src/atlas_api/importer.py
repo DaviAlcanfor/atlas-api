@@ -154,11 +154,12 @@ def validate(content: dict[str, Any]) -> list[str]:
 
 
 def set_version(session: Session, part: str, digest: str) -> str:
-    """Record the digest of one input ("content" or "facts") and recompute meta.data_version from
-    both, so `import-facts` invalidates ETags too (spec 019). generated_at moves only on change."""
+    """Record the digest of one input ("content", "facts" or "fx") and recompute meta.data_version from
+    all of them, so `import-facts` and the daily `import-fx` invalidate ETags too (spec 019, 009).
+    generated_at moves only on change."""
     session.merge(Meta(key=f"{part}_version", value=digest))
     session.flush()
-    parts = [session.get(Meta, f"{k}_version") for k in ("content", "facts")]
+    parts = [session.get(Meta, f"{k}_version") for k in ("content", "facts", "fx")]
     blob = "|".join(m.value if m else "" for m in parts)
     version = hashlib.sha256(blob.encode()).hexdigest()[:16]
     cur = session.get(Meta, "data_version")

@@ -1,0 +1,34 @@
+# Daily exchange rates (spec 009): ECB reference rates are published around 16:00 CET on working days.
+# Fetches with the FX ETL and imports ONLY fx.json into production (`atlas_api.cli import-fx`, which also bumps the ETag).
+# Needs the repository secret DATABASE_URL (Supabase session pooler, postgresql+psycopg://...).
+name: fx-daily
+
+on:
+  schedule:
+    - cron: "30 15 * * 1-5"  # 15:30 UTC, Monday to Friday
+  workflow_dispatch:
+
+concurrency:
+  group: fx-daily
+  cancel-in-progress: false
+
+jobs:
+  fx:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      PYTHONPATH: src
+      FX_CODES_FILE: fx_codes.txt
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+      - run: uv sync --no-dev --group etl
+      - name: Currency codes of the imported countries
+        run: uv run python -m atlas_api.cli currency-codes > fx_codes.txt && wc -l fx_codes.txt
+      - name: Fetch rates (ECB via Frankfurter + exchange-api)
+        run: uv run python -m etl fx
+      - name: Import into production
+        run: uv run python -m atlas_api.cli import-fx
