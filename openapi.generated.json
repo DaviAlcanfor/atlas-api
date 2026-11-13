@@ -1408,6 +1408,13 @@
             "type": "array",
             "title": "Periods"
           },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/HistoryEvent"
+            },
+            "type": "array",
+            "title": "Events"
+          },
           "sources": {
             "items": {
               "$ref": "#/components/schemas/Source"
@@ -1420,6 +1427,7 @@
         "required": [
           "summary",
           "periods",
+          "events",
           "sources"
         ],
         "title": "CountryHistory"
@@ -2057,6 +2065,78 @@
           "db"
         ],
         "title": "Health"
+      },
+      "HistoryEvent": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "political",
+              "war",
+              "treaty",
+              "cultural",
+              "economic",
+              "other"
+            ],
+            "title": "Kind"
+          },
+          "year_start": {
+            "type": "integer",
+            "title": "Year Start"
+          },
+          "year_end": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year End"
+          },
+          "wikipedia_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Wikipedia Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "summary",
+          "kind",
+          "year_start",
+          "year_end",
+          "wikipedia_url"
+        ],
+        "title": "HistoryEvent"
       },
       "HistoryItem": {
         "properties": {

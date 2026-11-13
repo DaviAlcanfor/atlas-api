@@ -35,6 +35,7 @@ from atlas_api.db.models import (
     CurrencyStat,
     FxRate,
     GlossaryTerm,
+    HistoryEvent,
     HistoryPeriod,
     Indicator,
     IndicatorDef,
@@ -110,10 +111,13 @@ def import_facts(session: Session, path: Path) -> dict[str, Any]:
     history = path.parent / "history.json"
     if history.exists():
         summary["history_imported"] = import_history(session, history, known)
+    events = path.parent / "events.json"
+    if events.exists():
+        summary["history_events_imported"] = import_events(session, events, known)
     subs = path.parent / "subdivisions.json"
     if subs.exists():
         summary["subdivisions_imported"] = import_subdivisions(session, subs, known)
-    read = [f for f in (path, leaders, people, langs, *ind_files, fx, history, subs) if f.exists()]
+    read = [f for f in (path, leaders, people, langs, *ind_files, fx, history, events, subs) if f.exists()]
     digest = hashlib.sha256(b"".join(f.read_bytes() for f in read)).hexdigest()[:16]
     summary["data_version"] = set_version(session, "facts", digest)
     return summary
@@ -159,6 +163,22 @@ def import_people(session: Session, path: Path, known: set[str | None]) -> int:
                 death_year=p.get("death_year"), rank=p["rank"], image_url=image.get("url"),
                 image_credit=image.get("credit"), image_license=image.get("license"),
                 wikipedia_url=p.get("wikipedia_url")))
+            n += 1
+    session.flush()
+    return n
+
+
+def import_events(session: Session, path: Path, known: set[str | None]) -> int:
+    """spec 016 stage 2: data_out/events.json -> history_events (rebuilt)."""
+    data = json.loads(path.read_text(encoding="utf-8"))
+    session.execute(delete(HistoryEvent))
+    n = 0
+    for iso2, items in data["countries"].items():
+        if iso2 not in known:
+            continue
+        for e in items:
+            session.add(HistoryEvent(iso2=iso2, qid=e["qid"], title=e["title"], summary=e.get("summary"), kind=e["kind"],
+                                     year_start=e["year_start"], year_end=e.get("year_end"), wikipedia_url=e.get("wikipedia_url")))
             n += 1
     session.flush()
     return n

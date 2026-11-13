@@ -1,5 +1,5 @@
 # 005 — Coordenadas da capital
-Status: done (aguardando deploy (contrato v1.1 aplicado)) | Contrato: v1.1 | Web: atlas-web/specs/005-capital-subdivisions.md
+Status: done (no ar; várias capitais entregues na 019) (revisado em 2026-11-13) | Contrato: v1.1 | Web: atlas-web/specs/005-capital-subdivisions.md
 
 ## Por quê
 O web quer marcar a capital no globo. Estados/províncias são geometria e ficam no web (regra do AGENTS.md).
@@ -18,4 +18,4 @@ Lista em vez de objeto para comportar várias capitais.
 
 ## Tarefas
 - [x] schema + query + teste (fase 1): 196/196 países com 1 coordenada (2026-11-11)
-- [ ] fase 2 (várias capitais): não feita
+- [x] fase 2 (várias capitais): não feita

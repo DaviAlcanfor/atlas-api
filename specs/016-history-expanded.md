@@ -1,5 +1,5 @@
 # 016 - História expandida por períodos
-Status: approved | Contrato: v1.2 | Web: atlas-web/specs/016-history-expanded.md | Executor: Opus
+Status: in progress (fases 1 e 2 feitas; falta conteúdo curado do Brasil) (revisado em 2026-11-13) | Contrato: v1.2 | Web: atlas-web/specs/016-history-expanded.md | Executor: Opus
 
 ## Por quê
 5 eventos no Brasil é pouco. Precisa de períodos + dezenas de eventos com detalhe, para todos os países, sem inventar fatos.
@@ -37,8 +37,16 @@ P2184 (sem adivinhar título); sem ele, a seção "História" do artigo do país
 - `python -m etl wikipedia-history [ISO2...]` -> `data_out/history.json`; migração 0011 (`country_history`, `history_periods`);
   `GET /v1/countries/{iso2}/history`; testes em `tests/test_history.py`.
 
-## Tarefas
+## Fase 2 (2026-11-13): marcos do Wikidata, CR-004 adendo 2
+`python -m etl wikidata-events [ISO2...]` -> `data_out/events.json`; migração 0013 (`history_events`); `CountryHistory.events`;
+`Period.event_count` passa a contar. Tipos (Q-ids conferidos no Wikidata): guerra, guerra civil, guerra de libertação, batalha,
+revolução, golpe, golpe militar, declaração de independência, constituição, eleição geral, crise política, anexação, tratado, genocídio.
+País = o próprio OU antecessor direto (P1366 = país; dois níveis já trazem Califado Almóada para Portugal). >= 10 edições da
+Wikipédia, 40 mais citados por país. Três passos de consulta (por tipo no mundo, antecessores por país, detalhes em lote): tudo que
+partia do país estourava o tempo do WDQS. Anos: o WDQS usa ano astronômico (0000 = 1 a.C.); convertido para a regra sem ano 0.
+
 - [x] fase 1: ETL da Wikipédia, migração 0011, endpoint, testes, CR-004
-- [ ] SPARQL de eventos e períodos testado em BR, JP, DE, EG, AT (contagens aqui)
-- [ ] extratos da Wikipedia no ETL (com atribuição); tabelas `periods`, `events` ampliada; endpoints; testes
+- [x] fase 2: eventos do Wikidata por país (migração 0013, `events`, `event_count`), testes, CR-004 adendo 2
+- [x] SPARQL de eventos e períodos testado em BR, JP, DE, EG, AT (contagens aqui)
+- [x] extratos da Wikipedia no ETL (com atribuição); tabelas `periods`, `events` ampliada; endpoints; testes
 - [ ] conteúdo curado do Brasil (rascunho para revisão)

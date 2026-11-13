@@ -1,5 +1,5 @@
 # 009 - Moeda, câmbio e economia comparável
-Status: done (local, não publicado; contrato = CR-003) | Contrato: v1.2 | Web: atlas-web/specs/009-currency.md | Executor: Opus (ETL/estatísticas), Sonnet (endpoints)
+Status: done (no ar; falta só o job diário de câmbio) (revisado em 2026-11-13) | Contrato: v1.2 | Web: atlas-web/specs/009-currency.md | Executor: Opus (ETL/estatísticas), Sonnet (endpoints)
 
 ## Dados
 | Uso | Fonte | Cobertura | Licença/termos (ler e citar antes de codar) |

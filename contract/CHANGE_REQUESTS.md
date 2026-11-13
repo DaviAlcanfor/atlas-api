@@ -257,3 +257,14 @@ GET /v1/countries/{iso2}/subdivisions -> SubdivisionList
                                         In the order of the web's admin-1 file. No head of government (Wikidata's are stale).
                                         Country without subdivisions -> { items: [], sources: [] }. Unknown iso2 -> 404.
 ```
+
+### CR-004 addendum 2 (2026-11-13): history events (spec 016 stage 2)
+Changes `CountryHistory` (additive field) and gives `Period.event_count` a value:
+```
+HistoryEvent   { id: string /* Wikidata Q-id */, title: string, summary: string|null, kind: EventKind /* same enum as Event */,
+                 year_start: int, year_end: int|null, wikipedia_url: string|null }
+CountryHistory { summary: string|null, periods: Period[], events: HistoryEvent[], sources: Source[] }
+```
+`events`: up to 40 notable dated events (Wikidata, >= 10 Wikipedia editions) of the country or of a DIRECT predecessor state, sorted
+by (year_start, id); automatic, never human-reviewed (clients must say so). `Period.event_count` = events whose year_start falls in
+the period's years (0 when the period has no years). `sources` gains `wikidata` when there are events.

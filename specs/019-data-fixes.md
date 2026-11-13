@@ -1,5 +1,5 @@
 # 019 - Correções de dados encontradas na fase B
-Status: done (local, branch `feat/v1.2-data`; não publicado) | Contrato: não muda (só o texto de `Images`, ver CR-003) | Executor: Sonnet
+Status: done (no ar) (revisado em 2026-11-13) | Contrato: não muda (só o texto de `Images`, ver CR-003) | Executor: Sonnet
 
 ## Problemas
 1. **ETag velho depois de importar fatos**: `data_version` só faz hash de `content/`. Depois de `import-facts` (Wikidata, World Bank,

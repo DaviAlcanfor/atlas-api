@@ -1,5 +1,5 @@
 # 004 — Regime de todos os países + glossário
-Status: done (aguardando deploy (contrato v1.1 aplicado)) | Contrato: v1.1 | Web: atlas-web/specs/004-glossary.md
+Status: done (no ar) (revisado em 2026-11-13) | Contrato: v1.1 | Web: atlas-web/specs/004-glossary.md
 
 ## Por quê
 O web quer explicar *como funciona* cada regime (tooltip + popup + catálogo). Hoje **191 de 196 países têm `regime` null**
