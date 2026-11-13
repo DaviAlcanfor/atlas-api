@@ -32,7 +32,10 @@ def create_app(database_url: str | None = None) -> FastAPI:
         engine = make_engine(database_url or st.database_url, st.db_pool_size, st.db_max_overflow,
                              st.db_pool_timeout)
         if st.auto_migrate:
-            upgrade_to_head(engine)
+            try:
+                upgrade_to_head(engine)
+            except Exception:  # DB down at boot: serve anyway (requests get 503), never crash-loop the deploy
+                logging.getLogger(__name__).exception("startup migration failed; serving without it")
         app.state.engine = engine
         app.state.session_factory = make_session_factory(engine)
         yield

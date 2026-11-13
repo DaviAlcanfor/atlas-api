@@ -11,13 +11,13 @@ from sqlalchemy import Engine, create_engine, text
 from sqlalchemy.engine import make_url
 from sqlalchemy.orm import Session
 
+from atlas_api.config import get_settings
 from atlas_api.facts import import_facts
 from atlas_api.importer import import_content
 from atlas_api.main import create_app
 
-TEST_URL = make_url(
-    os.environ.get("TEST_DATABASE_URL", "postgresql+psycopg://atlas:atlas@localhost:5432/atlas_test")
-)
+# same host/port as the dev DB (.env DATABASE_URL); TEST_DATABASE_URL overrides
+TEST_URL = make_url(os.environ.get("TEST_DATABASE_URL") or get_settings().database_url).set(database="atlas_test")
 
 
 def _fresh_database(name: str) -> Engine:
