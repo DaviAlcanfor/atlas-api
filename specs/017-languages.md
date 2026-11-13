@@ -1,5 +1,5 @@
 # 017 - Idiomas oficiais e outros falados
-Status: approved | Contrato: v1.2 | Web: atlas-web/specs/017-languages.md | Executor: Opus (classificação), Sonnet (endpoint)
+Status: in progress (ETL e endpoint feitos; falta importar na produção) (revisado em 2026-11-13) | Contrato: v1.2 | Web: atlas-web/specs/017-languages.md | Executor: Opus (classificação), Sonnet (endpoint)
 
 ## Dados
 Wikidata (CC0):
@@ -20,5 +20,5 @@ Ordenado por status (na ordem acima) e depois por falantes desc.
 ```
 
 ## Tarefas
-- [ ] SPARQL testado em BR, IN, US, ES, NG, BO (listar o que saiu e o que faltou)
-- [ ] tabela `country_languages`; import; campo; testes
+- [x] SPARQL testado em BR, IN, US, ES, NG, BO (listar o que saiu e o que faltou)
+- [x] tabela `country_languages`; import; campo; testes

@@ -3,7 +3,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-from atlas_api.schemas.common import Event, Politics, Source
+from atlas_api.schemas.common import Event, EventKind, Politics, Source
 
 
 class Marker(BaseModel):
@@ -167,9 +167,20 @@ class Period(BaseModel):  # v1.3 proposal (spec 016, CR-004): year_start nullabl
     event_count: int
 
 
-class CountryHistory(BaseModel):  # v1.3 proposal (spec 016 stage 1, CR-004)
+class HistoryEvent(BaseModel):  # v1.3 proposal (spec 016 stage 2, CR-004): automatic, never human-reviewed
+    id: str  # Wikidata Q-id
+    title: str
+    summary: str | None
+    kind: EventKind
+    year_start: int
+    year_end: int | None
+    wikipedia_url: str | None
+
+
+class CountryHistory(BaseModel):  # v1.3 proposal (spec 016 stages 1-2, CR-004)
     summary: str | None
     periods: list[Period]
+    events: list[HistoryEvent]
     sources: list[Source]
 
 

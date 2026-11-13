@@ -51,3 +51,28 @@ def test_history_endpoint(api_client: TestClient) -> None:
     assert (imp.year_start, imp.year_end) == (1822, 1889)
     assert h.sources[0].license == "CC BY-SA 4.0" and "oldid=" in (h.sources[0].url or "")
     assert api_client.get("/v1/countries/ZZ/history").status_code == 404
+
+
+def test_event_years_have_no_year_zero() -> None:
+    from etl.wikidata.events import year_of
+    assert year_of("1822-09-07T00:00:00Z") == 1822
+    assert year_of("0000-01-01T00:00:00Z") == -1  # astronomical 0 = 1 BCE
+    assert year_of("-0489-01-01T00:00:00Z") == -490  # Marathon
+    assert year_of(None) is None
+
+
+def test_pick_keeps_the_most_linked_events_of_the_states() -> None:
+    from etl.wikidata.events import pick
+    links = {"Q1": ("Q198", 50, {"Q155"}), "Q2": ("Q198", 90, {"Q217230"}), "Q3": ("Q198", 99, {"Q45"}), "Q4": ("Q178561", 10, {"Q155"})}
+    assert pick(links, {"Q155", "Q217230"}) == ["Q2", "Q1", "Q4"]  # predecessor (Empire of Brazil) counts; Portugal does not
+
+
+@pytest.mark.skipif(not Path("data_out/events.json").exists(), reason="run `python -m etl wikidata-events` first")
+def test_history_events(api_client: TestClient) -> None:
+    h = CountryHistory.model_validate(api_client.get("/v1/countries/BR/history").json())
+    titles = {e.title for e in h.events}
+    assert "Guerra do Paraguai" in titles and all(e.id.startswith("Q") for e in h.events)
+    assert [e.year_start for e in h.events] == sorted(e.year_start for e in h.events)
+    imperio = next(p for p in h.periods if p.title == "Império")
+    assert imperio.event_count >= 3  # Cisplatina, Farrapos, Paraguai... fall inside 1822-1889
+    assert {s.id for s in h.sources} == {"wikipedia-pt", "wikidata"}

@@ -1,5 +1,5 @@
 # 015 - Perfil do país: como vive o povo
-Status: done (local, não publicado; contrato = CR-003) | Contrato: v1.2 | Web: atlas-web/specs/015-country-profile.md | Executor: Sonnet
+Status: done (no ar) (revisado em 2026-11-13) | Contrato: v1.2 | Web: atlas-web/specs/015-country-profile.md | Executor: Sonnet
 
 ## Dados
 | Grupo | Indicador | Fonte (licença a citar) |
@@ -29,8 +29,8 @@ GET /v1/countries/{iso2}/profile -> { groups: [{ id: "life"|"society"|"income"|"
 - Composição: no ETL do Wikidata; só entra se a soma das proporções ficar entre 80% e 105% (senão é dado incompleto: null).
 
 ## Tarefas
-- [ ] ler licenças UNDP/UN WPP; citar
-- [ ] indicadores no ETL; `indicator_stats`; composição Wikidata; endpoint; testes
+- [x] ler licenças UNDP/UN WPP; citar
+- [x] indicadores no ETL; `indicator_stats`; composição Wikidata; endpoint; testes
 
 ## Licenças lidas (2026-11-12)
 - **World Bank WDI**: CC BY 4.0 (https://datacatalog.worldbank.org/public-licenses#cc-by), atribuição "The World Bank: <dataset>: <fonte>".

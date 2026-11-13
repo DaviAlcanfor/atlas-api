@@ -1,5 +1,5 @@
 # 003 — Pistas de GeoGuessr
-Status: done (aguardando deploy (contrato v1.1 aplicado)) | Contrato: v1.1 | Web: atlas-web/specs/003-geoguessr.md
+Status: done (no ar) (revisado em 2026-11-13) | Contrato: v1.1 | Web: atlas-web/specs/003-geoguessr.md
 
 ## Por quê
 O web mostra um bloco "Pistas" (lado de dirigir, DDI, domínio, placa, alfabetos). O link do Plonk It é só do web.

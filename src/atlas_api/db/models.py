@@ -456,3 +456,18 @@ class Subdivision(Base):
     flag_url: Mapped[str | None] = mapped_column(Text)
     flag_credit: Mapped[str | None] = mapped_column(Text)
     flag_license: Mapped[str | None] = mapped_column(Text)
+
+
+class HistoryEvent(Base):
+    """spec 016 stage 2: a notable dated event of the country (or a direct predecessor state) from Wikidata; not reviewed."""
+
+    __tablename__ = "history_events"
+
+    iso2: Mapped[str] = mapped_column(CHAR(2), ForeignKey("polities.iso2"), primary_key=True)
+    qid: Mapped[str] = mapped_column(Text, primary_key=True)
+    title: Mapped[str] = mapped_column(Text)
+    summary: Mapped[str | None] = mapped_column(Text)
+    kind: Mapped[str] = mapped_column(Text)
+    year_start: Mapped[int] = mapped_column(Integer)
+    year_end: Mapped[int | None] = mapped_column(Integer)
+    wikipedia_url: Mapped[str | None] = mapped_column(Text)

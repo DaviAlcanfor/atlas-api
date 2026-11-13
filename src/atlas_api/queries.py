@@ -23,6 +23,7 @@ from atlas_api.db.models import (
     Event,
     FxRate,
     GlossaryTerm,
+    HistoryEvent,
     HistoryPeriod,
     Indicator,
     IndicatorDef,
@@ -88,6 +89,7 @@ from atlas_api.schemas import (
 from atlas_api.schemas import CountryHistory as CountryHistoryOut
 from atlas_api.schemas import Event as EventOut
 from atlas_api.schemas import GlossaryTerm as GlossaryTermOut
+from atlas_api.schemas import HistoryEvent as HistoryEventOut
 from atlas_api.schemas import Leader as LeaderOut
 from atlas_api.schemas import (
     Meta as MetaOut,
@@ -635,19 +637,32 @@ def currency_history(s: Session, base: str, vs: list[str], start: date | None,
                            items=[HistoryItem(date=d.isoformat(), rates=by[d]) for d in days])
 
 
+def _in_period(y: int, start: int | None, end: int | None) -> bool:
+    """Event year inside a period's years; a period without any year holds no events (event_count 0)."""
+    if start is None and end is None:
+        return False
+    return (start is None or y >= start) and (end is None or y <= end)
+
+
 def get_history(s: Session, iso2: str) -> CountryHistoryOut:
-    """spec 016 stage 1: condensed pt.wikipedia history article; no article = empty (summary null, no periods)."""
+    """spec 016: condensed pt.wikipedia history (stage 1) + Wikidata events (stage 2). Nothing = empty lists, summary null."""
     h = s.get(CountryHistory, iso2)
+    evs = list(s.scalars(select(HistoryEvent).where(HistoryEvent.iso2 == iso2)
+                         .order_by(HistoryEvent.year_start, HistoryEvent.qid)))
+    events = [HistoryEventOut(id=e.qid, title=e.title, summary=e.summary, kind=e.kind, year_start=e.year_start,
+                              year_end=e.year_end, wikipedia_url=e.wikipedia_url) for e in evs]
+    sources = _sources(s, {"wikidata"}) if events else []
     if h is None:
-        return CountryHistoryOut(summary=None, periods=[], sources=[])
+        return CountryHistoryOut(summary=None, periods=[], events=events, sources=sources)
     rows = s.scalars(select(HistoryPeriod).where(HistoryPeriod.iso2 == iso2).order_by(HistoryPeriod.ord))
     periods = [PeriodOut(id=f"{iso2.lower()}-{p.ord + 1}", title=p.title, year_start=p.year_start, year_end=p.year_end,
-                      summary=p.text, event_count=0) for p in rows]
+                         summary=p.text, event_count=sum(_in_period(e.year_start, p.year_start, p.year_end) for e in evs))
+               for p in rows]
     rev = f" (revisão {h.revision})" if h.revision else ""
     url = f"https://pt.wikipedia.org/w/index.php?oldid={h.revision}" if h.revision else h.article_url
     src = SourceOut(id="wikipedia-pt", title=f"Wikipédia: {h.article_title}{rev}", url=url,
-                 license="CC BY-SA 4.0", retrieved_at=h.retrieved_at)
-    return CountryHistoryOut(summary=h.summary, periods=periods, sources=[src])
+                    license="CC BY-SA 4.0", retrieved_at=h.retrieved_at)
+    return CountryHistoryOut(summary=h.summary, periods=periods, events=events, sources=[src, *sources])
 
 
 def list_subdivisions(s: Session, iso2: str) -> SubdivisionList:
