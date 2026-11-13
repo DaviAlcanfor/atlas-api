@@ -385,6 +385,49 @@
         }
       }
     },
+    "/v1/countries/{iso2}/subdivisions": {
+      "get": {
+        "tags": [
+          "countries"
+        ],
+        "summary": "List Subdivisions",
+        "operationId": "list_subdivisions_v1_countries__iso2__subdivisions_get",
+        "parameters": [
+          {
+            "name": "iso2",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z]{2}$",
+              "title": "Iso2"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubdivisionList"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/polities": {
       "get": {
         "tags": [
@@ -3427,6 +3470,131 @@
           "year"
         ],
         "title": "Speakers"
+      },
+      "SubdivisionList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SubdivisionOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/Source"
+            },
+            "type": "array",
+            "title": "Sources"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "sources"
+        ],
+        "title": "SubdivisionList"
+      },
+      "SubdivisionOut": {
+        "properties": {
+          "wikidata_id": {
+            "type": "string",
+            "title": "Wikidata Id"
+          },
+          "code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "capital": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Capital"
+          },
+          "area_km2": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Area Km2"
+          },
+          "population": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SubdivisionPopulation"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "flag": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Image"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "wikidata_id",
+          "code",
+          "name",
+          "capital",
+          "area_km2",
+          "population",
+          "flag"
+        ],
+        "title": "SubdivisionOut"
+      },
+      "SubdivisionPopulation": {
+        "properties": {
+          "value": {
+            "type": "integer",
+            "title": "Value"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value",
+          "year"
+        ],
+        "title": "SubdivisionPopulation"
       },
       "ValidationError": {
         "properties": {

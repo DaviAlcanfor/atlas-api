@@ -242,3 +242,18 @@ GET /v1/countries/{iso2}/history     -> CountryHistory
                                         year_start null + year_end set = "até <year_end>"; year_end null + year_start set = to present.
                                         No article = { summary: null, periods: [], sources: [] }. Unknown iso2 -> 404.
 ```
+
+### CR-004 addendum (2026-11-12): subdivisions (spec 024 stage 1)
+Shared types:
+```
+Subdivision     { wikidata_id: string /* key: the web's admin-1 polygons carry it as `wikidataid` */, code: string|null /* ISO 3166-2 */,
+                  name: string, capital: string|null, area_km2: number|null, population: { value: int, year: int|null }|null,
+                  flag: Image|null /* Commons, per-file credit + licence */ }
+SubdivisionList { items: Subdivision[], sources: Source[] }
+```
+Endpoint:
+```
+GET /v1/countries/{iso2}/subdivisions -> SubdivisionList
+                                        In the order of the web's admin-1 file. No head of government (Wikidata's are stale).
+                                        Country without subdivisions -> { items: [], sources: [] }. Unknown iso2 -> 404.
+```

@@ -165,9 +165,10 @@ def _strip_html(s: str) -> str:
     return " ".join(html.unescape(re.sub(r"<[^>]+>", "", s)).split())
 
 
-def commons_images(client: httpx.Client, files: set[str], cache: Path,
-                   refresh: bool) -> dict[str, dict[str, str]]:
-    """File name -> {url, credit, license}; files without licence AND artist are left out."""
+def commons_images(client: httpx.Client, files: set[str], cache: Path, refresh: bool,
+                   accept_without_artist: re.Pattern[str] | None = None) -> dict[str, dict[str, str]]:
+    """File name -> {url, credit, license}; files without licence AND artist are left out, except when the licence matches
+    `accept_without_artist` (flags: public domain, credited to Wikimedia Commons)."""
     f = cache / "commons_imageinfo.json"
     known: dict[str, Any] = {} if refresh or not f.exists() else json.loads(f.read_text(encoding="utf-8"))
     todo = sorted(files - set(known))
@@ -193,8 +194,8 @@ def commons_images(client: httpx.Client, files: set[str], cache: Path,
         lic = _strip_html((meta.get("LicenseShortName") or {}).get("value", ""))
         artist = _strip_html((meta.get("Artist") or {}).get("value", ""))
         url = (info.get("thumburl") or info.get("url") or "").split("?", 1)[0]  # drop utm_* tracking
-        if lic and artist and url:
-            out[name] = {"url": url, "credit": f"{artist} / Wikimedia Commons", "license": lic}
+        if lic and url and (artist or (accept_without_artist and accept_without_artist.search(lic))):
+            out[name] = {"url": url, "credit": f"{artist} / Wikimedia Commons" if artist else "Wikimedia Commons", "license": lic}
     return mirror_images(client, out, cache)
 
 
