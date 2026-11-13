@@ -437,3 +437,22 @@ class HistoryPeriod(Base):
     year_start: Mapped[int | None] = mapped_column(Integer)
     year_end: Mapped[int | None] = mapped_column(Integer)
     text: Mapped[str] = mapped_column(Text)
+
+
+class Subdivision(Base):
+    """spec 024: one admin-1 unit drawn by the web (Natural Earth wikidataid); `ord` = order in the web's file."""
+
+    __tablename__ = "subdivisions"
+
+    wikidata_id: Mapped[str] = mapped_column(Text, primary_key=True)
+    iso2: Mapped[str] = mapped_column(CHAR(2), ForeignKey("polities.iso2"), index=True)
+    ord: Mapped[int] = mapped_column(Integer)
+    code: Mapped[str | None] = mapped_column(Text)
+    name: Mapped[str] = mapped_column(Text)
+    capital: Mapped[str | None] = mapped_column(Text)
+    area_km2: Mapped[float | None] = mapped_column(Float)
+    population: Mapped[int | None] = mapped_column(BigInteger)
+    population_year: Mapped[int | None] = mapped_column(Integer)
+    flag_url: Mapped[str | None] = mapped_column(Text)
+    flag_credit: Mapped[str | None] = mapped_column(Text)
+    flag_license: Mapped[str | None] = mapped_column(Text)

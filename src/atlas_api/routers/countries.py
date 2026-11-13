@@ -15,6 +15,7 @@ from atlas_api.schemas import (
     LeaderRole,
     PersonDomain,
     PersonList,
+    SubdivisionList,
 )
 
 router = APIRouter(prefix="/countries", tags=["countries"])
@@ -78,3 +79,10 @@ def get_history(db: DbSession, iso2: Annotated[str, Path(pattern=r"^[A-Z]{2}$")]
     if not queries.country_exists(db, iso2):
         raise NotFoundError(f"Unknown country {iso2}")
     return queries.get_history(db, iso2)
+
+
+@router.get("/{iso2}/subdivisions")  # v1.3 proposal (spec 024, CR-004)
+def list_subdivisions(db: DbSession, iso2: Annotated[str, Path(pattern=r"^[A-Z]{2}$")]) -> SubdivisionList:
+    if not queries.country_exists(db, iso2):
+        raise NotFoundError(f"Unknown country {iso2}")
+    return queries.list_subdivisions(db, iso2)

@@ -171,3 +171,23 @@ class CountryHistory(BaseModel):  # v1.3 proposal (spec 016 stage 1, CR-004)
     summary: str | None
     periods: list[Period]
     sources: list[Source]
+
+
+class SubdivisionPopulation(BaseModel):  # v1.3 proposal (spec 024, CR-004)
+    value: int
+    year: int | None
+
+
+class Subdivision(BaseModel):  # v1.3 proposal (spec 024, CR-004)
+    wikidata_id: str
+    code: str | None
+    name: str
+    capital: str | None
+    area_km2: float | None
+    population: SubdivisionPopulation | None
+    flag: Image | None
+
+
+class SubdivisionList(BaseModel):  # v1.3 proposal (spec 024, CR-004)
+    items: list[Subdivision]
+    sources: list[Source]

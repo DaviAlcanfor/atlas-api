@@ -45,6 +45,7 @@ from atlas_api.db.models import (
     Person,
     Polity,
     Source,
+    Subdivision,
 )
 from atlas_api.importer import set_version
 
@@ -109,7 +110,10 @@ def import_facts(session: Session, path: Path) -> dict[str, Any]:
     history = path.parent / "history.json"
     if history.exists():
         summary["history_imported"] = import_history(session, history, known)
-    read = [f for f in (path, leaders, people, langs, *ind_files, fx, history) if f.exists()]
+    subs = path.parent / "subdivisions.json"
+    if subs.exists():
+        summary["subdivisions_imported"] = import_subdivisions(session, subs, known)
+    read = [f for f in (path, leaders, people, langs, *ind_files, fx, history, subs) if f.exists()]
     digest = hashlib.sha256(b"".join(f.read_bytes() for f in read)).hexdigest()[:16]
     summary["data_version"] = set_version(session, "facts", digest)
     return summary
@@ -158,6 +162,28 @@ def import_people(session: Session, path: Path, known: set[str | None]) -> int:
             n += 1
     session.flush()
     return n
+
+
+def import_subdivisions(session: Session, path: Path, known: set[str | None]) -> int:
+    """spec 024: data_out/subdivisions.json -> subdivisions (rebuilt). A Q-id listed twice (shared polygon) keeps the first."""
+    data = json.loads(path.read_text(encoding="utf-8"))
+    session.execute(delete(Subdivision))
+    seen: set[str] = set()
+    for iso2, items in data["countries"].items():
+        if iso2 not in known:
+            continue
+        for i, x in enumerate(items):
+            if x["wikidata_id"] in seen:
+                continue
+            seen.add(x["wikidata_id"])
+            pop, flag = x.get("population") or {}, x.get("flag") or {}
+            session.add(Subdivision(
+                wikidata_id=x["wikidata_id"], iso2=iso2, ord=i, code=x.get("code"), name=x["name"],
+                capital=x.get("capital"), area_km2=x.get("area_km2"), population=pop.get("value"),
+                population_year=pop.get("year"), flag_url=flag.get("url"), flag_credit=flag.get("credit"),
+                flag_license=flag.get("license")))
+    session.flush()
+    return len(seen)
 
 
 def import_history(session: Session, path: Path, known: set[str | None]) -> int:

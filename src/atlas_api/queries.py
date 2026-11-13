@@ -36,6 +36,7 @@ from atlas_api.db.models import (
     Snapshot,
     SnapshotLink,
     Source,
+    Subdivision,
     Succession,
 )
 from atlas_api.rules import has_content, name_as_of
@@ -78,6 +79,8 @@ from atlas_api.schemas import (
     Share,
     SnapshotInfo,
     Speakers,
+    SubdivisionList,
+    SubdivisionPopulation,
     Wikipedia,
     WorldStats,
     YearValue,
@@ -95,6 +98,7 @@ from atlas_api.schemas import (
     SnapshotLink as SnapshotLinkOut,
 )
 from atlas_api.schemas import Source as SourceOut
+from atlas_api.schemas import Subdivision as SubdivisionOut
 
 log = logging.getLogger("atlas_api")
 YEAR_MIN = -3000  # ponytail: fixed lower bound of the slider; move to config if it ever changes
@@ -644,3 +648,14 @@ def get_history(s: Session, iso2: str) -> CountryHistoryOut:
     src = SourceOut(id="wikipedia-pt", title=f"Wikipédia: {h.article_title}{rev}", url=url,
                  license="CC BY-SA 4.0", retrieved_at=h.retrieved_at)
     return CountryHistoryOut(summary=h.summary, periods=periods, sources=[src])
+
+
+def list_subdivisions(s: Session, iso2: str) -> SubdivisionList:
+    """spec 024: the country's admin-1 units in the web's file order; empty when the country has none."""
+    rows = list(s.scalars(select(Subdivision).where(Subdivision.iso2 == iso2).order_by(Subdivision.ord)))
+    items = [SubdivisionOut(
+        wikidata_id=x.wikidata_id, code=x.code, name=x.name, capital=x.capital, area_km2=x.area_km2,
+        population=SubdivisionPopulation(value=x.population, year=x.population_year) if x.population is not None else None,
+        flag=Image(url=x.flag_url, credit=x.flag_credit or "", license=x.flag_license or "") if x.flag_url else None)
+        for x in rows]
+    return SubdivisionList(items=items, sources=_sources(s, {"wikidata"}) if items else [])
