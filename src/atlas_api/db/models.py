@@ -439,6 +439,19 @@ class HistoryPeriod(Base):
     text: Mapped[str] = mapped_column(Text)
 
 
+class CountryBrief(Base):
+    """spec 022: short summary of a country; `method` = "template" or "template+<model>" (AI rewording, numbers checked)."""
+
+    __tablename__ = "country_briefs"
+
+    iso2: Mapped[str] = mapped_column(CHAR(2), ForeignKey("polities.iso2"), primary_key=True)
+    tldr: Mapped[str] = mapped_column(Text)
+    now: Mapped[str | None] = mapped_column(Text)
+    method: Mapped[str] = mapped_column(Text)
+    generated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    source_ids: Mapped[list[str]] = mapped_column(JSONB)
+
+
 class Subdivision(Base):
     """spec 024: one admin-1 unit drawn by the web (Natural Earth wikidataid); `ord` = order in the web's file."""
 

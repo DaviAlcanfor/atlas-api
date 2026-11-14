@@ -471,6 +471,49 @@
         }
       }
     },
+    "/v1/countries/{iso2}/brief": {
+      "get": {
+        "tags": [
+          "countries"
+        ],
+        "summary": "Get Brief",
+        "operationId": "get_brief_v1_countries__iso2__brief_get",
+        "parameters": [
+          {
+            "name": "iso2",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z]{2}$",
+              "title": "Iso2"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CountryBriefOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/polities": {
       "get": {
         "tags": [
@@ -1307,6 +1350,49 @@
           "source_id"
         ],
         "title": "CompositionOut"
+      },
+      "CountryBriefOut": {
+        "properties": {
+          "tldr": {
+            "type": "string",
+            "title": "Tldr"
+          },
+          "now": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Now"
+          },
+          "method": {
+            "type": "string",
+            "title": "Method"
+          },
+          "generated_at": {
+            "type": "string",
+            "title": "Generated At"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/Source"
+            },
+            "type": "array",
+            "title": "Sources"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tldr",
+          "now",
+          "method",
+          "generated_at",
+          "sources"
+        ],
+        "title": "CountryBriefOut"
       },
       "CountryDetail": {
         "properties": {

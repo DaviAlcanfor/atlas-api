@@ -329,3 +329,16 @@ GET /v1/indicators/{id}/ranking -> { id, label, unit, items: RankingItem[] /* by
 `rank` orders by VALUE, not by "better": rank 1 of "Homicídios" is the highest homicide rate. Clients must not call it "best".
 Data fix in the same change: when Wikidata has several areas (P2046), the preferred one wins, then the one not limited to a
 part of the country (P518), then the largest (Bosnia's first statement was its 10 km2 water area).
+
+## CR-007: country brief (spec 022, 2026-11-13; owner: "faz uma espécie de f string ... usa o GPT 6 Luna")
+Additive:
+```
+CountryBriefOut { tldr: string /* 3-5 sentences: place, size, a line of history, economy and life */,
+                  now: string|null /* who governs since when + latest growth/inflation/unemployment, each with its year */,
+                  method: string /* "template" or "template+<model>": the AI only reworded the formula's text */,
+                  generated_at: string, sources: Source[] /* where the facts came from */ }
+GET /v1/countries/{iso2}/brief -> CountryBriefOut      Unknown iso2 -> 404; no brief generated yet -> 404.
+```
+Text: a formula fills fixed pt-BR sentences with facts the API already serves; GPT-6 Luna (Vercel AI Gateway) rewords it and
+the result is kept only if every number in it already appears in the formula's text. Clients show "revisado por IA" when
+`method` has a model, and the sources.
