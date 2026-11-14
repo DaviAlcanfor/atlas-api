@@ -83,8 +83,8 @@ QUERIES: dict[str, str] = {
         "wikibase:rank ?rank. OPTIONAL { ?st pq:P585 ?when } }"
     ),
     "area": (
-        f"SELECT ?iso2 ?area WHERE {{ {STATE} ?c p:P2046 ?st. ?st psn:P2046/wikibase:quantityAmount ?area; "
-        "wikibase:rank ?rank. FILTER(?rank != wikibase:DeprecatedRank) }"
+        f"SELECT ?iso2 ?area ?rank ?part WHERE {{ {STATE} ?c p:P2046 ?st. ?st psn:P2046/wikibase:quantityAmount ?area; "
+        "wikibase:rank ?rank. FILTER(?rank != wikibase:DeprecatedRank) OPTIONAL { ?st pq:P518 ?part } }"
     ),
     "languages": (
         f"SELECT ?iso2 ?l ?lLabel ?code ?c639_1 ?c639_3 WHERE {{ {STATE} ?c wdt:P37 ?l. "
@@ -277,10 +277,13 @@ def build(
         when = _v(r, "when")
         out[iso]["population_year"] = int(when[:4]) if when and when[:4].isdigit() else None
 
+    areas: dict[str, list[dict[str, Any]]] = {}
     for r in raw["area"]["rows"]:
-        iso = _v(r, "iso2") or ""
-        if iso in out and out[iso]["area_km2"] is None:
-            out[iso]["area_km2"] = round(float(_v(r, "area") or 0) / 1_000_000, 1) or None
+        areas.setdefault(_v(r, "iso2") or "", []).append(r)
+    for iso, stmts in areas.items():
+        if iso in out:
+            km2 = pick_area(stmts)
+            out[iso]["area_km2"] = round(km2 / 1_000_000, 1) if km2 else None
 
     for r in raw["languages"]["rows"]:
         iso, label = _v(r, "iso2") or "", _v(r, "lLabel")
@@ -363,6 +366,16 @@ def regime_report(countries: dict[str, dict[str, Any]], regimes: dict[str, Any])
     lines.append(f"  no P122 in Wikidata ({len(no_p122)}): {' '.join(no_p122)}")
     lines.append(f"  P122 but no/conflicting rule ({len(no_rule)}): {' '.join(no_rule)}")
     return lines
+
+
+def pick_area(rows: list[dict[str, Any]]) -> float | None:
+    """Total area in m2 among several P2046 statements (spec 027: Bosnia's first one was 10 km2, its water area).
+    Preferred rank wins; else statements for a part of the country (P518 "applies to part") are dropped; then the largest."""
+    pref = [r for r in rows if _v(r, "rank") == "http://wikiba.se/ontology#PreferredRank"]
+    cands = pref or rows
+    whole = [r for r in cands if not _v(r, "part")] or cands
+    values = [float(v) for r in whole if (v := _v(r, "area"))]
+    return max(values) if values else None
 
 
 def add_curated_memberships(countries: dict[str, Any], orgs: dict[str, Any]) -> None:

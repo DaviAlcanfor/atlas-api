@@ -1049,6 +1049,70 @@
           }
         }
       }
+    },
+    "/v1/indicators": {
+      "get": {
+        "tags": [
+          "indicators"
+        ],
+        "summary": "List Indicators",
+        "operationId": "list_indicators_v1_indicators_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IndicatorCatalog"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/indicators/{id}/ranking": {
+      "get": {
+        "tags": [
+          "indicators"
+        ],
+        "summary": "Indicator Ranking",
+        "operationId": "indicator_ranking_v1_indicators__id__ranking_get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9.]{1,40}$",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IndicatorRanking"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2518,6 +2582,61 @@
         ],
         "title": "Image"
       },
+      "IndicatorCatalog": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RankedIndicator"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "IndicatorCatalog"
+      },
+      "IndicatorRanking": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RankingItem"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/Source"
+            },
+            "type": "array",
+            "title": "Sources"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "unit",
+          "items",
+          "sources"
+        ],
+        "title": "IndicatorRanking"
+      },
       "Language": {
         "properties": {
           "code": {
@@ -3569,6 +3688,74 @@
           "region_avg"
         ],
         "title": "ProfileIndicator"
+      },
+      "RankedIndicator": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          },
+          "n": {
+            "type": "integer",
+            "title": "N"
+          },
+          "source_id": {
+            "type": "string",
+            "title": "Source Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "unit",
+          "n",
+          "source_id"
+        ],
+        "title": "RankedIndicator"
+      },
+      "RankingItem": {
+        "properties": {
+          "iso2": {
+            "type": "string",
+            "title": "Iso2"
+          },
+          "value": {
+            "type": "number",
+            "title": "Value"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          },
+          "rank": {
+            "type": "integer",
+            "title": "Rank"
+          }
+        },
+        "type": "object",
+        "required": [
+          "iso2",
+          "value",
+          "year",
+          "rank"
+        ],
+        "title": "RankingItem"
       },
       "RateItem": {
         "properties": {

@@ -126,3 +126,31 @@ class CurrencyHistory(BaseModel):
     vs: list[str]
     items: list[HistoryItem]
     source: Source
+
+
+# --- indicator ranking (spec 027, CR-006) --------------------------------------------------------
+class RankedIndicator(BaseModel):
+    id: str
+    label: str
+    unit: str
+    n: int  # countries with a value
+    source_id: str
+
+
+class IndicatorCatalog(BaseModel):
+    items: list[RankedIndicator]
+
+
+class RankingItem(BaseModel):
+    iso2: str
+    value: float
+    year: int | None
+    rank: int  # 1 = highest value (ties share a rank); NOT "best"
+
+
+class IndicatorRanking(BaseModel):
+    id: str
+    label: str
+    unit: str
+    items: list[RankingItem]  # every country with a value, by rank
+    sources: list[Source]

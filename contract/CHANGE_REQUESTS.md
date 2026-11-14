@@ -315,3 +315,17 @@ Source: Cliopatria v0.2.1 (Seshat Global History Databank), CC BY 4.0. Clients m
 (Seshat Global History Databank), CC BY 4.0, simplificadas". Changes made to the source: coordinates snapped to a 0.01 degree
 grid, aggregate rows dropped, names translated. Not done from the first v2 proposal: TopoJSON and Supabase Storage (the files are
 small enough as GeoJSON, largest 492 KB, and the web repo serves them).
+
+## CR-006: indicator ranking (spec 027, 2026-11-13; owner approved "implementa então")
+Additive, two read-only endpoints for the map's ranking layer:
+```
+RankedIndicator { id: string, label: string, unit: string, n: int /* countries with a value */, source_id: string }
+RankingItem     { iso2: string, value: number, year: int|null, rank: int /* 1 = highest value; ties share a rank */ }
+GET /v1/indicators              -> { items: RankedIndicator[] }   (by label; every profile/economy indicator except
+                                   PA.NUS.PPP, plus "density" = population / area from Wikidata, unit "hab/km²")
+GET /v1/indicators/{id}/ranking -> { id, label, unit, items: RankingItem[] /* by rank, then iso2 */, sources: Source[] }
+                                   Unknown or unranked id -> 404.
+```
+`rank` orders by VALUE, not by "better": rank 1 of "Homicídios" is the highest homicide rate. Clients must not call it "best".
+Data fix in the same change: when Wikidata has several areas (P2046), the preferred one wins, then the one not limited to a
+part of the country (P518), then the largest (Bosnia's first statement was its 10 km2 water area).

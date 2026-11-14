@@ -66,6 +66,8 @@ from atlas_api.schemas import (
     HistoryItem,
     IdeologyDetail,
     Image,
+    IndicatorCatalog,
+    IndicatorRanking,
     Language,
     LanguageSpoken,
     Link,
@@ -82,6 +84,8 @@ from atlas_api.schemas import (
     Population,
     ProfileGroup,
     ProfileIndicator,
+    RankedIndicator,
+    RankingItem,
     RateItem,
     Rates,
     SearchItem,
@@ -747,3 +751,52 @@ def get_ideology(s: Session, ideology_id: str) -> IdeologyDetail | None:
     sources = _sources(s, {"wikidata"})
     return IdeologyDetail(term=_term(t, _examples(s, [t])[t.id]), founders=_figures(s, [ideology_id], "WORLD").get(ideology_id, []),
                           timeline=[], governed=_merge_terms(mandates), sources=sources)
+
+
+# --- indicator ranking (spec 027, CR-006) ----------------------------------------------------------
+# Not ranked: a conversion factor has no meaningful order across countries.
+UNRANKED = {"PA.NUS.PPP"}
+DENSITY = "density"  # computed here: population / area (Wikidata), like the panel's "Densidade"
+
+
+def _density(s: Session) -> dict[str, tuple[float, int | None]]:
+    rows = s.execute(select(CountryFacts.iso2, CountryFacts.population, CountryFacts.population_year, CountryFacts.area_km2)
+                     .where(CountryFacts.population.is_not(None), CountryFacts.area_km2 > 0))
+    return {iso2: (pop / area, year) for iso2, pop, year, area in rows if pop is not None and area}  # filtered in SQL too; for mypy
+
+
+def list_ranked_indicators(s: Session) -> IndicatorCatalog:
+    n = {x.id: x.n for x in s.scalars(select(IndicatorStat))}
+    items = [RankedIndicator(id=d.id, label=d.label, unit=d.unit, n=n[d.id], source_id=d.source_id)
+             for d in s.scalars(select(IndicatorDef).order_by(IndicatorDef.label)) if d.id in n and d.id not in UNRANKED]
+    dens = _density(s)
+    if dens:
+        items.append(RankedIndicator(id=DENSITY, label="Densidade demográfica", unit="hab/km²", n=len(dens), source_id="wikidata"))
+    return IndicatorCatalog(items=sorted(items, key=lambda x: x.label))
+
+
+def indicator_ranking(s: Session, ind: str) -> IndicatorRanking | None:
+    if ind == DENSITY:
+        dens = _density(s)
+        if not dens:
+            return None
+        ranks = _rank_desc({k: v for k, (v, _) in dens.items()})
+        items = [RankingItem(iso2=k, value=v, year=y, rank=ranks[k]) for k, (v, y) in dens.items()]
+        label, unit, sources = "Densidade demográfica", "hab/km²", {"wikidata"}
+    else:
+        d = s.get(IndicatorDef, ind)
+        if d is None or ind in UNRANKED:
+            return None
+        items = [RankingItem(iso2=x.iso2, value=x.value, year=x.year, rank=x.rank)
+                 for x in s.scalars(select(IndicatorLatest).where(IndicatorLatest.id == ind))]
+        label, unit, sources = d.label, d.unit, {d.source_id}
+    items.sort(key=lambda x: (x.rank, x.iso2))
+    return IndicatorRanking(id=ind, label=label, unit=unit, items=items, sources=_sources(s, sources))
+
+
+def _rank_desc(values: dict[str, float]) -> dict[str, int]:
+    """Competition ranking, 1 = highest (same rule as import-facts' indicator_latest.rank)."""
+    first: dict[float, int] = {}
+    for i, v in enumerate(sorted(values.values(), reverse=True)):
+        first.setdefault(v, i + 1)
+    return {k: first[v] for k, v in values.items()}
