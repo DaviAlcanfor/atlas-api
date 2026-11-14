@@ -276,3 +276,10 @@ GET /v1/indicators              -> { items: RankedIndicator[] }   (by label; inc
 GET /v1/indicators/{id}/ranking -> { id: string, label: string, unit: string, items: RankingItem[] /* by rank, iso2 */,
                                      sources: Source[] }        Unknown or unranked id -> 404.
 ```
+
+## v1.5 (CR-007, applied 2026-11-13): country brief
+```
+CountryBriefOut { tldr: string, now: string|null, method: string /* "template" | "template+<model>" */,
+                  generated_at: string, sources: Source[] }
+GET /v1/countries/{iso2}/brief -> CountryBriefOut      Unknown iso2 -> 404; no brief generated yet -> 404.
+```

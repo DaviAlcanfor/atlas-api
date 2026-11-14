@@ -29,6 +29,7 @@ from sqlalchemy.orm import Session
 from atlas_api.db.models import (
     Capital,
     Composition,
+    CountryBrief,
     CountryFacts,
     CountryHistory,
     CountryLanguage,
@@ -124,10 +125,13 @@ def import_facts(session: Session, path: Path) -> dict[str, Any]:
     subs = path.parent / "subdivisions.json"
     if subs.exists():
         summary["subdivisions_imported"] = import_subdivisions(session, subs, known)
+    briefs = path.parent / "summaries.json"
+    if briefs.exists():
+        summary["briefs_imported"] = import_briefs(session, briefs, known)
     snaps = path.parent / "snapshots.json"
     if snaps.exists():
         summary["snapshots_imported"] = import_snapshots(session, snaps)
-    read = [f for f in (path, leaders, people, langs, *ind_files, fx, history, events, ideologies, subs, snaps) if f.exists()]
+    read = [f for f in (path, leaders, people, langs, *ind_files, fx, history, events, ideologies, subs, snaps, briefs) if f.exists()]
     digest = hashlib.sha256(b"".join(f.read_bytes() for f in read)).hexdigest()[:16]
     summary["data_version"] = set_version(session, "facts", digest)
     return summary
@@ -233,6 +237,20 @@ def import_ideologies(session: Session, path: Path, known: set[str | None]) -> i
         session.execute(insert(IdeologyParty), parties)
     session.flush()
     return len(figures)
+
+
+def import_briefs(session: Session, path: Path, known: set[str | None]) -> int:
+    """spec 022: data_out/summaries.json (etl ai-summaries) -> country_briefs (rebuilt)."""
+    data = json.loads(path.read_text(encoding="utf-8"))
+    session.execute(delete(CountryBrief))
+    n = 0
+    for iso2, x in data["countries"].items():
+        if iso2 in known and x.get("tldr"):
+            session.add(CountryBrief(iso2=iso2, tldr=x["tldr"], now=x.get("now") or None, method=x["method"],
+                                     generated_at=datetime.fromisoformat(x["generated_at"]), source_ids=x["source_ids"]))
+            n += 1
+    session.flush()
+    return n
 
 
 def import_snapshots(session: Session, path: Path) -> int:

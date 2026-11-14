@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session, aliased, selectinload
 from atlas_api.db.models import (
     Capital,
     Composition,
+    CountryBrief,
     CountryFacts,
     CountryHistory,
     CountryLanguage,
@@ -49,6 +50,7 @@ from atlas_api.schemas import (
     Clues,
     CompareIndicator,
     CompositionOut,
+    CountryBriefOut,
     CountryDetail,
     CountryEconomy,
     CountryIdeologies,
@@ -800,3 +802,12 @@ def _rank_desc(values: dict[str, float]) -> dict[str, int]:
     for i, v in enumerate(sorted(values.values(), reverse=True)):
         first.setdefault(v, i + 1)
     return {k: first[v] for k, v in values.items()}
+
+
+def get_brief(s: Session, iso2: str) -> CountryBriefOut | None:
+    """spec 022: the country summary; None when it was never generated."""
+    b = s.get(CountryBrief, iso2)
+    if b is None:
+        return None
+    return CountryBriefOut(tldr=b.tldr, now=b.now, method=b.method, generated_at=_ts(b.generated_at) or "",
+                           sources=_sources(s, set(b.source_ids)))

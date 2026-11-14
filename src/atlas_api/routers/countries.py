@@ -6,6 +6,7 @@ from atlas_api import queries
 from atlas_api.deps import DbSession
 from atlas_api.errors import NotFoundError, ServiceUnavailableError
 from atlas_api.schemas import (
+    CountryBriefOut,
     CountryDetail,
     CountryEconomy,
     CountryHistory,
@@ -94,3 +95,13 @@ def list_ideologies(db: DbSession, iso2: Annotated[str, Path(pattern=r"^[A-Z]{2}
     if not queries.country_exists(db, iso2):
         raise NotFoundError(f"Unknown country {iso2}")
     return queries.list_country_ideologies(db, iso2)
+
+
+@router.get("/{iso2}/brief")  # v1.5 proposal (spec 022, CR-007)
+def get_brief(db: DbSession, iso2: Annotated[str, Path(pattern=r"^[A-Z]{2}$")]) -> CountryBriefOut:
+    if not queries.country_exists(db, iso2):
+        raise NotFoundError(f"Unknown country {iso2}")
+    b = queries.get_brief(db, iso2)
+    if b is None:
+        raise NotFoundError(f"No summary for {iso2} yet")
+    return b

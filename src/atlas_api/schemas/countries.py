@@ -203,3 +203,11 @@ class Subdivision(BaseModel):  # v1.3 proposal (spec 024, CR-004)
 class SubdivisionList(BaseModel):  # v1.3 proposal (spec 024, CR-004)
     items: list[Subdivision]
     sources: list[Source]
+
+
+class CountryBriefOut(BaseModel):  # v1.5 proposal (spec 022, CR-007)
+    tldr: str
+    now: str | None
+    method: str  # "template" or "template+<model>": clients must say when AI reworded the text
+    generated_at: str
+    sources: list[Source]  # where the facts came from
