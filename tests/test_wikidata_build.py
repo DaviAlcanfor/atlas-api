@@ -102,3 +102,17 @@ def test_curated_memberships_join_wikidata_and_match_glossary() -> None:
     add_curated_memberships(countries, orgs)
     assert {"ONU", "Mercosul", "BRICS", "G20", "CPLP"} == set(countries["BR"]["memberships"])
     assert "Mercosul" not in countries["VE"]["memberships"]  # suspended since 2016
+
+
+def test_area_prefers_preferred_rank_then_the_whole_country() -> None:
+    """spec 027: Bosnia had a 10 km2 statement first (its water area) and became the densest country on the map."""
+    from etl.wikidata.pipeline import pick_area
+
+    pref = "http://wikiba.se/ontology#PreferredRank"
+    part = "http://www.wikidata.org/entity/Q1"
+    ba = [_row(area="10000000", part=part), _row(area="51187000000", part=part), _row(area="51209200000", part=part)]
+    assert pick_area(ba) == 51209200000.0  # all are parts: the largest
+    au = [_row(area="8148250000000", part=part), _row(area="7688287000000", rank=pref), _row(area="410977000000", part=part)]
+    assert pick_area(au) == 7688287000000.0
+    assert pick_area([_row(area="2"), _row(area="3", part=part)]) == 2.0
+    assert pick_area([]) is None

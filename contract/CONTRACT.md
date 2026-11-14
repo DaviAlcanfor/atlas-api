@@ -267,3 +267,12 @@ Brazil: curated table from Anatel (content/area_codes.yaml); elsewhere Wikidata 
 `SubdivisionList.sources` includes `anatel` for BR. Also: `CountryDetail.memberships` now lists curated organizations
 (content/organizations.yaml: Mercosul, BRICS, G7, G20, União Europeia, OTAN, OPEP, ASEAN, União Africana, CPLP, OCDE) besides
 "ONU"; each value is the `label` of a `membership` glossary term. No type change.
+
+## v1.4 (CR-006, applied 2026-11-13): indicator ranking
+```
+RankedIndicator { id: string, label: string, unit: string, n: int, source_id: string }
+RankingItem     { iso2: string, value: number, year: int|null, rank: int /* 1 = highest value, ties share; not "best" */ }
+GET /v1/indicators              -> { items: RankedIndicator[] }   (by label; includes "density", excludes PA.NUS.PPP)
+GET /v1/indicators/{id}/ranking -> { id: string, label: string, unit: string, items: RankingItem[] /* by rank, iso2 */,
+                                     sources: Source[] }        Unknown or unranked id -> 404.
+```
