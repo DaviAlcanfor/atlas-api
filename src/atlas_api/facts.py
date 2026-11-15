@@ -47,6 +47,8 @@ from atlas_api.db.models import (
     IndicatorStat,
     Leader,
     Meta,
+    NewsItem,
+    NewsItemCountry,
     Person,
     Polity,
     Snapshot,
@@ -437,3 +439,34 @@ def import_fx(session: Session, path: Path) -> int:
             session.add(CurrencyStat(code=code, vs=vs, as_of=series[-1][0], **currency_stats(series)))
     session.flush()
     return len(rows)
+
+
+NEWS_RETENTION_DAYS = 30
+
+
+def import_news(session: Session, path: Path) -> dict[str, Any]:
+    """spec 008: data_out/news.json (etl news) -> news_items + news_item_countries. Upsert by id (sha of the URL), the newest
+    classification wins; items older than NEWS_RETENTION_DAYS are deleted. Touches only the news tables."""
+    data = json.loads(path.read_text(encoding="utf-8"))
+    fetched = datetime.fromisoformat(data["fetched_at"])
+    src = data["source"]
+    session.merge(Source(id=src["id"], title=src["title"], url=src["url"], license=src["license"], retrieved_at=fetched))
+    ids = [x["id"] for x in data["items"]]
+    if ids:
+        session.execute(delete(NewsItemCountry).where(NewsItemCountry.item_id.in_(ids)))
+    for x in data["items"]:
+        session.merge(NewsItem(id=x["id"], url=x["url"], title=x["title"], outlet=x["outlet"], language=x.get("language"),
+                               published_at=datetime.fromisoformat(x["published_at"]), event_type=x["event_type"],
+                               geopolitical_p=x["geopolitical_p"], fetched_at=fetched))
+    session.flush()
+    for x in data["items"]:
+        for c in x["countries"]:
+            session.add(NewsItemCountry(item_id=x["id"], iso2=c["iso2"], about_p=c["p"]))
+    cutoff = fetched - timedelta(days=NEWS_RETENTION_DAYS)
+    old = list(session.scalars(select(NewsItem.id).where(NewsItem.published_at < cutoff)))
+    if old:
+        session.execute(delete(NewsItem).where(NewsItem.id.in_(old)))
+    gone = len(old)
+    session.merge(Meta(key="news_fetched_at", value=fetched.isoformat()))
+    session.flush()
+    return {"news_upserted": len(ids), "news_deleted_old": gone}

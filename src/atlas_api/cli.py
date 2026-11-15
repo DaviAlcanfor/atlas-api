@@ -1,4 +1,6 @@
-"""`python -m atlas_api.cli import-content | import-facts | import-fx | currency-codes`
+"""`python -m atlas_api.cli import-content | import-facts | import-fx | import-news | currency-codes`
+
+import-news: only data_out/news.json (the 6-hourly job, spec 008), only the news tables.
 
 import-fx: only data_out/fx.json (the daily job, spec 009); currency-codes: prints the ISO 4217 codes of the imported countries,
 one per line (the FX ETL needs them and CI has no data_out/wikidata.json)."""
@@ -15,13 +17,13 @@ from sqlalchemy.orm import Session
 from atlas_api.config import get_settings
 from atlas_api.db.models import CountryFacts
 from atlas_api.db.session import make_engine
-from atlas_api.facts import import_facts, import_fx
+from atlas_api.facts import import_facts, import_fx, import_news
 from atlas_api.importer import ContentError, import_content, set_version
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(prog="atlas_api.cli")
-    ap.add_argument("command", choices=["import-content", "import-facts", "import-fx", "currency-codes"])
+    ap.add_argument("command", choices=["import-content", "import-facts", "import-fx", "import-news", "currency-codes"])
     ap.add_argument("--content", default="content", type=Path)
     ap.add_argument("--data-out", default="data_out", type=Path)
     args = ap.parse_args()
@@ -40,6 +42,10 @@ def main() -> int:
                 fx = args.data_out / "fx.json"
                 summary = {"fx_rates_imported": import_fx(session, fx),
                            "data_version": set_version(session, "fx", hashlib.sha256(fx.read_bytes()).hexdigest()[:16])}
+            elif args.command == "import-news":
+                news = args.data_out / "news.json"
+                summary = {**import_news(session, news),
+                           "data_version": set_version(session, "news", hashlib.sha256(news.read_bytes()).hexdigest()[:16])}
             else:
                 summary = import_content(session, args.content)
     except ContentError as e:

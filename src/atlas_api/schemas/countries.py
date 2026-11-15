@@ -211,3 +211,23 @@ class CountryBriefOut(BaseModel):  # v1.5 proposal (spec 022, CR-007)
     method: str  # "template" or "template+<model>": clients must say when AI reworded the text
     generated_at: str
     sources: list[Source]  # where the facts came from
+
+
+class NewsItemOut(BaseModel):  # v1.6 proposal (spec 008, CR-008)
+    id: str
+    title: str  # original language
+    url: str
+    outlet: str
+    language: str | None
+    published_at: str
+    countries: list[str]  # ISO2, most relevant first
+    event_type: str  # conflict | diplomacy | election | sanctions | agreement | protest | coup | economy_policy | other
+    geopolitical_p: float  # 0..1 (classifier)
+    origin: str  # "gdelt"
+
+
+class NewsList(BaseModel):  # v1.6 proposal (spec 008, CR-008)
+    items: list[NewsItemOut]
+    fetched_at: str | None
+    next: str | None  # cursor for `before`
+    sources: list[Source]

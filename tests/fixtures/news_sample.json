@@ -1,0 +1,12 @@
+{"source": {"id": "gdelt", "title": "The GDELT Project (DOC 2.0 API)", "url": "https://www.gdeltproject.org/", "license": "Uso livre com citação ao GDELT Project"},
+ "classifier": "openai/gpt-6-luna-decisions", "fetched_at": "2026-11-14T12:00:00+00:00",
+ "items": [
+  {"id": "a1", "url": "https://example.org/a1", "title": "Rússia e Ucrânia retomam negociações de cessar-fogo", "outlet": "example.org", "language": "pt",
+   "published_at": "2026-11-14T10:00:00+00:00", "event_type": "diplomacy", "geopolitical_p": 0.98, "countries": [{"iso2": "RU", "p": 0.95}, {"iso2": "UA", "p": 0.93}]},
+  {"id": "a2", "url": "https://example.org/a2", "title": "Brasil e Argentina assinam acordo de comércio na fronteira", "outlet": "example.org", "language": "pt",
+   "published_at": "2026-11-14T09:00:00+00:00", "event_type": "agreement", "geopolitical_p": 0.81, "countries": [{"iso2": "BR", "p": 0.9}, {"iso2": "AR", "p": 0.88}]},
+  {"id": "a3", "url": "https://example.org/a3", "title": "Election results contested in a small district", "outlet": "example.com", "language": "en",
+   "published_at": "2026-11-14T08:00:00+00:00", "event_type": "election", "geopolitical_p": 0.6, "countries": []},
+  {"id": "old", "url": "https://example.org/old", "title": "Old headline that the retention window must delete", "outlet": "example.org", "language": "en",
+   "published_at": "2026-09-01T08:00:00+00:00", "event_type": "other", "geopolitical_p": 0.9, "countries": []}
+ ]}
