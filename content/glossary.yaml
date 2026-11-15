@@ -365,3 +365,224 @@ terms:
     icon: null
     sources:
       - {id: wp-pt-ocde, title: "Organização para a Cooperação e Desenvolvimento Econômico (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Organiza%C3%A7%C3%A3o_para_a_Coopera%C3%A7%C3%A3o_e_Desenvolvimento_Econ%C3%B4mico", license: "CC BY-SA 4.0", retrieved_at: "2026-11-13T00:00:00Z"}
+
+  # --- economia (kind other: o contrato não tem um kind próprio; o web agrupa "other" em "Economia e indicadores") ----
+  # Textos próprios escritos por agente em 2026-11-15 (RASCUNHO, revisão humana pendente). Títulos da Wikipédia verificados
+  # na API da Wikipédia em 2026-11-15; a página do indicador do Banco Mundial é a definição do dado que o Atlas mostra.
+  - id: pib
+    kind: other
+    label: PIB (Produto Interno Bruto)
+    short: Valor de tudo o que um país produz em bens e serviços finais em um ano.
+    body: >-
+      Soma o valor dos bens e serviços finais produzidos dentro do país num período, em geral um ano. Mede o tamanho
+      da economia, não o bem-estar: um país muito populoso pode ter PIB alto e renda por pessoa baixa. No Atlas o PIB
+      aparece em dólares correntes (Banco Mundial), então também sobe e desce com o câmbio.
+    icon: null
+    sources:
+      - {id: wp-pt-pib, title: "Produto interno bruto (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Produto_interno_bruto", license: "CC BY-SA 4.0", retrieved_at: "2026-11-15T00:00:00Z"}
+      - {id: wb-ny-gdp-mktp-cd, title: "Indicador NY.GDP.MKTP.CD (Banco Mundial)", url: "https://data.worldbank.org/indicator/NY.GDP.MKTP.CD", license: "CC BY 4.0", retrieved_at: "2026-11-15T00:00:00Z"}
+
+  - id: pib-per-capita
+    kind: other
+    label: PIB per capita
+    short: PIB dividido pela população, ou seja, quanto a economia produz em média por habitante.
+    body: >-
+      É a medida mais usada para comparar a renda média entre países. Por ser uma média, esconde a desigualdade: o
+      índice de Gini ajuda a ver como a renda se divide. No Atlas ele vem em paridade do poder de compra (PPC), que
+      corrige as diferenças de preço entre os países.
+    icon: null
+    sources:
+      - {id: wp-pt-pib-per-capita, title: "Produto interno bruto: PIB per capita (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Produto_interno_bruto#PIB_per_capita", license: "CC BY-SA 4.0", retrieved_at: "2026-11-15T00:00:00Z"}
+      - {id: wb-ny-gdp-pcap-pp-cd, title: "Indicador NY.GDP.PCAP.PP.CD (Banco Mundial)", url: "https://data.worldbank.org/indicator/NY.GDP.PCAP.PP.CD", license: "CC BY 4.0", retrieved_at: "2026-11-15T00:00:00Z"}
+
+  - id: paridade-do-poder-de-compra
+    kind: other
+    label: Paridade do poder de compra (PPC)
+    short: Forma de converter moedas que considera o que o dinheiro compra em cada país, e não só o câmbio.
+    body: >-
+      Um dólar trocado no câmbio compra mais coisas em alguns países do que em outros. A PPC usa os preços de uma
+      cesta de produtos para criar o "dólar internacional", que compra o mesmo em qualquer lugar; assim dá para
+      comparar rendas de países com custo de vida diferente. O fator de conversão (moeda local por dólar
+      internacional), comparado ao câmbio de mercado, indica se a moeda está barata ou cara.
+    icon: null
+    sources:
+      - {id: wp-pt-ppc, title: "Paridade do poder de compra (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Paridade_do_poder_de_compra", license: "CC BY-SA 4.0", retrieved_at: "2026-11-15T00:00:00Z"}
+      - {id: wb-pa-nus-ppp, title: "Indicador PA.NUS.PPP (Banco Mundial)", url: "https://data.worldbank.org/indicator/PA.NUS.PPP", license: "CC BY 4.0", retrieved_at: "2026-11-15T00:00:00Z"}
+
+  - id: crescimento-do-pib
+    kind: other
+    label: Crescimento do PIB
+    short: Quanto o PIB aumentou em relação ao ano anterior, já descontada a inflação.
+    body: >-
+      É calculado com preços constantes (o chamado PIB real), para que a alta de preços não pareça crescimento.
+      Valores negativos indicam que a economia encolheu. Países pobres podem crescer rápido partindo de uma base
+      baixa; países ricos costumam crescer devagar.
+    icon: null
+    sources:
+      - {id: wp-pt-crescimento-economico, title: "Crescimento econômico (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Crescimento_econ%C3%B4mico", license: "CC BY-SA 4.0", retrieved_at: "2026-11-15T00:00:00Z"}
+      - {id: wb-ny-gdp-mktp-kd-zg, title: "Indicador NY.GDP.MKTP.KD.ZG (Banco Mundial)", url: "https://data.worldbank.org/indicator/NY.GDP.MKTP.KD.ZG", license: "CC BY 4.0", retrieved_at: "2026-11-15T00:00:00Z"}
+
+  - id: inflacao
+    kind: other
+    label: Inflação
+    short: Aumento geral dos preços ao longo do tempo, que reduz o que o dinheiro consegue comprar.
+    body: >-
+      Costuma ser medida por um índice de preços ao consumidor, que acompanha o custo de uma cesta de produtos e
+      serviços (no Brasil, o IPCA). Inflação baixa e estável é a meta da maioria dos bancos centrais; inflação muito
+      alta corrói salários e poupança. Quando os preços caem, fala-se em deflação.
+    icon: null
+    sources:
+      - {id: wp-pt-inflacao, title: "Inflação (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Infla%C3%A7%C3%A3o", license: "CC BY-SA 4.0", retrieved_at: "2026-11-15T00:00:00Z"}
+      - {id: wb-fp-cpi-totl-zg, title: "Indicador FP.CPI.TOTL.ZG (Banco Mundial)", url: "https://data.worldbank.org/indicator/FP.CPI.TOTL.ZG", license: "CC BY 4.0", retrieved_at: "2026-11-15T00:00:00Z"}
+
+  - id: desemprego
+    kind: other
+    label: Taxa de desemprego
+    short: Parte das pessoas que querem trabalhar e procuram emprego, mas não encontram.
+    body: >-
+      A conta é feita sobre a força de trabalho (quem trabalha ou procura trabalho), não sobre a população toda:
+      estudantes e aposentados que não procuram emprego ficam de fora, e quem desiste de procurar deixa de contar
+      como desempregado. O Atlas usa a estimativa da OIT, feita para ser comparável entre países.
+    icon: null
+    sources:
+      - {id: wp-pt-desemprego, title: "Desemprego (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Desemprego", license: "CC BY-SA 4.0", retrieved_at: "2026-11-15T00:00:00Z"}
+      - {id: wb-sl-uem-totl-zs, title: "Indicador SL.UEM.TOTL.ZS (Banco Mundial)", url: "https://data.worldbank.org/indicator/SL.UEM.TOTL.ZS", license: "CC BY 4.0", retrieved_at: "2026-11-15T00:00:00Z"}
+
+  - id: divida-publica
+    kind: other
+    label: Dívida pública
+    short: O que o governo deve, em geral mostrado como parte do PIB.
+    body: >-
+      Soma empréstimos e títulos que o governo emite para cobrir gastos maiores que a arrecadação. Dividir pelo PIB
+      mostra o peso da dívida em relação ao tamanho da economia. Não existe um limite que sirva para todos: o risco
+      depende também dos juros, da moeda em que a dívida está e de quem a detém. O Atlas mostra a dívida do governo
+      central, que alguns países não informam.
+    icon: null
+    sources:
+      - {id: wp-pt-divida-governamental, title: "Dívida governamental (Wikipédia)", url: "https://pt.wikipedia.org/wiki/D%C3%ADvida_governamental", license: "CC BY-SA 4.0", retrieved_at: "2026-11-15T00:00:00Z"}
+      - {id: wb-gc-dod-totl-gd-zs, title: "Indicador GC.DOD.TOTL.GD.ZS (Banco Mundial)", url: "https://data.worldbank.org/indicator/GC.DOD.TOTL.GD.ZS", license: "CC BY 4.0", retrieved_at: "2026-11-15T00:00:00Z"}
+
+  - id: conta-corrente
+    kind: other
+    label: Conta corrente
+    short: Saldo das trocas de um país com o exterior em bens, serviços, rendas e transferências.
+    body: >-
+      É uma parte da balança de pagamentos. Positiva: o país recebe do exterior mais do que paga, por exemplo
+      porque exporta muito. Negativa: gasta mais fora do que recebe e precisa se financiar com investimento ou
+      empréstimos estrangeiros. Um déficit não é ruim por si só, mas déficits grandes e longos deixam o país mais
+      vulnerável.
+    icon: null
+    sources:
+      - {id: wp-pt-balanca-de-pagamentos, title: "Balança de pagamentos (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Balan%C3%A7a_de_pagamentos", license: "CC BY-SA 4.0", retrieved_at: "2026-11-15T00:00:00Z"}
+      - {id: wb-bn-cab-xoka-gd-zs, title: "Indicador BN.CAB.XOKA.GD.ZS (Banco Mundial)", url: "https://data.worldbank.org/indicator/BN.CAB.XOKA.GD.ZS", license: "CC BY 4.0", retrieved_at: "2026-11-15T00:00:00Z"}
+
+  - id: reservas-internacionais
+    kind: other
+    label: Reservas internacionais
+    short: Dinheiro em moeda estrangeira e ouro guardado pelo banco central.
+    body: >-
+      Servem para pagar compromissos com o exterior e para defender a moeda em crises, por exemplo vendendo dólares
+      quando o câmbio dispara. Costumam ser comparadas com as importações (quantos meses elas pagariam) ou com a
+      dívida externa de curto prazo.
+    icon: null
+    sources:
+      - {id: wp-pt-reserva-internacional, title: "Reserva internacional (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Reserva_internacional", license: "CC BY-SA 4.0", retrieved_at: "2026-11-15T00:00:00Z"}
+      - {id: wb-fi-res-totl-cd, title: "Indicador FI.RES.TOTL.CD (Banco Mundial)", url: "https://data.worldbank.org/indicator/FI.RES.TOTL.CD", license: "CC BY 4.0", retrieved_at: "2026-11-15T00:00:00Z"}
+
+  - id: indice-de-gini
+    kind: other
+    label: Índice de Gini
+    short: Mede a desigualdade de renda, de 0 (todos ganham igual) a 100 (uma pessoa fica com tudo).
+    body: >-
+      É calculado a partir da distribuição da renda (ou do consumo) das famílias. Os países menos desiguais ficam
+      perto de 25 a 30; os mais desiguais passam de 50. As pesquisas são feitas em anos diferentes em cada país,
+      então confira o ano do dado antes de comparar.
+    icon: null
+    sources:
+      - {id: wp-pt-coeficiente-de-gini, title: "Coeficiente de Gini (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Coeficiente_de_Gini", license: "CC BY-SA 4.0", retrieved_at: "2026-11-15T00:00:00Z"}
+      - {id: wb-si-pov-gini, title: "Indicador SI.POV.GINI (Banco Mundial)", url: "https://data.worldbank.org/indicator/SI.POV.GINI", license: "CC BY 4.0", retrieved_at: "2026-11-15T00:00:00Z"}
+
+  - id: pobreza-extrema
+    kind: other
+    label: Pobreza extrema
+    short: Viver com menos de US$ 3,00 por dia, a linha internacional do Banco Mundial (preços de 2021).
+    body: >-
+      A linha é medida em dólares de paridade do poder de compra, então leva em conta o custo de vida de cada país.
+      Ela já foi atualizada algumas vezes (US$ 1,90 e depois US$ 2,15) conforme chegaram novos dados de preços, por
+      isso números antigos podem ter usado outra linha.
+    icon: null
+    sources:
+      - {id: wp-pt-pobreza-absoluta, title: "Pobreza absoluta (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Pobreza_absoluta", license: "CC BY-SA 4.0", retrieved_at: "2026-11-15T00:00:00Z"}
+      - {id: wb-si-pov-dday, title: "Indicador SI.POV.DDAY (Banco Mundial)", url: "https://data.worldbank.org/indicator/SI.POV.DDAY", license: "CC BY 4.0", retrieved_at: "2026-11-15T00:00:00Z"}
+
+  - id: idh
+    kind: other
+    label: IDH (Índice de Desenvolvimento Humano)
+    short: Índice da ONU, de 0 a 1, que combina saúde, educação e renda.
+    body: >-
+      Criado pelo PNUD em 1990 para medir desenvolvimento além do PIB. Junta expectativa de vida, anos de estudo
+      (a média dos adultos e o esperado para as crianças) e renda por pessoa. Acima de 0,8 é considerado muito alto.
+      Não mede desigualdade nem impacto ambiental.
+    icon: null
+    sources:
+      - {id: wp-pt-idh, title: "Índice de Desenvolvimento Humano (Wikipédia)", url: "https://pt.wikipedia.org/wiki/%C3%8Dndice_de_Desenvolvimento_Humano", license: "CC BY-SA 4.0", retrieved_at: "2026-11-15T00:00:00Z"}
+      - {id: undp-hdi, title: "Human Development Index (PNUD)", url: "https://hdr.undp.org/data-center/human-development-index", license: "CC BY 3.0 IGO", retrieved_at: "2026-11-15T00:00:00Z"}
+
+  - id: taxa-de-cambio
+    kind: currency
+    label: Taxa de câmbio
+    short: Preço de uma moeda em outra, como quantos reais custa um dólar.
+    body: >-
+      Pode ser flutuante (definida pelo mercado), fixa (o governo garante um valor) ou algo entre os dois. Quando a
+      moeda perde valor, as importações ficam mais caras e as exportações mais baratas para quem compra de fora.
+      Nas páginas de moeda, o Atlas usa principalmente as taxas de referência do Banco Central Europeu.
+    icon: null
+    sources:
+      - {id: wp-pt-taxa-de-cambio, title: "Taxa de câmbio (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Taxa_de_c%C3%A2mbio", license: "CC BY-SA 4.0", retrieved_at: "2026-11-15T00:00:00Z"}
+
+  # --- sistemas de governo ---------------------------------------------------------------------
+  - id: federacao
+    kind: system
+    label: Federação
+    short: País formado por estados ou províncias com governo próprio e autonomia garantida pela Constituição.
+    body: >-
+      O poder é dividido entre o governo central e as unidades (estados, províncias, cantões), e o centro não pode
+      simplesmente acabar com essa autonomia. Cada unidade costuma ter seu próprio legislativo e executivo. Brasil,
+      Estados Unidos, Alemanha e Índia são federações.
+    icon: null
+    sources:
+      - {id: wp-pt-federacao, title: "Federação (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Federa%C3%A7%C3%A3o", license: "CC BY-SA 4.0", retrieved_at: "2026-11-15T00:00:00Z"}
+
+  - id: estado-unitario
+    kind: system
+    label: Estado unitário
+    short: País em que o governo central concentra o poder e as regiões têm só a autonomia que ele delega.
+    body: >-
+      Pode haver regiões e municípios com governo próprio, mas essa autonomia vem de lei nacional e pode ser mudada
+      pelo centro. É o modelo da maioria dos países, como França, Japão e Portugal.
+    icon: null
+    sources:
+      - {id: wp-pt-estado-unitario, title: "Estado unitário (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Estado_unit%C3%A1rio", license: "CC BY-SA 4.0", retrieved_at: "2026-11-15T00:00:00Z"}
+
+  - id: separacao-de-poderes
+    kind: system
+    label: Separação de poderes
+    short: Divisão do Estado em Executivo, Legislativo e Judiciário, para que um poder limite o outro.
+    body: >-
+      A ideia, associada a Montesquieu, é impedir que uma só pessoa ou órgão faça as leis, as execute e julgue quem
+      as descumpre. Cada poder tem funções próprias e meios de fiscalizar os outros, os chamados freios e
+      contrapesos.
+    icon: null
+    sources:
+      - {id: wp-pt-separacao-de-poderes, title: "Separação de poderes (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Separa%C3%A7%C3%A3o_de_poderes", license: "CC BY-SA 4.0", retrieved_at: "2026-11-15T00:00:00Z"}
+
+  - id: sufragio-universal
+    kind: system
+    label: Sufrágio universal
+    short: Direito de voto para todos os adultos, sem exigência de renda, sexo, raça ou instrução.
+    body: >-
+      Foi conquistado aos poucos: em muitos países o voto foi primeiro só de homens com propriedade, depois de todos
+      os homens e só mais tarde das mulheres. No Brasil, as mulheres votam desde 1932 e os analfabetos desde 1985.
+    icon: null
+    sources:
+      - {id: wp-pt-sufragio-universal, title: "Sufrágio universal (Wikipédia)", url: "https://pt.wikipedia.org/wiki/Sufr%C3%A1gio_universal", license: "CC BY-SA 4.0", retrieved_at: "2026-11-15T00:00:00Z"}

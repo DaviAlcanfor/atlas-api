@@ -22,3 +22,10 @@ Ordenado por status (na ordem acima) e depois por falantes desc.
 ## Tarefas
 - [x] SPARQL testado em BR, IN, US, ES, NG, BO (listar o que saiu e o que faltou)
 - [x] tabela `country_languages`; import; campo; testes
+- [x] Classificação revista (2026-11-15). "Imigração" agora exige pátria em outro país (oficial P37 ou nativa P2341 lá) ou família
+  estrangeira na região; sem pátria em lugar nenhum = língua local = "indígena". Antes: Índia 399 de 444 como imigração, Nigéria 220,
+  Papua-Nova Guiné 831; depois: 5, 1 e 0. Brasil: as 27 que mudaram eram línguas indígenas (Ticuna, Kalapalo, Uaiuai...).
+- [x] Cooficial em município (2026-11-15): o teste de "entidade administrativa" excluía tudo que o Wikidata tipa como organização,
+  inclusive os municípios brasileiros; agora a exceção é o município (Q15284), numa consulta só para os lugares. No Brasil, 24 municípios
+  voltam a contar (Serafina Corrêa, Caxias do Sul, Bento Gonçalves...: o Talian); escola e igreja continuam de fora.
+- [ ] Importar na produção (`import-facts`) e conferir o painel (BR, IN, NG, US)

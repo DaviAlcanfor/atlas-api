@@ -36,3 +36,18 @@ def test_indo_european_is_never_indigenous_in_the_americas() -> None:
     out = {x["name"]: x["status"] for x in languages.classify(
         "Q155", "América do Sul", [row("Q1", "indigenous_to"), row("Q2", "used"), row("Q3", "indigenous_to")], attrs, fams)}
     assert out == {"talian": "immigrant", "nheengatu": "indigenous", "guarani": "indigenous"}
+
+
+def test_immigrant_needs_a_homeland_elsewhere() -> None:
+    """With `homes` (full runs), a language with no home in another country is local (India's 399 "immigrant" languages)."""
+    fams = {"Q19860": {"label": "indo-europeia", "regions": [], "foreign_in": ["América do Sul"]}}
+    row = lambda q: {"l": {"value": f"http://www.wikidata.org/entity/{q}"}, "kind": {"value": "used"}}
+    attrs = {"Q1": _lang("bhili", set()), "Q2": _lang("italiano", set()), "Q3": _lang("talian", {"Q19860"})}
+    homes = {"Q1": {"Q668"}, "Q2": {"Q38"}}  # bhili: home only in India itself; italiano: official in Italy
+    india = {x["name"]: x["status"] for x in languages.classify("Q668", "Ásia", [row("Q1"), row("Q2")], attrs, fams, homes)}
+    assert india == {"bhili": "indigenous", "italiano": "immigrant"}
+    # a family foreign to the region stays immigrant even with no homeland listed
+    brazil = languages.classify("Q155", "América do Sul", [row("Q3")], attrs, fams, homes)
+    assert brazil[0]["status"] == "immigrant"
+    # without homes (sample runs) the old rule holds: no evidence of being native = immigrant
+    assert languages.classify("Q668", "Ásia", [row("Q1")], attrs, fams)[0]["status"] == "immigrant"
