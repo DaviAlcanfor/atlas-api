@@ -1,11 +1,17 @@
 """Geopolitical news (spec 008): GDELT candidates -> GPT-6 Luna decisions -> data_out/news.json.
 
-GDELT DOC 2.0 API (blog.gdeltproject.org/gdelt-doc-2-0-api-debuts, terms at gdeltproject.org/about.html#termsofuse, read
-2026-11-14): "all datasets released by the GDELT Project are available for unlimited and unrestricted use", "You may
-redistribute, rehost, republish, and mirror any of the GDELT datasets in any form", and "any use or redistribution of the data
-must include a citation to the GDELT Project" + "a link to this website (https://www.gdeltproject.org/)". The API answers
-"Please limit requests to one every 5 seconds" (and blocks shared IPs, like this office's), so queries run one at a time,
-6 s apart, from GitHub Actions. ArtList returns up to 250 articles; only title, URL, domain, language and date are kept.
+GDELT 2.0 Global Knowledge Graph files (terms at gdeltproject.org/about.html#termsofuse, read 2026-11-14): "all datasets
+released by the GDELT Project are available for unlimited and unrestricted use", "You may redistribute, rehost, republish,
+and mirror any of the GDELT datasets in any form", and "any use or redistribution of the data must include a citation to the
+GDELT Project" + "a link to this website (https://www.gdeltproject.org/)".
+Why files and not the DOC 2.0 search API: the API refused every query from GitHub Actions and from this office ("Please limit
+requests to one every 5 seconds ... All high-traffic users should switch to our ngrams dataset"), even the first one. The
+static 15-minute GKG files (data.gdeltproject.org/gdeltv2/<YYYYMMDDHHMMSS>.gkg.csv.zip, English sources, and
+.translation.gkg.csv.zip, other languages machine-translated) download fine. Columns used (GKG 2.1, 27 tab-separated): 1 DATE,
+3 SourceCommonName, 4 DocumentIdentifier (URL), 7 Themes, 25 TranslationInfo ("srclc:por"), 26 Extras (<PAGE_TITLE>, the
+title in its ORIGINAL language). The newest files are published with a delay: a 404 just means "not yet".
+Candidates: English, Portuguese and Spanish articles with at least one geopolitical theme (THEMES); per file and language only
+the PER_FILE with most such themes go on, which keeps the classifier at ~800 headlines per 6-hour run (~US$ 0.04).
 
 Classification: openai/gpt-6-luna-decisions through the Vercel AI Gateway (POST https://ai-gateway.vercel.sh/v1/decisions,
 key AI_GATEWAY_API_KEY; owner's choice 2026-11-13, replaces the Jev of the first spec draft). One request per new headline
@@ -16,12 +22,14 @@ whose classification fails is left out of this run (never published unclassified
 """
 
 import hashlib
+import html
+import io
 import json
 import os
 import re
 import sys
-import time
 import unicodedata
+import zipfile
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -29,19 +37,21 @@ from typing import Any
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 import httpx
-import yaml
 
 from etl.settings import get_etl_settings
 from etl.wikidata.leaders import _cached
 
-GDELT = "https://api.gdeltproject.org/api/v2/doc/doc"
+GDELT_FILES = "http://data.gdeltproject.org/gdeltv2/{stamp}.{kind}gkg.csv.zip"
 DECISIONS = "https://ai-gateway.vercel.sh/v1/decisions"
 MODEL = "openai/gpt-6-luna-decisions"
-QUERIES = Path("content/news_queries.yaml")
 KEEP_P, COUNTRY_P = 0.5, 0.6
 MAX_COUNTRIES = 5
 RETENTION_DAYS = 30
-LANG = {"portuguese": "pt", "english": "en", "spanish": "es", "french": "fr", "german": "de", "italian": "it"}
+SRC_LANG = {"por": "pt", "spa": "es"}  # translation stream; the English stream has no TranslationInfo
+THEMES = {"ARMEDCONFLICT", "MILITARY", "TAX_FNCACT_PRESIDENT", "ELECTION", "SANCTIONS", "NEGOTIATIONS", "PROTEST", "CEASEFIRE",
+          "PEACEKEEPING", "TERROR", "REBELLION", "COUP", "TAX_FNCACT_COUP_PLOTTERS", "GENERAL_GOVERNMENT"}
+PER_FILE = 12  # per 15-minute file and language
+WINDOW_HOURS = 6
 TYPES = {
     "conflict": "conflito armado, guerra, ataque, bombardeio, operação militar",
     "diplomacy": "negociação, cúpula, visita oficial, relações entre países, cessar-fogo em negociação",
@@ -76,17 +86,25 @@ def item_id(url: str) -> str:
     return hashlib.sha256(url.encode()).hexdigest()[:16]
 
 
-def parse_article(a: dict[str, Any]) -> dict[str, Any] | None:
-    """GDELT ArtList article -> our item; None without a usable title, URL or date."""
-    title, url, seen = (a.get("title") or "").strip(), a.get("url") or "", a.get("seendate") or ""
-    m = re.fullmatch(r"(\d{8})T(\d{6})Z", seen)
-    if len(title) < 15 or not url.startswith("http") or not m:
+def parse_gkg_row(cols: list[str], translated: bool) -> tuple[dict[str, Any], int] | None:
+    """One GKG 2.1 row -> (item, number of geopolitical themes); None when it is not a pt/en/es geopolitical article with a title."""
+    if len(cols) < 27:
         return None
-    published = datetime.strptime(m.group(1) + m.group(2), "%Y%m%d%H%M%S").replace(tzinfo=UTC)
-    u = clean_url(url)
-    return {"id": item_id(u), "url": u, "title": re.sub(r"\s+", " ", title), "outlet": (a.get("domain") or urlsplit(u).netloc).lower(),
-            "language": LANG.get((a.get("language") or "").lower(), (a.get("language") or "")[:2].lower() or None),
-            "published_at": published.isoformat()}
+    lang = "en"
+    if translated:
+        m = re.search(r"srclc:(\w+)", cols[25])
+        lang = SRC_LANG.get(m.group(1) if m else "", "")
+    if not lang:
+        return None
+    hits = {t for t in cols[7].split(";") if t in THEMES}
+    m = re.search(r"<PAGE_TITLE>(.*?)</PAGE_TITLE>", cols[26])
+    title = re.sub(r"\s+", " ", html.unescape(m.group(1))).strip() if m else ""
+    if not hits or len(title) < 15 or not cols[4].startswith("http") or not re.fullmatch(r"\d{14}", cols[1]):
+        return None
+    u = clean_url(cols[4])
+    published = datetime.strptime(cols[1], "%Y%m%d%H%M%S").replace(tzinfo=UTC)
+    return {"id": item_id(u), "url": u, "title": title, "outlet": (cols[3] or urlsplit(u).netloc).lower(),
+            "language": lang, "published_at": published.isoformat()}, len(hits)
 
 
 ALIASES = {"eua": "US", "eeuu": "US"}  # abbreviations headlines use all the time
@@ -148,30 +166,40 @@ def apply_policy(item: dict[str, Any], c: dict[str, Any]) -> dict[str, Any] | No
             "countries": [{"iso2": k, "p": round(v, 3)} for k, v in sorted(c["about"].items(), key=lambda kv: -kv[1]) if v >= COUNTRY_P]}
 
 
-def fetch_gdelt(http: httpx.Client, queries: list[str], timespan: str) -> list[dict[str, Any]]:
+def stamps(now: datetime, hours: int = WINDOW_HOURS) -> list[str]:
+    """15-minute file stamps covering the last `hours`, newest first."""
+    end = now.replace(minute=now.minute - now.minute % 15, second=0, microsecond=0)
+    return [(end - timedelta(minutes=15 * k)).strftime("%Y%m%d%H%M%S") for k in range(hours * 4)]
+
+
+def top_per_file(rows: list[tuple[dict[str, Any], int]]) -> list[dict[str, Any]]:
+    """Per language, the PER_FILE articles with most geopolitical themes (ties: file order)."""
+    out: list[dict[str, Any]] = []
+    for lang in {it["language"] for it, _ in rows}:
+        mine = sorted((r for r in rows if r[0]["language"] == lang), key=lambda r: -r[1])
+        out += [it for it, _ in mine[:PER_FILE]]
+    return out
+
+
+def fetch_gdelt(http: httpx.Client, now: datetime) -> list[dict[str, Any]]:
     seen: dict[str, dict[str, Any]] = {}
     titles: set[str] = set()
-    for i, q in enumerate(queries):
-        if i:
-            time.sleep(6)  # GDELT: one request every 5 seconds
-        arts = None
-        for attempt in range(4):  # GDELT answers a plain-text "Please limit requests..." when the (shared) IP went too fast
-            r = http.get(GDELT, params={"query": q, "mode": "ArtList", "format": "json", "maxrecords": "250",
-                                        "timespan": timespan, "sort": "DateDesc"})
-            try:
-                arts = r.json().get("articles", [])
-                break
-            except ValueError:
-                print(f"  GDELT refused query {i + 1} (attempt {attempt + 1}): {r.text[:80]!r}")
-                time.sleep(15 * (attempt + 1))
-        if arts is None:
-            continue
-        for a in arts:
-            it = parse_article(a)
-            if it and it["url"] not in seen and norm(it["title"]) not in titles:
-                seen[it["url"]] = it
-                titles.add(norm(it["title"]))
-        print(f"  query {i + 1}/{len(queries)}: {len(arts)} articles")
+    files = 0
+    for stamp in stamps(now):
+        for kind, translated in (("", False), ("translation.", True)):
+            r = http.get(GDELT_FILES.format(stamp=stamp, kind=kind), follow_redirects=True)
+            if r.status_code == 404:
+                continue  # not published yet (or a gap in the stream)
+            r.raise_for_status()
+            files += 1
+            with zipfile.ZipFile(io.BytesIO(r.content)) as z:
+                text = z.read(z.namelist()[0]).decode("utf-8", "replace")
+            rows = [x for line in text.splitlines() if (x := parse_gkg_row(line.split("\t"), translated))]
+            for it in top_per_file(rows):
+                if it["url"] not in seen and norm(it["title"]) not in titles:
+                    seen[it["url"]] = it
+                    titles.add(norm(it["title"]))
+    print(f"  GDELT: {files} files read")
     return list(seen.values())
 
 
@@ -180,7 +208,6 @@ def run() -> None:
     key = os.environ.get("AI_GATEWAY_API_KEY") or _dotenv("AI_GATEWAY_API_KEY")
     if not key:
         sys.exit("Set AI_GATEWAY_API_KEY (env or .env): the Vercel AI Gateway key.")
-    conf = yaml.safe_load(QUERIES.read_text(encoding="utf-8"))
     cache = s.cache_dir / "news"
     cache.mkdir(parents=True, exist_ok=True)
     done_f = cache / "classified.json"
@@ -190,7 +217,7 @@ def run() -> None:
         rows = _cached(http, cache / "country_names.json", NAMES_QUERY, False)
         index = name_index(rows)
         pt = {r["iso2"]["value"]: r["label"]["value"] for r in rows if r.get("label", {}).get("xml:lang") == "pt"}
-        items = fetch_gdelt(http, conf["queries"], conf.get("timespan", "6h"))
+        items = fetch_gdelt(http, datetime.now(UTC))
         new = [it for it in items if it["url"] not in done]
         print(f"GDELT: {len(items)} unique articles, {len(new)} not classified yet")
 
@@ -205,7 +232,7 @@ def run() -> None:
     done = {u: v for u, v in done.items() if v["at"] >= cutoff}
     done_f.write_text(json.dumps(done, ensure_ascii=False), encoding="utf-8")
     kept = [x for it in items if it["url"] in done and (x := apply_policy(it, done[it["url"]]["c"]))]
-    out = {"source": {"id": "gdelt", "title": "The GDELT Project (DOC 2.0 API)", "url": "https://www.gdeltproject.org/",
+    out = {"source": {"id": "gdelt", "title": "The GDELT Project (Global Knowledge Graph 2.1)", "url": "https://www.gdeltproject.org/",
                       "license": "Uso livre com citação ao GDELT Project"},
            "classifier": MODEL, "fetched_at": datetime.now(UTC).isoformat(), "items": kept}
     s.out_dir.mkdir(parents=True, exist_ok=True)

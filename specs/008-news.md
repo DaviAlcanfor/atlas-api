@@ -1,6 +1,14 @@
 # 008 - Notícias geopolíticas (GDELT + Jev)
 Status: in progress (API + job prontos em 2026-11-14; falta o 1º disparo no Actions e a medição dos limiares) | Contrato: v1.2 | Web: atlas-web/specs/008-news.md | Substitui: CR-001 | Executor: Opus
 
+## Mudança de 2026-11-15: arquivos do GDELT em vez da API de busca
+A DOC 2.0 API recusou todas as consultas, já na primeira, tanto do escritório quanto do GitHub Actions ("Please limit requests
+to one every 5 seconds ... All high-traffic users should switch to our ngrams dataset"). O job agora lê os arquivos de 15 min
+do Global Knowledge Graph (`gdeltv2/<stamp>.gkg.csv.zip`, fontes em inglês, e `.translation.gkg.csv.zip`, demais idiomas),
+que baixam sem limite: título original (`<PAGE_TITLE>`), URL, veículo, data e temas. Filtro: inglês, português e espanhol com
+ao menos um tema geopolítico; por arquivo e idioma, os 12 com mais temas. Rodada local de 2026-11-15: 43 arquivos, 656
+candidatos, 284 mantidos (en 146, es 105, pt 33; 269 com p >= 0,7), ~US$ 0,03.
+
 ## Mudança de 2026-11-14 (dono: "usa o GPT 6 Luna")
 O classificador é o `openai/gpt-6-luna-decisions` pelo Vercel AI Gateway (`POST /v1/decisions`, perguntas predicate/choice,
 mesma chave `AI_GATEWAY_API_KEY`), no lugar do Jev. Mesmo desenho de perguntas; ~US$ 0,00005 por manchete (saída grátis).

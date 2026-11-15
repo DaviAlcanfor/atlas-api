@@ -1,7 +1,0 @@
-# Spec 008: GDELT DOC 2.0 queries, one request each (6 s apart). Themes are GDELT GKG themes
-# (https://data.gdeltproject.org/api/v2/guides/LOOKUP-GKGTHEMES.TXT); the classifier decides what is geopolitical.
-timespan: 6h
-queries:
-  - "sourcelang:por (theme:ARMEDCONFLICT OR theme:MILITARY OR theme:TAX_FNCACT_PRESIDENT OR theme:ELECTION OR theme:SANCTIONS OR theme:NEGOTIATIONS OR theme:PROTEST OR theme:CEASEFIRE)"
-  - "sourcelang:eng (theme:ARMEDCONFLICT OR theme:SANCTIONS OR theme:NEGOTIATIONS OR theme:CEASEFIRE OR theme:ELECTION)"
-  - "sourcelang:spa (theme:ARMEDCONFLICT OR theme:SANCTIONS OR theme:NEGOTIATIONS OR theme:ELECTION OR theme:PROTEST OR theme:CEASEFIRE)"
