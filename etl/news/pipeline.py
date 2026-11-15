@@ -154,12 +154,17 @@ def fetch_gdelt(http: httpx.Client, queries: list[str], timespan: str) -> list[d
     for i, q in enumerate(queries):
         if i:
             time.sleep(6)  # GDELT: one request every 5 seconds
-        r = http.get(GDELT, params={"query": q, "mode": "ArtList", "format": "json", "maxrecords": "250",
-                                    "timespan": timespan, "sort": "DateDesc"})
-        try:
-            arts = r.json().get("articles", [])
-        except ValueError:
-            print(f"  GDELT refused query {i + 1}: {r.text[:120]!r}")
+        arts = None
+        for attempt in range(4):  # GDELT answers a plain-text "Please limit requests..." when the (shared) IP went too fast
+            r = http.get(GDELT, params={"query": q, "mode": "ArtList", "format": "json", "maxrecords": "250",
+                                        "timespan": timespan, "sort": "DateDesc"})
+            try:
+                arts = r.json().get("articles", [])
+                break
+            except ValueError:
+                print(f"  GDELT refused query {i + 1} (attempt {attempt + 1}): {r.text[:80]!r}")
+                time.sleep(15 * (attempt + 1))
+        if arts is None:
             continue
         for a in arts:
             it = parse_article(a)
