@@ -1,8 +1,17 @@
 """spec 008: news rules (offline) and the news endpoints on a sample import."""
 import re
+from datetime import UTC, datetime
 from pathlib import Path
 
-from etl.news.pipeline import apply_policy, candidates, clean_url, name_index, parse_article
+from etl.news.pipeline import (
+    apply_policy,
+    candidates,
+    clean_url,
+    name_index,
+    parse_gkg_row,
+    stamps,
+    top_per_file,
+)
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
@@ -16,14 +25,32 @@ def _names() -> list[tuple[re.Pattern[str], str]]:
     return name_index(rows)
 
 
-def test_parse_and_clean() -> None:
-    a = {"title": "  Rússia  e Ucrânia retomam negociações ", "url": "https://Ex.org/n?id=1&utm_source=x#top", "domain": "ex.org",
-         "language": "Portuguese", "seendate": "20261114T101500Z"}
-    it = parse_article(a)
-    assert it is not None and it["url"] == "https://ex.org/n?id=1" and it["language"] == "pt"
+def _row(themes: str = "ARMEDCONFLICT;TAX_FNCACT_PRESIDENT", title: str = "R&#xFA;ssia e Ucr&#xE2;nia retomam negocia&#xE7;&#xF5;es",
+         lang: str = "srclc:por;eng:GT-POR 1.0", url: str = "https://Ex.org/n?id=1&utm_source=x#top") -> list[str]:
+    cols = [""] * 27
+    cols[1], cols[3], cols[4], cols[7], cols[25] = "20261114101500", "ex.org", url, themes, lang
+    cols[26] = f"<PAGE_PRECISEPUBTIMESTAMP>x</PAGE_PRECISEPUBTIMESTAMP><PAGE_TITLE>{title}</PAGE_TITLE>"
+    return cols
+
+
+def test_parse_gkg_row() -> None:
+    got = parse_gkg_row(_row(), translated=True)
+    assert got is not None
+    it, n = got
+    assert n == 2 and it["url"] == "https://ex.org/n?id=1" and it["language"] == "pt" and it["outlet"] == "ex.org"
     assert it["title"] == "Rússia e Ucrânia retomam negociações" and it["published_at"] == "2026-11-14T10:15:00+00:00"
-    assert parse_article({**a, "seendate": "ontem"}) is None and parse_article({**a, "title": "curto"}) is None
+    assert parse_gkg_row(_row(lang="srclc:ita"), translated=True) is None  # not pt/es
+    assert parse_gkg_row(_row(themes="SPORTS;MUSIC"), translated=True) is None  # no geopolitical theme
+    assert parse_gkg_row(_row(lang=""), translated=False)[0]["language"] == "en"  # type: ignore[index]
     assert clean_url("https://x.org/a?b=1&fbclid=9") == "https://x.org/a?b=1"
+
+
+def test_window_and_cap() -> None:
+    s = stamps(datetime(2026, 11, 14, 12, 7, tzinfo=UTC), hours=1)
+    assert s == ["20261114120000", "20261114114500", "20261114113000", "20261114111500"]
+    rows = [({"language": "en", "id": str(i)}, i % 3) for i in range(30)] + [({"language": "pt", "id": "p"}, 1)]
+    top = top_per_file(rows)
+    assert len([x for x in top if x["language"] == "en"]) == 12 and {"id": "p", "language": "pt"} in top
 
 
 def test_candidates_by_name_and_demonym() -> None:
