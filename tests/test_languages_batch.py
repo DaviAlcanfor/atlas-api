@@ -51,3 +51,13 @@ def test_immigrant_needs_a_homeland_elsewhere() -> None:
     assert brazil[0]["status"] == "immigrant"
     # without homes (sample runs) the old rule holds: no evidence of being native = immigrant
     assert languages.classify("Q668", "Ásia", [row("Q1")], attrs, fams)[0]["status"] == "immigrant"
+
+
+def test_admin_flags_allow_municipalities_that_are_also_organisations() -> None:
+    """Brazilian municipalities are typed under "organisation" too; a church or a school is not a municipality."""
+    e = "http://www.wikidata.org/entity/"
+    t = lambda place, cls, gone=None: {"l": {"value": e + place}, "c": {"value": e + cls}} | ({"gone": {"value": gone}} if gone else {})
+    c = lambda cls, adm, org, muni: {"l": {"value": e + cls}, "adm": {"value": adm}, "org": {"value": org}, "muni": {"value": muni}}
+    classes = [c("Qmun", "true", "true", "true"), c("Qchurch", "true", "true", "false"), c("Qstate", "true", "false", "false")]
+    types = [t("Q1757416", "Qmun"), t("Q9", "Qchurch"), t("Q2", "Qstate"), t("Q3", "Qstate", gone="2000"), t("Q4", "Qother")]
+    assert languages.admin_flags(types, classes) == {"Q1757416": True, "Q9": False, "Q2": True, "Q3": False, "Q4": False}
