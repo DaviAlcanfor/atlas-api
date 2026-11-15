@@ -1,0 +1,38 @@
+# Geopolitical news (spec 008), every 6 hours: GDELT candidates -> GPT-6 Luna decisions (Vercel AI Gateway) -> production.
+# GDELT blocks shared office IPs, so this runs here. Imports ONLY data_out/news.json (`atlas_api.cli import-news`, news tables).
+# Needs the repository secrets DATABASE_URL (Supabase session pooler, postgresql+psycopg://...) and AI_GATEWAY_API_KEY.
+name: news
+
+on:
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: news
+  cancel-in-progress: false
+
+jobs:
+  news:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      AI_GATEWAY_API_KEY: ${{ secrets.AI_GATEWAY_API_KEY }}
+      PYTHONPATH: src
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+      - run: uv sync --no-dev --group etl
+      # classifications are cached per URL: a headline is never paid for twice
+      - uses: actions/cache@v4
+        with:
+          path: etl_cache/news
+          key: news-${{ github.run_id }}
+          restore-keys: news-
+      - name: Fetch and classify
+        run: uv run python -m etl news
+      - name: Import into production
+        run: uv run python -m atlas_api.cli import-news

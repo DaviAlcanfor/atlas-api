@@ -439,6 +439,30 @@ class HistoryPeriod(Base):
     text: Mapped[str] = mapped_column(Text)
 
 
+class NewsItem(Base):
+    """spec 008: one headline (GDELT), kept 30 days; title in its original language."""
+
+    __tablename__ = "news_items"
+
+    id: Mapped[str] = mapped_column(Text, primary_key=True)  # sha256(url)[:16]
+    url: Mapped[str] = mapped_column(Text, unique=True)
+    title: Mapped[str] = mapped_column(Text)
+    outlet: Mapped[str] = mapped_column(Text)
+    language: Mapped[str | None] = mapped_column(Text)
+    published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    event_type: Mapped[str] = mapped_column(Text, index=True)
+    geopolitical_p: Mapped[float] = mapped_column(Float)
+    fetched_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class NewsItemCountry(Base):
+    __tablename__ = "news_item_countries"
+
+    item_id: Mapped[str] = mapped_column(ForeignKey("news_items.id", ondelete="CASCADE"), primary_key=True)
+    iso2: Mapped[str] = mapped_column(CHAR(2), primary_key=True, index=True)
+    about_p: Mapped[float] = mapped_column(Float)
+
+
 class CountryBrief(Base):
     """spec 022: short summary of a country; `method` = "template" or "template+<model>" (AI rewording, numbers checked)."""
 

@@ -1,5 +1,12 @@
 # 008 - Notícias geopolíticas (GDELT + Jev)
-Status: approved | Contrato: v1.2 | Web: atlas-web/specs/008-news.md | Substitui: CR-001 | Executor: Opus
+Status: in progress (API + job prontos em 2026-11-14; falta o 1º disparo no Actions e a medição dos limiares) | Contrato: v1.2 | Web: atlas-web/specs/008-news.md | Substitui: CR-001 | Executor: Opus
+
+## Mudança de 2026-11-14 (dono: "usa o GPT 6 Luna")
+O classificador é o `openai/gpt-6-luna-decisions` pelo Vercel AI Gateway (`POST /v1/decisions`, perguntas predicate/choice,
+mesma chave `AI_GATEWAY_API_KEY`), no lugar do Jev. Mesmo desenho de perguntas; ~US$ 0,00005 por manchete (saída grátis).
+Termos do GDELT lidos e citados no `etl/news/pipeline.py`. O GDELT recusa a rede do escritório ("Please limit requests to one
+every 5 seconds"), então o job só roda no Actions; o tema `COUP` não existe na lista do GDELT (o tipo "golpe" vem do classificador).
+Limiares: medir sobre a primeira coleta real (as 200 manchetes rotuladas viram uma amostra revisada da 1ª execução).
 
 ## Decisões (aprovadas pelo dono em 2026-11-12)
 - Job agendado (não busca ao vivo). Português primeiro, outros idiomas completando. Retenção 30 dias. Frequência: a cada 6 h.
@@ -53,5 +60,6 @@ Cache-Control nessas rotas: max-age=900. `title` no idioma original (exceção a
 
 ## Tarefas
 - [ ] ler termos do GDELT; spike (workflow_dispatch que só imprime 50 candidatos + respostas do Jev); rotular 200 manchetes; medir limiares
-- [ ] migração; `etl news`; `import-news`; testes com respostas GDELT/TypeSafe gravadas (sem rede)
-- [ ] endpoints + cache; workflow agendado; atualizar AGENTS.md
+- [x] migração 0017; `etl news`; `import-news`; testes sem rede (regras + endpoints sobre `tests/fixtures/news_sample.json`)
+- [x] endpoints; workflow agendado (`news.yml`); CR-008
+- [ ] 1º disparo no Actions (depois do merge e do secret `AI_GATEWAY_API_KEY`) e revisão de uma amostra para os limiares

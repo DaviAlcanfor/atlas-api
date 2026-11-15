@@ -283,3 +283,14 @@ CountryBriefOut { tldr: string, now: string|null, method: string /* "template" |
                   generated_at: string, sources: Source[] }
 GET /v1/countries/{iso2}/brief -> CountryBriefOut      Unknown iso2 -> 404; no brief generated yet -> 404.
 ```
+
+## v1.6 (CR-008, applied 2026-11-14): news
+```
+NewsItemOut { id, title /* original language */, url, outlet, language: string|null, published_at, countries: string[],
+              event_type: "conflict"|"diplomacy"|"election"|"sanctions"|"agreement"|"protest"|"coup"|"economy_policy"|"other",
+              geopolitical_p: number, origin: "gdelt" }
+NewsList    { items: NewsItemOut[], fetched_at: string|null, next: string|null, sources: Source[] }
+GET /v1/news?region=&type=&lang=&country=&min_p=&limit=&before= -> NewsList   (min_p 0.7, limit 30/max 100; bad type/cursor 422)
+GET /v1/countries/{iso2}/news?limit= -> NewsList                                (limit 20; unknown iso2 404)
+```
+Every news item must be shown with a citation and link to the GDELT Project.

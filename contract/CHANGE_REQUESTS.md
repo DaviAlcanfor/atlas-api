@@ -342,3 +342,18 @@ GET /v1/countries/{iso2}/brief -> CountryBriefOut      Unknown iso2 -> 404; no b
 Text: a formula fills fixed pt-BR sentences with facts the API already serves; GPT-6 Luna (Vercel AI Gateway) rewords it and
 the result is kept only if every number in it already appears in the formula's text. Clients show "revisado por IA" when
 `method` has a model, and the sources.
+
+## CR-008: news (spec 008, 2026-11-14) - replaces the v1.2 news delta
+Additive. Classifier changed by the owner: GPT-6 Luna decisions (Vercel AI Gateway) instead of Jev.
+```
+NewsItemOut { id: string, title: string /* original language */, url: string, outlet: string, language: string|null,
+              published_at: string, countries: string[] /* ISO2, most relevant first */,
+              event_type: "conflict"|"diplomacy"|"election"|"sanctions"|"agreement"|"protest"|"coup"|"economy_policy"|"other",
+              geopolitical_p: number /* 0..1 */, origin: "gdelt" }
+NewsList    { items: NewsItemOut[], fetched_at: string|null, next: string|null /* pass as `before` */, sources: Source[] }
+GET /v1/news?region=&type=&lang=&country=&min_p=&limit=&before= -> NewsList   min_p default 0.7; limit default 30, max 100;
+     region matches CountryFacts.region of a country in the item; invalid type or cursor -> 422.
+GET /v1/countries/{iso2}/news?limit= -> NewsList                                limit default 20; unknown iso2 -> 404.
+```
+Refreshed every 6 h (`.github/workflows/news.yml`); retention 30 days; the import bumps data_version (ETags change every 6 h).
+Clients must cite and link the GDELT Project (its terms: "any use or redistribution of the data must include a citation").

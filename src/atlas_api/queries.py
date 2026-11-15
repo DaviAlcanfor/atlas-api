@@ -35,6 +35,8 @@ from atlas_api.db.models import (
     IndicatorStat,
     Leader,
     Meta,
+    NewsItem,
+    NewsItemCountry,
     Person,
     Polity,
     PolityName,
@@ -75,6 +77,8 @@ from atlas_api.schemas import (
     Link,
     Marker,
     NamePeriod,
+    NewsItemOut,
+    NewsList,
     Party,
     PartyRef,
     PersonList,
@@ -811,3 +815,41 @@ def get_brief(s: Session, iso2: str) -> CountryBriefOut | None:
         return None
     return CountryBriefOut(tldr=b.tldr, now=b.now, method=b.method, generated_at=_ts(b.generated_at) or "",
                            sources=_sources(s, set(b.source_ids)))
+
+
+# --- news (spec 008) -----------------------------------------------------------------------------------------------------
+NEWS_TYPES = ("conflict", "diplomacy", "election", "sanctions", "agreement", "protest", "coup", "economy_policy", "other")
+
+
+def list_news(s: Session, *, region: str | None = None, event_type: str | None = None, lang: str | None = None,
+              country: str | None = None, min_p: float = 0.7, limit: int = 30,
+              before: tuple[datetime, str] | None = None) -> NewsList:
+    q = select(NewsItem).where(NewsItem.geopolitical_p >= min_p)
+    if event_type:
+        q = q.where(NewsItem.event_type == event_type)
+    if lang:
+        q = q.where(NewsItem.language == lang)
+    if country:
+        q = q.where(NewsItem.id.in_(select(NewsItemCountry.item_id).where(NewsItemCountry.iso2 == country)))
+    if region:
+        in_region = select(CountryFacts.iso2).where(CountryFacts.region.ilike(f"%{region}%"))
+        q = q.where(NewsItem.id.in_(select(NewsItemCountry.item_id).where(NewsItemCountry.iso2.in_(in_region))))
+    if before:
+        q = q.where((NewsItem.published_at < before[0]) | ((NewsItem.published_at == before[0]) & (NewsItem.id < before[1])))
+    rows = list(s.scalars(q.order_by(NewsItem.published_at.desc(), NewsItem.id.desc()).limit(limit + 1)))
+    page, more = rows[:limit], len(rows) > limit
+    countries: dict[str, list[str]] = {}
+    if page:
+        for item_id, iso2 in s.execute(select(NewsItemCountry.item_id, NewsItemCountry.iso2)
+                                       .where(NewsItemCountry.item_id.in_([x.id for x in page]))
+                                       .order_by(NewsItemCountry.about_p.desc())):
+            countries.setdefault(item_id, []).append(iso2)
+    fetched = s.get(Meta, "news_fetched_at")
+    last = page[-1] if more and page else None
+    return NewsList(
+        items=[NewsItemOut(id=x.id, title=x.title, url=x.url, outlet=x.outlet, language=x.language,
+                           published_at=_ts(x.published_at) or "", countries=countries.get(x.id, []), event_type=x.event_type,
+                           geopolitical_p=x.geopolitical_p, origin="gdelt") for x in page],
+        fetched_at=fetched.value if fetched else None,
+        next=f"{_ts(last.published_at)}|{last.id}" if last else None,
+        sources=_sources(s, {"gdelt"}) if page else [])
