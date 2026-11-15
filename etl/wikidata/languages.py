@@ -9,8 +9,9 @@ Wikidata (CC0), same endpoint/politeness/cache as pipeline.py. Two steps (one bi
    P576, or UNESCO "extinct"), ISO codes, UNESCO status (P1999), pt/en Wikipedia, P279+
    ancestors ("variety of" + families), speakers (P1098 with a place qualifier = the country). The step-1 "subdivisions"
    are checked the same way (P31/P279* Q56061 administrative territorial entity, not dissolved,
-   not an organisation Q43229), so P37 of Mercosul, a church, ethnic groups or colonial
-   captaincies does not count. "Language" = P31/P279* Q34770 language or Q33384 dialect (Talian
+   not an organisation Q43229 unless it is also a municipality Q15284), so P37 of Mercosul, a church, a school, ethnic groups
+   or colonial captaincies does not count. The municipality exception matters: Brazilian municipalities are typed under
+   "organisation" too, and without it Talian (Serafina Corrêa) or Pomerano (Pomerode) were never co-official. "Language" = P31/P279* Q34770 language or Q33384 dialect (Talian
    and Hunsrik are typed as dialects).
 
 `family` comes ONLY from content/language_families.yaml (Wikidata Q-id -> our pt-BR label):
@@ -65,6 +66,12 @@ WHERE {{ VALUES ?l {{ {ids} }}
  OPTIONAL {{ ?pt schema:about ?l; schema:isPartOf <https://pt.wikipedia.org/> }}
  OPTIONAL {{ ?en schema:about ?l; schema:isPartOf <https://en.wikipedia.org/> }}
  {label} }}"""
+# Subdivisions only (the step-1 "sub" rows): the admin test with the municipality exception (see the module docstring). Kept apart
+# from INFO_QUERY, whose ?isAdmin (no exception) still runs for every id: one query over ~16k ids with the extra path timed out
+# batch after batch, and only the ~8k places need it.
+ADMIN_QUERY = """SELECT ?l ?isAdmin WHERE {{ VALUES ?l {{ {ids} }}
+ BIND((EXISTS {{ ?l wdt:P31/wdt:P279* wd:Q56061 }} && !EXISTS {{ ?l wdt:P576 ?g2 }}
+        && (!EXISTS {{ ?l wdt:P31/wdt:P279* wd:Q43229 }} || EXISTS {{ ?l wdt:P31/wdt:P279* wd:Q15284 }})) AS ?isAdmin) }}"""
 ANCESTORS_QUERY = """SELECT ?l ?a WHERE {{ VALUES ?l {{ {ids} }} ?l wdt:P279+ ?a. }}"""
 # UNESCO Atlas status (P1999): fixed 6-step scale, our pt-BR wording (Wikidata labels are mixed).
 ENDANGERMENT = {"Q20672086": "segura", "Q20672087": "vulnerável", "Q20672088": "definitivamente em perigo",
@@ -113,6 +120,9 @@ def attributes(rows: dict[str, list[dict[str, Any]]], anc: list[dict[str, Any]],
             a["status"] = st
             a["dead"] = a["dead"] or st == "extinta"
         a["wikipedia_url"] = a["wikipedia_url"] or _v(r, "pt") or _v(r, "en")
+    for r in rows.get("admin", []):  # ADMIN_QUERY wins over INFO's ?isAdmin (municipality exception)
+        if (a_ := out.get(_qid(_v(r, "l")) or "")) is not None:
+            a_["admin"] = _v(r, "isAdmin") == "true"
     for r in anc:
         if (a_ := out.get(_qid(_v(r, "l")) or "")) is not None:
             a_["ancestors"].add(_qid(_v(r, "a")) or "")
@@ -140,8 +150,14 @@ def _speakers(a: dict[str, Any], country: str) -> dict[str, Any] | None:
 
 
 def classify(country_q: str, region: str | None, cand: list[dict[str, Any]],
-             attrs: dict[str, dict[str, Any]], families: dict[str, Any]) -> list[dict[str, Any]]:
-    """Step-1 rows of one country + attributes -> sorted LanguageSpoken records."""
+             attrs: dict[str, dict[str, Any]], families: dict[str, Any],
+             homes: dict[str, set[str]] | None = None) -> list[dict[str, Any]]:
+    """Step-1 rows of one country + attributes -> sorted LanguageSpoken records.
+
+    `homes` (language Q-id -> Q-ids of the countries where it is official P37 or indigenous P2341, from ALL countries' step-1
+    rows): with it, "immigrant" needs evidence of a homeland elsewhere; a language with no home anywhere else is local, i.e.
+    indigenous (most of India's, Nigeria's and Papua New Guinea's languages have no family listed in the yaml). Without it
+    (sample runs, which only see a few countries) the old rule stays: no evidence of being native = immigrant."""
     official, used, indig = set(), set(), set()
     where: dict[str, set[str]] = {}
     for r in cand:
@@ -169,9 +185,11 @@ def classify(country_q: str, region: str | None, cand: list[dict[str, Any]],
         # a family that arrived by colonisation/migration in this region (e.g. Indo-European in the Americas) is never indigenous
         # there, even when Wikidata's P2341 says so (Hunsrik and Talian took shape in Brazil but are immigrant languages)
         foreign = any(set(families[f].get("foreign_in") or []) & regions for f in hits)
+        elsewhere = homes.get(q, set()) - {country_q} if homes is not None else None
         status = ("official" if q in official else "co_official" if q in where
                   else "sign" if a["sign"] else "historical" if a["dead"]
-                  else "indigenous" if (q in indig and not foreign) or native else "immigrant")
+                  else "indigenous" if (q in indig and not foreign) or native
+                  else "immigrant" if foreign or elsewhere is None or elsewhere else "indigenous")
         places = sorted(where.get(q, set())) if status == "co_official" else []
         out.append({
             "qid": q, "code": _code(a["codes"]), "name": a["name"], "status": status,
@@ -200,15 +218,23 @@ def collect(client: httpx.Client, countries: dict[str, Any], cache: Path, refres
         subs |= {_qid(_v(r, "sub")) or "" for r in rs
                  if _v(r, "kind") == "sub" and _v(r, "l") not in official}
     info = _batched(client, cache, INFO_QUERY, sorted(set(langs) | subs), refresh)
-    attrs = attributes({"info": info}, _batched(client, cache, ANCESTORS_QUERY, langs, refresh),
+    admin = _batched(client, cache, ADMIN_QUERY, sorted(subs), refresh)
+    attrs = attributes({"info": info, "admin": admin}, _batched(client, cache, ANCESTORS_QUERY, langs, refresh),
                        _batched(client, cache, SPEAKERS_QUERY, langs, refresh))
     fams = yaml.safe_load(FAMILIES.read_text(encoding="utf-8")) if FAMILIES.exists() else {}
+    homes: dict[str, set[str]] | None = None  # a sample run sees only a few countries: homelands would be incomplete
+    if not only:
+        homes = {}
+        for iso2, rs in cand.items():
+            for r in rs:
+                if _v(r, "kind") in ("official", "indigenous_to"):
+                    homes.setdefault(_qid(_v(r, "l")) or "", set()).add(countries[iso2]["qid"])
     return {
         "source": {"id": "wikidata", "title": "Wikidata", "url": "https://www.wikidata.org/",
                    "license": "CC0 1.0"},
         "retrieved_at": datetime.now(UTC).isoformat(),
         "countries": {iso2: classify(countries[iso2]["qid"], countries[iso2].get("region"), rows,
-                                     attrs, fams.get("families", {}))
+                                     attrs, fams.get("families", {}), homes)
                       for iso2, rows in cand.items()},
     }
 
