@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 from atlas_api.schemas.common import Source
 
-ProfileGroupId = Literal["life", "society", "income", "environment"]
+ProfileGroupId = Literal["life", "society", "income", "environment", "economy"]  # economy: CR-009
 
 
 class WorldStats(BaseModel):

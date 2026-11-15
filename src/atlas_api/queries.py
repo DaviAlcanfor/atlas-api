@@ -483,6 +483,10 @@ PROFILE_GROUPS: dict[str, tuple[str, ...]] = {
                 "HDR.MYS"),
     "income": ("NY.GDP.PCAP.PP.CD", "SI.POV.GINI", "SI.POV.DDAY", "SL.UEM.TOTL.ZS"),
     "environment": ("EN.GHG.CO2.PC.CE.AR5", "EG.FEC.RNEW.ZS", "AG.LND.FRST.ZS"),
+    # CR-009 (spec 029 phase 1): what the economy lives on. Sectors and rents in % of GDP, then the composition of exports
+    "economy": ("NV.AGR.TOTL.ZS", "NV.IND.TOTL.ZS", "NV.IND.MANF.ZS", "NV.SRV.TOTL.ZS", "NY.GDP.PETR.RT.ZS",
+                "NY.GDP.TOTL.RT.ZS", "TX.VAL.FUEL.ZS.UN", "TX.VAL.FOOD.ZS.UN", "TX.VAL.AGRI.ZS.UN", "TX.VAL.MMTL.ZS.UN",
+                "TX.VAL.MANF.ZS.UN", "TX.VAL.TECH.MF.ZS"),
 }
 ECONOMY_IDS = ("NY.GDP.MKTP.CD", "NY.GDP.PCAP.PP.CD", "NY.GDP.MKTP.KD.ZG", "FP.CPI.TOTL.ZG",
                "SL.UEM.TOTL.ZS", "GC.DOD.TOTL.GD.ZS", "BN.CAB.XOKA.GD.ZS", "FI.RES.TOTL.CD",

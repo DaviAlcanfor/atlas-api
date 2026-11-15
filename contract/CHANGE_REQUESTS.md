@@ -357,3 +357,17 @@ GET /v1/countries/{iso2}/news?limit= -> NewsList                                
 ```
 Refreshed every 6 h (`.github/workflows/news.yml`); retention 30 days; the import bumps data_version (ETags change every 6 h).
 Clients must cite and link the GDELT Project (its terms: "any use or redistribution of the data must include a citation").
+
+## CR-009: what the economy lives on (spec 029 phase 1, 2026-11-15; owner: "aprovado tudo")
+Additive. One more profile group; nothing else changes.
+```
+ProfileGroup.id: "life"|"society"|"income"|"environment"|"economy"
+GET /v1/countries/{iso2}/profile -> Always the 5 groups, in this order. "economy" = NV.AGR.TOTL.ZS, NV.IND.TOTL.ZS,
+     NV.IND.MANF.ZS, NV.SRV.TOTL.ZS (% of GDP), NY.GDP.PETR.RT.ZS, NY.GDP.TOTL.RT.ZS (rents, % of GDP),
+     TX.VAL.FUEL.ZS.UN, TX.VAL.FOOD.ZS.UN, TX.VAL.AGRI.ZS.UN, TX.VAL.MMTL.ZS.UN, TX.VAL.MANF.ZS.UN
+     (% of merchandise exports), TX.VAL.TECH.MF.ZS (% of manufactured exports). Same ProfileIndicator shape and rules
+     (no data for the country = the indicator is left out of the group).
+```
+Source: World Bank WDI (CC BY 4.0), same ETL as the other indicators. The same 12 ids also show up in `GET /v1/indicators`
+(the catalog already lists every ranked indicator with data, so that part needs no contract text).
+**Deploy order**: clients validate `ProfileGroup.id` as a closed enum, so the web must accept "economy" BEFORE the API serves it.

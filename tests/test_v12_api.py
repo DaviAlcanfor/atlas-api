@@ -36,7 +36,9 @@ def test_languages_spoken(api_client: TestClient) -> None:  # spec 017
 
 def test_profile(api_client: TestClient) -> None:  # spec 015
     p = CountryProfile.model_validate(api_client.get("/v1/countries/BR/profile").json())
-    assert [g.id for g in p.groups] == ["life", "society", "income", "environment"]
+    assert [g.id for g in p.groups] == ["life", "society", "income", "environment", "economy"]
+    eco = {i.id: i for i in p.groups[4].indicators}  # CR-009: Brazil has the sector and export-composition data
+    assert {"NV.SRV.TOTL.ZS", "TX.VAL.FOOD.ZS.UN"} <= set(eco) and 0 < eco["NV.SRV.TOTL.ZS"].value < 100
     life = {i.id: i for i in p.groups[0].indicators}
     le = life["SP.DYN.LE00.IN"]
     assert le.rank and le.rank_of and 1 <= le.rank <= le.rank_of and le.world

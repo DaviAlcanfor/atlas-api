@@ -57,6 +57,19 @@ INDICATORS = {
     "BN.CAB.XOKA.GD.ZS": {"label": "Saldo em conta corrente", "unit": "% do PIB"},
     "FI.RES.TOTL.CD": {"label": "Reservas totais (com ouro)", "unit": "US$ correntes"},
     "PA.NUS.PPP": {"label": "Fator de conversão PPC", "unit": "moeda local por US$ internacional"},
+    # spec 029 phase 1: what the economy lives on (sectors, resource rents, composition of merchandise exports)
+    "NV.AGR.TOTL.ZS": {"label": "Setor: agropecuária, silvicultura e pesca", "unit": "% do PIB"},
+    "NV.IND.TOTL.ZS": {"label": "Setor: indústria (com construção)", "unit": "% do PIB"},
+    "NV.IND.MANF.ZS": {"label": "Setor: indústria de transformação", "unit": "% do PIB"},
+    "NV.SRV.TOTL.ZS": {"label": "Setor: serviços", "unit": "% do PIB"},
+    "NY.GDP.PETR.RT.ZS": {"label": "Renda do petróleo", "unit": "% do PIB"},
+    "NY.GDP.TOTL.RT.ZS": {"label": "Renda de recursos naturais", "unit": "% do PIB"},
+    "TX.VAL.FUEL.ZS.UN": {"label": "Exportações: combustíveis", "unit": "% das exportações de mercadorias"},
+    "TX.VAL.FOOD.ZS.UN": {"label": "Exportações: alimentos", "unit": "% das exportações de mercadorias"},
+    "TX.VAL.AGRI.ZS.UN": {"label": "Exportações: matérias-primas agrícolas", "unit": "% das exportações de mercadorias"},
+    "TX.VAL.MMTL.ZS.UN": {"label": "Exportações: minérios e metais", "unit": "% das exportações de mercadorias"},
+    "TX.VAL.MANF.ZS.UN": {"label": "Exportações: manufaturados", "unit": "% das exportações de mercadorias"},
+    "TX.VAL.TECH.MF.ZS": {"label": "Exportações: alta tecnologia", "unit": "% das exportações de manufaturados"},
 }
 SOURCE = {
     "id": "worldbank", "title": "World Bank: World Development Indicators",
