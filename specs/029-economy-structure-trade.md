@@ -50,6 +50,8 @@ exportações em combustíveis, Nigéria 86%, Coreia do Sul 88% em manufaturados
   A Namíbia vem com ISO2 vazio (o "NA" foi lido como ausente), então usamos o ISO3 NAM do mesmo arquivo.
 - Primeiro resultado (2024): 225 códigos com dado; Brasil exporta US$ 350 bi e importa US$ 276 bi; 1º produto óleos brutos de
   petróleo (13%), 1º destino China (27%). Arábia Saudita US$ 308 bi; Coreia do Sul US$ 721 bi, 1º produto circuitos integrados.
+  Dos 197 países do Atlas, 192 ganham dado; sem BACI (-> 404): TW (acima), XK, LI, MC, VA (não estão no `country_codes` do BACI; os códigos 251 e 757 são os do Comtrade para França e Suíça, que nas Nações Unidas incluem Mônaco e Liechtenstein).
+  Ensaio local de `import-prod-029.ps1` (cópia descartável do banco de dev, rodado 2 vezes): 0018 aplicada, 192 países.
 
 ### Nomes dos produtos em português (Decisão 2, lido em 2026-11-16)
 - Tabela NCM do Siscomex (módulo Classif, JSON/XLSX): nenhuma licença ou termo de uso publicado encontrado.
