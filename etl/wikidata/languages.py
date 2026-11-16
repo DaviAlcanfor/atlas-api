@@ -66,12 +66,15 @@ WHERE {{ VALUES ?l {{ {ids} }}
  OPTIONAL {{ ?pt schema:about ?l; schema:isPartOf <https://pt.wikipedia.org/> }}
  OPTIONAL {{ ?en schema:about ?l; schema:isPartOf <https://en.wikipedia.org/> }}
  {label} }}"""
-# Subdivisions only (the step-1 "sub" rows): the admin test with the municipality exception (see the module docstring). Kept apart
-# from INFO_QUERY, whose ?isAdmin (no exception) still runs for every id: one query over ~16k ids with the extra path timed out
-# batch after batch, and only the ~8k places need it.
-ADMIN_QUERY = """SELECT ?l ?isAdmin WHERE {{ VALUES ?l {{ {ids} }}
- BIND((EXISTS {{ ?l wdt:P31/wdt:P279* wd:Q56061 }} && !EXISTS {{ ?l wdt:P576 ?g2 }}
-        && (!EXISTS {{ ?l wdt:P31/wdt:P279* wd:Q43229 }} || EXISTS {{ ?l wdt:P31/wdt:P279* wd:Q15284 }})) AS ?isAdmin) }}"""
+# Subdivisions only (the step-1 "sub" rows): the admin test with the municipality exception (see the module docstring), in two
+# cheap steps instead of one P31/P279* walk per place (that ran ~1 batch/min over the ~8k places, hours in all): the direct classes
+# of each place (+ dissolved?), then the class tree walked once per DISTINCT class (a few hundred). INFO_QUERY's ?isAdmin (no
+# exception) still runs for every id and is overridden for the places.
+TYPES_QUERY = """SELECT ?l ?c ?gone WHERE {{ VALUES ?l {{ {ids} }} OPTIONAL {{ ?l wdt:P31 ?c }} OPTIONAL {{ ?l wdt:P576 ?gone }} }}"""
+CLASS_QUERY = """SELECT ?l ?adm ?org ?muni WHERE {{ VALUES ?l {{ {ids} }}
+ BIND(EXISTS {{ ?l wdt:P279* wd:Q56061 }} AS ?adm) BIND(EXISTS {{ ?l wdt:P279* wd:Q43229 }} AS ?org)
+ BIND(EXISTS {{ ?l wdt:P279* wd:Q15284 }} AS ?muni) }}"""
+TYPES_BATCH = 300  # one plain triple pattern per id: much bigger batches than BATCH are fine
 ANCESTORS_QUERY = """SELECT ?l ?a WHERE {{ VALUES ?l {{ {ids} }} ?l wdt:P279+ ?a. }}"""
 # UNESCO Atlas status (P1999): fixed 6-step scale, our pt-BR wording (Wikidata labels are mixed).
 ENDANGERMENT = {"Q20672086": "segura", "Q20672087": "vulnerável", "Q20672088": "definitivamente em perigo",
@@ -84,9 +87,9 @@ SPEAKERS_QUERY = """SELECT ?l ?n ?when ?place WHERE {{ VALUES ?l {{ {ids} }}
 
 
 def _batched(client: httpx.Client, cache: Path, query: str, qids: list[str],
-             refresh: bool) -> list[dict[str, Any]]:
+             refresh: bool, size: int = BATCH) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
-    todo = [qids[i:i + BATCH] for i in range(0, len(qids), BATCH)]
+    todo = [qids[i:i + size] for i in range(0, len(qids), size)]
     while todo:
         batch = todo.pop(0)
         tag = hashlib.sha256((query + " ".join(batch)).encode()).hexdigest()[:12]
@@ -100,6 +103,19 @@ def _batched(client: httpx.Client, cache: Path, query: str, qids: list[str],
             half = len(batch) // 2
             todo[:0] = [batch[:half], batch[half:]]
     return rows
+
+
+def admin_flags(types: list[dict[str, Any]], classes: list[dict[str, Any]]) -> dict[str, bool]:
+    """Place Q-id -> administrative territorial entity? Some class under Q56061, not dissolved (P576), and no class under
+    "organisation" Q43229 unless some class is under "municipality" Q15284 (Brazilian municipalities are typed as both)."""
+    cls = {_qid(_v(r, "l")) or "": (_v(r, "adm") == "true", _v(r, "org") == "true", _v(r, "muni") == "true") for r in classes}
+    by: dict[str, dict[str, bool]] = {}
+    for r in types:
+        f = by.setdefault(_qid(_v(r, "l")) or "", {"adm": False, "org": False, "muni": False, "gone": False})
+        f["gone"] = f["gone"] or bool(_v(r, "gone"))
+        adm, org, muni = cls.get(_qid(_v(r, "c")) or "", (False, False, False))
+        f["adm"], f["org"], f["muni"] = f["adm"] or adm, f["org"] or org, f["muni"] or muni
+    return {q: f["adm"] and not f["gone"] and (not f["org"] or f["muni"]) for q, f in by.items()}
 
 
 def attributes(rows: dict[str, list[dict[str, Any]]], anc: list[dict[str, Any]],
@@ -120,7 +136,7 @@ def attributes(rows: dict[str, list[dict[str, Any]]], anc: list[dict[str, Any]],
             a["status"] = st
             a["dead"] = a["dead"] or st == "extinta"
         a["wikipedia_url"] = a["wikipedia_url"] or _v(r, "pt") or _v(r, "en")
-    for r in rows.get("admin", []):  # ADMIN_QUERY wins over INFO's ?isAdmin (municipality exception)
+    for r in rows.get("admin", []):  # the places' admin flag (municipality exception) wins over INFO's ?isAdmin
         if (a_ := out.get(_qid(_v(r, "l")) or "")) is not None:
             a_["admin"] = _v(r, "isAdmin") == "true"
     for r in anc:
@@ -218,7 +234,11 @@ def collect(client: httpx.Client, countries: dict[str, Any], cache: Path, refres
         subs |= {_qid(_v(r, "sub")) or "" for r in rs
                  if _v(r, "kind") == "sub" and _v(r, "l") not in official}
     info = _batched(client, cache, INFO_QUERY, sorted(set(langs) | subs), refresh)
-    admin = _batched(client, cache, ADMIN_QUERY, sorted(subs), refresh)
+    types = _batched(client, cache, TYPES_QUERY, sorted(subs), refresh, TYPES_BATCH)
+    classes = sorted({c for r in types if (c := _qid(_v(r, "c")))})
+    flags = admin_flags(types, _batched(client, cache, CLASS_QUERY, classes, refresh))
+    admin = [{"l": {"value": "http://www.wikidata.org/entity/" + q}, "isAdmin": {"value": str(ok).lower()}}
+             for q, ok in flags.items()]
     attrs = attributes({"info": info, "admin": admin}, _batched(client, cache, ANCESTORS_QUERY, langs, refresh),
                        _batched(client, cache, SPEAKERS_QUERY, langs, refresh))
     fams = yaml.safe_load(FAMILIES.read_text(encoding="utf-8")) if FAMILIES.exists() else {}
