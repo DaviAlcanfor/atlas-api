@@ -24,10 +24,14 @@ curl https://atlas-api.fastapicloud.dev/v1/countries/BR/subdivisions
 ## O que a API oferece
 
 - **197 países e 3.754 estados e províncias:** capital, população com ano, área, regime político, idiomas, moedas, organizações, bandeira e código ISO.
-- **Política:** governantes atuais e anteriores (10.766 mandatos) e um glossário de formas de governo.
-- **Como vive o povo:** 25 indicadores (23 do Banco Mundial, 2 do PNUD) (expectativa de vida, IDH, renda, escolaridade...), com a posição do país no ranking mundial e a média da região.
-- **Economia e câmbio:** PIB, inflação, comércio e cotações diárias desde 1999, com comparação entre países.
+- **Em resumo:** 3 a 5 frases por país montadas por fórmula só com os fatos da própria API e reescritas por IA, aceitas apenas se todo número do texto já estiver na fórmula.
+- **Política:** governantes atuais e anteriores (10.766 mandatos), correntes políticas com figuras ligadas ao país e um glossário de 63 verbetes (formas de governo, sistemas, regiões, organizações, economia).
+- **Como vive o povo:** indicadores do Banco Mundial e do PNUD (expectativa de vida, IDH, renda, escolaridade...), com a posição do país no ranking mundial e a média da região.
+- **Do que vive a economia:** peso de agropecuária, indústria e serviços no PIB, renda do petróleo e dos recursos naturais e composição das exportações (12 indicadores do Banco Mundial).
+- **Economia, câmbio e ranking:** PIB, inflação, comércio, cotações diárias desde 1999, comparação entre países e ranking mundial de 37 indicadores.
 - **História:** resumo e períodos condensados da Wikipédia (190 países), marcos curados e linhagem entre entidades políticas.
+- **Viagem no tempo:** 130 retratos de fronteiras históricas do Cliopatria, de 3400 a.C. a 2024.
+- **Notícias:** manchetes geopolíticas do GDELT classificadas por IA a cada 6 horas, com tipo, países citados e relevância.
 - **Pessoas importantes:** as figuras mais conhecidas de cada país, segundo o Pantheon (7.749 pessoas).
 
 Três regras valem para todos os endpoints:
@@ -43,17 +47,21 @@ Todos são `GET`, com prefixo `/v1`. O contrato completo está em [`contract/CON
 |---|---|
 | `/countries` | lista de países (nome, região, regime, capitais com coordenadas, marcador de micro-estado) |
 | `/countries/{iso2}` | detalhe do país: fatos, idiomas falados por status, moedas, política atual, marcos, pistas de GeoGuessr |
-| `/countries/{iso2}/profile` | indicadores sociais com ranking mundial e média regional; composição religiosa e étnica |
+| `/countries/{iso2}/profile` | indicadores em 5 grupos (vida, sociedade, renda, ambiente, economia) com ranking mundial e média regional; composição religiosa e étnica |
+| `/countries/{iso2}/brief` | "Em resumo": texto curto montado com os fatos da API, com o método e as fontes |
 | `/countries/{iso2}/economy` | indicadores econômicos com série histórica |
 | `/countries/{iso2}/leaders?role=` | chefes de Estado e de governo, com foto, partido e mandato |
 | `/countries/{iso2}/people?domain=&limit=` | pessoas importantes por área (política, ciência, artes, esportes...) |
 | `/countries/{iso2}/history` | resumo da história e períodos com datas |
-| `/countries/{iso2}/subdivisions` | estados e províncias com bandeira |
+| `/countries/{iso2}/subdivisions` | estados e províncias com bandeira e DDD |
+| `/countries/{iso2}/ideologies` · `/ideologies/{id}` | correntes políticas ligadas ao país · a corrente no mundo |
+| `/countries/{iso2}/news?limit=` · `/news?region=&type=&lang=&country=` | manchetes geopolíticas do país · do mundo, com filtros |
+| `/indicators` · `/indicators/{id}/ranking` | catálogo de indicadores · todos os países ordenados por um indicador |
 | `/economy/compare?countries=&ids=` | 2 a 5 países lado a lado |
 | `/currencies/{code}` · `/currencies/{code}/history?vs=&from=&to=` | cotações atuais, variação e volatilidade · histórico diário (semanal em janelas longas) |
 | `/glossary` · `/glossary/{id}` | verbetes (formas de governo, regiões, organizações) com exemplos |
 | `/polities?year=` · `/polities/{id}` | entidades políticas (inclusive extintas), com nomes ao longo do tempo e sucessão |
-| `/snapshots` · `/snapshots/nearest?year=` · `/snapshots/{year}/links` | mapas históricos (base da futura viagem no tempo) |
+| `/snapshots` · `/snapshots/nearest?year=` · `/snapshots/{year}/links` | mapas históricos da viagem no tempo (130 retratos do Cliopatria) |
 | `/search?q=` · `/meta` · `/health` | busca sem acento · versão dos dados · estado do serviço |
 
 **Erros:** `application/problem+json` (`404` para id ou ano desconhecido, `422` para parâmetro inválido, `503` com o banco indisponível).
@@ -138,6 +146,9 @@ python -m etl wikipedia-history       # resumos de história         -> history.
 python -m etl pantheon                # pessoas importantes         -> pantheon.json
 python -m etl worldbank && python -m etl undp   # indicadores       -> worldbank.json, undp.json
 python -m etl fx                      # câmbio diário               -> fx.json
+python -m etl cliopatria              # fronteiras históricas       -> snapshots.json + geometria no repositório do site
+python -m etl ai-summaries            # "Em resumo" (precisa de AI_GATEWAY_API_KEY) -> summaries.json
+python -m etl news                    # manchetes (roda no Actions a cada 6 h)       -> news.json
 python -m atlas_api.cli import-facts  # lê o que existir em data_out/ e grava numa transação
 ```
 
@@ -145,7 +156,8 @@ Os comandos aceitam códigos ISO2 para uma amostra (`python -m etl wikipedia-his
 
 **Câmbio diário:** o workflow [`fx-daily`](.github/workflows/fx-daily.yml) roda em dias úteis às 15:30 UTC (depois da publicação do BCE): lê as moedas dos países no banco (`atlas_api.cli currency-codes`), baixa as cotações (`etl fx`) e importa só o câmbio (`import-fx`). Precisa do secret `DATABASE_URL` no repositório.
 
-**Publicar dados em produção:** rode `import-facts` com `DATABASE_URL` apontando para o banco de produção, a partir de um checkout do código que está no ar. O modelo está em [`scripts/prod-migrate-example.ps1`](scripts/prod-migrate-example.ps1).
+**Publicar dados em produção:** depois do merge e do deploy, rode `import-content` e `import-facts` com `DATABASE_URL` apontando para o banco de produção e `AUTO_MIGRATE=false`, a partir de um checkout do código que está no ar (um `git worktree` em `origin/main`), com `--data-out` apontando para os arquivos gerados. Cada importação é uma transação só e pode ser repetida.
+O `import-facts` também **substitui o câmbio** pelo `fx.json` local: em seguida rode o workflow `fx-daily` (`gh workflow run fx-daily.yml`) para voltar às cotações mais recentes. As notícias não são tocadas.
 
 ## Modelo de dados
 
@@ -168,7 +180,7 @@ Os comandos aceitam códigos ISO2 para uma amostra (`python -m etl wikipedia-his
 
 ## Qualidade
 
-- **Testes:** cerca de 90 testes de ponta a ponta contra um Postgres real, com os dados reais de `content/` e `data_out/`.
+- **Testes:** cerca de 120 testes de ponta a ponta contra um Postgres real, com os dados reais de `content/` e `data_out/`.
 - **Código:** mypy strict e ruff.
 - **Contrato:** o contrato é congelado e espelhado no site. Mudanças entram por change request em [`contract/CHANGE_REQUESTS.md`](contract/CHANGE_REQUESTS.md), e o OpenAPI gerado alimenta a checagem de tipos do front.
 - **Specs:** cada funcionalidade tem uma spec em [`specs/`](specs/README.md), com o mesmo número no repositório do site.
@@ -178,7 +190,8 @@ Os comandos aceitam códigos ISO2 para uma amostra (`python -m etl wikipedia-his
 - **Governadores** ficaram de fora dos estados: no Wikidata eles estão desatualizados.
 - **Regime político** vem de um seed antigo ainda não verificado. O glossário e os textos de `content/` são rascunhos à espera de revisão humana.
 - **Datas de formação** dos países modernos são um placeholder (1946) até a curadoria.
-- **Mapas históricos** (viagem no tempo) ainda não foram importados; a fonte escolhida é o [Cliopatria](https://github.com/Seshat-Global-History-Databank/cliopatria) (CC BY 4.0).
+- **Viagem no tempo** tem fronteiras e nomes; os fatos de cada Estado antigo (bandeira, governantes) ainda não.
+- **Comércio por produto e parceiro** (o que cada país exporta e para quem) está planejado com o BACI do CEPII ([spec 029](specs/029-economy-structure-trade.md), fase 2). Relações diplomáticas ficam de fora até haver fonte completa.
 
 ## Fontes e licenças
 
@@ -191,6 +204,8 @@ Os comandos aceitam códigos ISO2 para uma amostra (`python -m etl wikipedia-his
 | [PNUD (HDR)](https://hdr.undp.org/) | IDH, anos de estudo | CC BY 3.0 IGO | obrigatória |
 | [Banco Central Europeu](https://www.ecb.europa.eu/) via Frankfurter · exchange-api | câmbio | reuso livre com citação | fonte em `source` |
 | [Pantheon](https://pantheon.world/) | pessoas importantes | CC BY-SA 4.0 | obrigatória |
+| [Cliopatria](https://github.com/Seshat-Global-History-Databank/cliopatria) (Seshat Global History Databank) | fronteiras históricas | CC BY 4.0 | obrigatória, com indicação de mudanças |
+| [GDELT](https://www.gdeltproject.org/) | manchetes geopolíticas | uso e redistribuição livres | citação e link do GDELT Project |
 | [flagcdn / Flagpedia](https://flagpedia.net/) | bandeiras de países | domínio público | não exigida |
 
 O código está sob a licença [MIT](LICENSE).
