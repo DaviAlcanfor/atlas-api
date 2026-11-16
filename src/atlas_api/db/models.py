@@ -4,6 +4,7 @@ Enum-like columns are plain text + CHECK constraint (easy to evolve with a migra
 Keep the value lists in sync with contract/CONTRACT.md.
 """
 from datetime import date, datetime
+from typing import Any
 
 from sqlalchemy import (
     CHAR,
@@ -473,6 +474,22 @@ class CountryBrief(Base):
     now: Mapped[str | None] = mapped_column(Text)
     method: Mapped[str] = mapped_column(Text)
     generated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    source_ids: Mapped[list[str]] = mapped_column(JSONB)
+
+
+class CountryTrade(Base):
+    """spec 029 phase 2: BACI aggregates of one country for one year (`etl baci` -> `import-trade`).
+    Top lists are JSONB as served: [{hs, label, value_usd, share}] and [{iso2, value_usd, share}]."""
+
+    __tablename__ = "country_trade"
+
+    iso2: Mapped[str] = mapped_column(CHAR(2), ForeignKey("polities.iso2"), primary_key=True)
+    year: Mapped[int] = mapped_column(Integer)
+    exports_usd: Mapped[float] = mapped_column(Float)
+    imports_usd: Mapped[float] = mapped_column(Float)
+    top_exports: Mapped[list[dict[str, Any]]] = mapped_column(JSONB)
+    top_destinations: Mapped[list[dict[str, Any]]] = mapped_column(JSONB)
+    top_origins: Mapped[list[dict[str, Any]]] = mapped_column(JSONB)
     source_ids: Mapped[list[str]] = mapped_column(JSONB)
 
 

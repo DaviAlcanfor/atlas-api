@@ -161,7 +161,7 @@ def set_version(session: Session, part: str, digest: str) -> str:
     generated_at moves only on change."""
     session.merge(Meta(key=f"{part}_version", value=digest))
     session.flush()
-    parts = [session.get(Meta, f"{k}_version") for k in ("content", "facts", "fx", "news")]  # news: every 6 h (spec 008)
+    parts = [session.get(Meta, f"{k}_version") for k in ("content", "facts", "fx", "news", "trade")]  # news: every 6 h (spec 008); trade: spec 029
     blob = "|".join(m.value if m else "" for m in parts)
     version = hashlib.sha256(blob.encode()).hexdigest()[:16]
     cur = session.get(Meta, "data_version")

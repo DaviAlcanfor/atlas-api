@@ -33,6 +33,7 @@ from atlas_api.db.models import (
     CountryFacts,
     CountryHistory,
     CountryLanguage,
+    CountryTrade,
     CurrencyStat,
     FxRate,
     GlossaryTerm,
@@ -253,6 +254,24 @@ def import_briefs(session: Session, path: Path, known: set[str | None]) -> int:
             n += 1
     session.flush()
     return n
+
+
+def import_trade(session: Session, path: Path) -> int:
+    """spec 029 phase 2: data_out/trade.json (etl baci) -> country_trade (rebuilt) + its source rows. Touches only these.
+    Countries that are not polities (territories, e.g. HK) are not stored; they still appear as partners of others."""
+    data = json.loads(path.read_text(encoding="utf-8"))
+    retrieved = datetime.fromisoformat(data["retrieved_at"])
+    for src in data["sources"]:
+        session.merge(Source(id=src["id"], title=src["title"], url=src["url"], license=src["license"], retrieved_at=retrieved))
+    known = set(session.scalars(select(Polity.iso2).where(Polity.iso2.is_not(None))))
+    ids = [x["id"] for x in data["sources"]]
+    session.execute(delete(CountryTrade))
+    rows = [{"iso2": iso2, "year": data["year"], "source_ids": ids, **x}
+            for iso2, x in data["countries"].items() if iso2 in known]
+    if rows:
+        session.execute(insert(CountryTrade), rows)
+    session.flush()
+    return len(rows)
 
 
 def import_snapshots(session: Session, path: Path) -> int:

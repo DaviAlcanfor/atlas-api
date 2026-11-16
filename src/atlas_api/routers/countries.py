@@ -13,6 +13,7 @@ from atlas_api.schemas import (
     CountryIdeologies,
     CountryList,
     CountryProfile,
+    CountryTradeOut,
     LeaderList,
     LeaderRole,
     PersonDomain,
@@ -105,3 +106,13 @@ def get_brief(db: DbSession, iso2: Annotated[str, Path(pattern=r"^[A-Z]{2}$")]) 
     if b is None:
         raise NotFoundError(f"No summary for {iso2} yet")
     return b
+
+
+@router.get("/{iso2}/trade")  # v1.7 proposal (spec 029 phase 2, CR-010)
+def get_trade(db: DbSession, iso2: Annotated[str, Path(pattern=r"^[A-Z]{2}$")]) -> CountryTradeOut:
+    if not queries.country_exists(db, iso2):
+        raise NotFoundError(f"Unknown country {iso2}")
+    t = queries.get_trade(db, iso2)
+    if t is None:
+        raise NotFoundError(f"No BACI trade data for {iso2}")
+    return t

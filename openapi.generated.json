@@ -514,6 +514,49 @@
         }
       }
     },
+    "/v1/countries/{iso2}/trade": {
+      "get": {
+        "tags": [
+          "countries"
+        ],
+        "summary": "Get Trade",
+        "operationId": "get_trade_v1_countries__iso2__trade_get",
+        "parameters": [
+          {
+            "name": "iso2",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z]{2}$",
+              "title": "Iso2"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CountryTradeOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/polities": {
       "get": {
         "tags": [
@@ -2060,6 +2103,61 @@
           "capital_coords"
         ],
         "title": "CountrySummary"
+      },
+      "CountryTradeOut": {
+        "properties": {
+          "year": {
+            "type": "integer",
+            "title": "Year"
+          },
+          "exports_usd": {
+            "type": "number",
+            "title": "Exports Usd"
+          },
+          "imports_usd": {
+            "type": "number",
+            "title": "Imports Usd"
+          },
+          "top_exports": {
+            "items": {
+              "$ref": "#/components/schemas/TradeProduct"
+            },
+            "type": "array",
+            "title": "Top Exports"
+          },
+          "top_destinations": {
+            "items": {
+              "$ref": "#/components/schemas/TradePartner"
+            },
+            "type": "array",
+            "title": "Top Destinations"
+          },
+          "top_origins": {
+            "items": {
+              "$ref": "#/components/schemas/TradePartner"
+            },
+            "type": "array",
+            "title": "Top Origins"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/Source"
+            },
+            "type": "array",
+            "title": "Sources"
+          }
+        },
+        "type": "object",
+        "required": [
+          "year",
+          "exports_usd",
+          "imports_usd",
+          "top_exports",
+          "top_destinations",
+          "top_origins",
+          "sources"
+        ],
+        "title": "CountryTradeOut"
       },
       "Counts": {
         "properties": {
@@ -4622,6 +4720,57 @@
           "year"
         ],
         "title": "SubdivisionPopulation"
+      },
+      "TradePartner": {
+        "properties": {
+          "iso2": {
+            "type": "string",
+            "title": "Iso2"
+          },
+          "value_usd": {
+            "type": "number",
+            "title": "Value Usd"
+          },
+          "share": {
+            "type": "number",
+            "title": "Share"
+          }
+        },
+        "type": "object",
+        "required": [
+          "iso2",
+          "value_usd",
+          "share"
+        ],
+        "title": "TradePartner"
+      },
+      "TradeProduct": {
+        "properties": {
+          "hs": {
+            "type": "string",
+            "title": "Hs"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "value_usd": {
+            "type": "number",
+            "title": "Value Usd"
+          },
+          "share": {
+            "type": "number",
+            "title": "Share"
+          }
+        },
+        "type": "object",
+        "required": [
+          "hs",
+          "label",
+          "value_usd",
+          "share"
+        ],
+        "title": "TradeProduct"
       },
       "ValidationError": {
         "properties": {

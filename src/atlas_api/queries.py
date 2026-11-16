@@ -20,6 +20,7 @@ from atlas_api.db.models import (
     CountryFacts,
     CountryHistory,
     CountryLanguage,
+    CountryTrade,
     CurrencyStat,
     Event,
     FxRate,
@@ -59,6 +60,7 @@ from atlas_api.schemas import (
     CountryIdeology,
     CountryProfile,
     CountrySummary,
+    CountryTradeOut,
     Counts,
     Currency,
     CurrencyDetail,
@@ -819,6 +821,17 @@ def get_brief(s: Session, iso2: str) -> CountryBriefOut | None:
         return None
     return CountryBriefOut(tldr=b.tldr, now=b.now, method=b.method, generated_at=_ts(b.generated_at) or "",
                            sources=_sources(s, set(b.source_ids)))
+
+
+def get_trade(s: Session, iso2: str) -> CountryTradeOut | None:
+    """spec 029 phase 2: BACI aggregates; None when BACI has no data for the country (e.g. TW, reported as "Other Asia")."""
+    t = s.get(CountryTrade, iso2)
+    if t is None:
+        return None
+    return CountryTradeOut.model_validate({
+        "year": t.year, "exports_usd": t.exports_usd, "imports_usd": t.imports_usd, "top_exports": t.top_exports,
+        "top_destinations": t.top_destinations, "top_origins": t.top_origins,
+        "sources": _sources(s, set(t.source_ids))})
 
 
 # --- news (spec 008) -----------------------------------------------------------------------------------------------------

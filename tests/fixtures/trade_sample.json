@@ -1,0 +1,13 @@
+{"sources": [
+  {"id": "baci", "title": "CEPII, BACI (versão 202601, atualizada em 30/01/2026); HS 2022, agregado por Atlas",
+   "url": "https://www.cepii.fr/CEPII/en/bdd_modele/bdd_modele_item.asp?id=37", "license": "Etalab 2.0"},
+  {"id": "mdic-sh", "title": "MDIC/Secex, tabela NCM_SH (nomes das posições do SH em português)",
+   "url": "https://www.gov.br/mdic/pt-br/assuntos/comercio-exterior/estatisticas/base-de-dados-bruta", "license": "CC BY-ND 3.0"}],
+ "retrieved_at": "2026-11-16T14:28:00+00:00", "year": 2024,
+ "countries": {
+  "BR": {"exports_usd": 1000.0, "imports_usd": 800.0,
+         "top_exports": [{"hs": "2709", "label": "Óleos brutos de petróleo ou de minerais betuminosos", "value_usd": 600.0, "share": 0.6},
+                         {"hs": "1201", "label": "Soja, mesmo triturada", "value_usd": 400.0, "share": 0.4}],
+         "top_destinations": [{"iso2": "CN", "value_usd": 700.0, "share": 0.7}, {"iso2": "HK", "value_usd": 300.0, "share": 0.3}],
+         "top_origins": [{"iso2": "US", "value_usd": 800.0, "share": 1.0}]},
+  "HK": {"exports_usd": 300.0, "imports_usd": 300.0, "top_exports": [], "top_destinations": [], "top_origins": []}}}

@@ -4,6 +4,7 @@ import sys
 from collections.abc import Callable
 
 from etl.ai import summaries as ai_summaries
+from etl.baci import pipeline as baci
 from etl.cliopatria import pipeline as cliopatria
 from etl.fx import pipeline as fx
 from etl.news import pipeline as news
@@ -25,7 +26,7 @@ COMMANDS: dict[str, Callable[[], None]] = {
     "wikidata-leaders": wikidata_leaders.run, "wikidata-events": wikidata_events.run,
     "wikidata-ideologies": wikidata_ideologies.run, "wikidata-subdivisions": wikidata_subdivisions.run, "pantheon": pantheon.run,
     "wikidata-languages": wikidata_languages.run, "undp": undp.run, "fx": fx.run,
-    "wikipedia-history": wikipedia_history.run, "cliopatria": cliopatria.run, "ai-summaries": ai_summaries.run, "news": news.run,
+    "wikipedia-history": wikipedia_history.run, "cliopatria": cliopatria.run, "ai-summaries": ai_summaries.run, "news": news.run, "baci": baci.run,
 }
 
 

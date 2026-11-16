@@ -154,3 +154,26 @@ class IndicatorRanking(BaseModel):
     unit: str
     items: list[RankingItem]  # every country with a value, by rank
     sources: list[Source]
+
+
+class TradeProduct(BaseModel):  # v1.7 proposal (spec 029 phase 2, CR-010)
+    hs: str  # HS 4 digits (HS 2022)
+    label: str  # pt-BR heading, verbatim from MDIC/Secex NCM_SH (CC BY-ND 3.0: never reworded)
+    value_usd: float
+    share: float  # of exports_usd, 0..1
+
+
+class TradePartner(BaseModel):
+    iso2: str
+    value_usd: float
+    share: float  # of exports_usd (destinations) or imports_usd (origins), 0..1
+
+
+class CountryTradeOut(BaseModel):
+    year: int
+    exports_usd: float
+    imports_usd: float
+    top_exports: list[TradeProduct]  # up to 10, by value
+    top_destinations: list[TradePartner]  # up to 10, by value
+    top_origins: list[TradePartner]  # up to 10, by value
+    sources: list[Source]
