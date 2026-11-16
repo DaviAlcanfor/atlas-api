@@ -371,3 +371,24 @@ GET /v1/countries/{iso2}/profile -> Always the 5 groups, in this order. "economy
 Source: World Bank WDI (CC BY 4.0), same ETL as the other indicators. The same 12 ids also show up in `GET /v1/indicators`
 (the catalog already lists every ranked indicator with data, so that part needs no contract text).
 **Deploy order**: clients validate `ProfileGroup.id` as a closed enum, so the web must accept "economy" BEFORE the API serves it.
+
+## CR-010: what a country exports and who it trades with (spec 029 phase 2, 2026-11-16; owner: "aprovado tudo" 2026-11-15)
+Additive, one read-only endpoint:
+```
+TradeProduct    { hs: string /* HS 2022 heading, 4 digits */, label: string /* pt-BR, verbatim */,
+                  value_usd: number, share: number /* of exports_usd, 0..1 */ }
+TradePartner    { iso2: string, value_usd: number, share: number /* of exports_usd (destinations) or imports_usd (origins), 0..1 */ }
+CountryTradeOut { year: int, exports_usd: number, imports_usd: number /* goods only, current USD */,
+                  top_exports: TradeProduct[] /* up to 10, by value */,
+                  top_destinations: TradePartner[] /* up to 10, by value */,
+                  top_origins: TradePartner[] /* up to 10, by value */, sources: Source[] }
+GET /v1/countries/{iso2}/trade -> CountryTradeOut      Unknown iso2 -> 404; no BACI data for the country -> 404.
+```
+Data: CEPII BACI version 202601, HS 2022, latest year (2024), summed per HS 4 digits and per partner by the ETL (`etl baci`,
+written by `import-trade`). Partners may be ISO2 codes that are not countries of `/v1/countries` (e.g. HK); BACI groups with no
+ISO2 ("Other Asia, nes", which is how BACI reports Taiwan) count in the totals but are never listed, so TW -> 404.
+Sources (both always present): `baci` (licence "Etalab 2.0"), title "CEPII, BACI (versão 202601, atualizada em 30/01/2026);
+HS 2022, agregado por Atlas", and `mdic-sh` (licence "CC BY-ND 3.0"), MDIC/Secex NCM_SH table for the pt-BR headings.
+Clients must show the BACI attribution with its version and update date (Etalab 2.0 requires "the name of the 'Grantor' and the
+date of the most recent update") and must show `label` VERBATIM (CC BY-ND: no shortening or rewording in the text; visual
+truncation with the full text available, e.g. a tooltip, is the client's call to confirm with the owner).

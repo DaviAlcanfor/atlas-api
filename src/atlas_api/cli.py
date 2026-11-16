@@ -1,4 +1,6 @@
-"""`python -m atlas_api.cli import-content | import-facts | import-fx | import-news | currency-codes`
+"""`python -m atlas_api.cli import-content | import-facts | import-fx | import-news | import-trade | currency-codes`
+
+import-trade: only data_out/trade.json (etl baci, spec 029), only country_trade and its source rows.
 
 import-news: only data_out/news.json (the 6-hourly job, spec 008), only the news tables.
 
@@ -17,13 +19,14 @@ from sqlalchemy.orm import Session
 from atlas_api.config import get_settings
 from atlas_api.db.models import CountryFacts
 from atlas_api.db.session import make_engine
-from atlas_api.facts import import_facts, import_fx, import_news
+from atlas_api.facts import import_facts, import_fx, import_news, import_trade
 from atlas_api.importer import ContentError, import_content, set_version
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(prog="atlas_api.cli")
-    ap.add_argument("command", choices=["import-content", "import-facts", "import-fx", "import-news", "currency-codes"])
+    ap.add_argument("command", choices=["import-content", "import-facts", "import-fx", "import-news", "import-trade",
+                                        "currency-codes"])
     ap.add_argument("--content", default="content", type=Path)
     ap.add_argument("--data-out", default="data_out", type=Path)
     args = ap.parse_args()
@@ -46,6 +49,10 @@ def main() -> int:
                 news = args.data_out / "news.json"
                 summary = {**import_news(session, news),
                            "data_version": set_version(session, "news", hashlib.sha256(news.read_bytes()).hexdigest()[:16])}
+            elif args.command == "import-trade":
+                trade = args.data_out / "trade.json"
+                summary = {"countries_with_trade": import_trade(session, trade),
+                           "data_version": set_version(session, "trade", hashlib.sha256(trade.read_bytes()).hexdigest()[:16])}
             else:
                 summary = import_content(session, args.content)
     except ContentError as e:

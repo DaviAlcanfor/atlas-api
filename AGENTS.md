@@ -9,6 +9,7 @@ A separate agent builds the web front in ANOTHER repo (not visible here).
 - The API process (`src/atlas_api`) must NEVER import the `etl` dependency group.
 - Only writer to the DB: `python -m atlas_api.cli import-content` (idempotent, one transaction). No write endpoints.
   The scheduled jobs write only their own tables: `import-fx` (fx, daily) and `import-news` (news_items, every 6 h; spec 008).
+  `import-trade` (manual, spec 029) writes only `country_trade` from `data_out/trade.json` (`etl baci`).
 - ORM / bound parameters only. Never format SQL strings. Never invent data: missing = null.
 - Work in phases (0-4); STOP after each for user review. Explain new concepts plainly (user is a data analyst, back-end beginner).
 
