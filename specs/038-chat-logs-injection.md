@@ -48,8 +48,17 @@ Verifica o comportamento DO SERVIDOR (o que ele aceita, executa e devolve), não
 Só entra código de endurecimento se um teste falhar; cada mudança será listada abaixo.
 
 ### Mudanças de endurecimento
-(nenhuma até agora)
+Três testes falharam e geraram três mudanças mínimas em `src/atlas_api/chat.py`:
+1. **Rodada final aceitava tools.** A última chamada ao gateway não oferece tools, mas se o modelo pedisse tools mesmo assim o
+   servidor as executava: eram N+1 rodadas de tools. Agora tool calls da rodada final são ignoradas (`rnd == max_rounds`).
+2. **Sem teto de tools por rodada.** Um modelo podia pedir centenas de tools de uma vez e o servidor executava todas
+   (uma sessão de banco cada). Novo `MAX_CALLS_PER_ROUND = 8`; as demais são descartadas.
+3. **`role`/`domain` não-texto derrubavam o chat.** `get_leaders` com `role: {"$ne": 1}` fazia o psycopg falhar fora do
+   `except (ValueError, TypeError)` e o cliente recebia o evento `error`. Agora os dois filtros viram `str` (sem casamento = lista vazia).
+
+Limite conhecido (sem código): o servidor não filtra o TEXTO que o modelo gera; se um modelo repetisse o prompt de sistema,
+ele seria transmitido. O prompt não contém segredo (está neste repositório) e o dono decide guardrails (Jev) à parte.
 
 ### Tarefas
-- [ ] testes
-- [ ] endurecimento, se algum teste falhar
+- [x] testes
+- [x] endurecimento (3 mudanças acima)

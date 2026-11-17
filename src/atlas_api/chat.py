@@ -23,6 +23,7 @@ from atlas_api import chat_logs, queries
 log = logging.getLogger("atlas_api.chat")
 MODEL = "openai/gpt-6-luna"  # owner's decision (2026-11-17): changing it needs his approval
 GATEWAY = "https://ai-gateway.vercel.sh/v1/chat/completions"
+MAX_CALLS_PER_ROUND = 8  # tool calls executed per model turn (a model may ask for hundreds at once)
 TOOL_RESULT_CAP = 32_000  # chars of JSON per tool result sent to the model (all 196 countries fit; bounds input cost)
 ISO2 = re.compile(r"^[A-Z]{2}$")
 LINK = re.compile(r"/pais/([a-zA-Z]{2})\b")
@@ -79,13 +80,13 @@ def _list_countries(s: Session, a: dict[str, Any]) -> Any:
 
 
 def _leaders(s: Session, iso2: str, a: dict[str, Any]) -> Any:
-    rows = queries.list_leaders(s, iso2, a.get("role"))[::-1][: max(1, min(int(a.get("limit") or 20), 100))]
+    rows = queries.list_leaders(s, iso2, str(a["role"]) if a.get("role") else None)[::-1][: max(1, min(int(a.get("limit") or 20), 100))]
     return {"items": _plain(rows),  # newest first
             "sources": _plain(queries._sources(s, {"wikidata"}))}
 
 
 def _people(s: Session, iso2: str, a: dict[str, Any]) -> Any:
-    return queries.list_people(s, iso2, a.get("domain"), max(1, min(int(a.get("limit") or 10), 50)))
+    return queries.list_people(s, iso2, str(a["domain"]) if a.get("domain") else None, max(1, min(int(a.get("limit") or 10), 50)))
 
 
 def _card(s: Session, iso2: str) -> Any:
@@ -270,9 +271,9 @@ def answer(messages: list[dict[str, str]], key: str, factory: Callable[[], Sessi
                             c["id"] = tc.get("id") or c["id"]
                             c["name"] += fn.get("name") or ""
                             c["arguments"] += fn.get("arguments") or ""
-                if not calls:
+                if not calls or rnd == max_rounds:  # the last call offered no tools: ignore any the model emits anyway
                     break
-                ordered = [calls[i] for i in sorted(calls)]
+                ordered = [calls[i] for i in sorted(calls)][:MAX_CALLS_PER_ROUND]
                 msgs.append({"role": "assistant", "content": None, "tool_calls": [
                     {"id": c["id"], "type": "function", "function": {"name": c["name"], "arguments": c["arguments"]}}
                     for c in ordered]})
