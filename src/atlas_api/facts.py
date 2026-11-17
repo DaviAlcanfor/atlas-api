@@ -134,7 +134,8 @@ def import_facts(session: Session, path: Path) -> dict[str, Any]:
     snaps = path.parent / "snapshots.json"
     if snaps.exists():
         summary["snapshots_imported"] = import_snapshots(session, snaps)
-    read = [f for f in (path, leaders, people, langs, *ind_files, fx, history, events, ideologies, subs, snaps, briefs) if f.exists()]
+    read = [f for f in (path, leaders, people, langs, *ind_files, fx, history, events, ideologies, subs, snaps, briefs,
+                        path.parent / "shdi.json", path.parent / "heads.json") if f.exists()]
     digest = hashlib.sha256(b"".join(f.read_bytes() for f in read)).hexdigest()[:16]
     summary["data_version"] = set_version(session, "facts", digest)
     return summary
@@ -288,8 +289,13 @@ def import_snapshots(session: Session, path: Path) -> int:
 
 
 def import_subdivisions(session: Session, path: Path, known: set[str | None]) -> int:
-    """spec 024: data_out/subdivisions.json -> subdivisions (rebuilt). A Q-id listed twice (shared polygon) keeps the first."""
+    """spec 024: data_out/subdivisions.json -> subdivisions (rebuilt). A Q-id listed twice (shared polygon) keeps the first.
+    Phase 2 (CR-011), when present next to it: shdi.json (etl gdl-shdi) -> hdi; heads.json (etl subdivision-heads) -> head."""
     data = json.loads(path.read_text(encoding="utf-8"))
+    shdi_f, heads_f = path.parent / "shdi.json", path.parent / "heads.json"
+    shdi = json.loads(shdi_f.read_text(encoding="utf-8")) if shdi_f.exists() else {}
+    heads = json.loads(heads_f.read_text(encoding="utf-8")) if heads_f.exists() else {}
+    extra_sources = ([{**shdi["source"], "retrieved_at": shdi["retrieved_at"]}] if shdi else []) + heads.get("sources", [])
     session.execute(delete(Subdivision))
     seen: set[str] = set()
     for iso2, items in data["countries"].items():
@@ -300,15 +306,17 @@ def import_subdivisions(session: Session, path: Path, known: set[str | None]) ->
                 continue
             seen.add(x["wikidata_id"])
             pop, flag = x.get("population") or {}, x.get("flag") or {}
+            hdi = shdi.get("items", {}).get(x["wikidata_id"]) or {}
             session.add(Subdivision(
                 wikidata_id=x["wikidata_id"], iso2=iso2, ord=i, code=x.get("code"), name=x["name"],
                 capital=x.get("capital"), area_km2=x.get("area_km2"), population=pop.get("value"),
                 population_year=pop.get("year"), flag_url=flag.get("url"), flag_credit=flag.get("credit"),
-                flag_license=flag.get("license"), area_codes=x.get("area_codes") or None))
+                flag_license=flag.get("license"), area_codes=x.get("area_codes") or None,
+                hdi=hdi.get("value"), hdi_year=hdi.get("year"), head=heads.get("items", {}).get(x["wikidata_id"])))
     extra = data.get("area_codes_source")  # spec 026: curated area codes (Anatel)
-    if extra:
-        session.merge(Source(id=extra["id"], title=extra["title"], url=extra["url"], license=extra["license"],
-                             retrieved_at=datetime.fromisoformat(extra["retrieved_at"])))
+    for src in ([extra] if extra else []) + extra_sources:
+        session.merge(Source(id=src["id"], title=src["title"], url=src["url"], license=src["license"],
+                             retrieved_at=datetime.fromisoformat(src["retrieved_at"])))
     session.flush()
     return len(seen)
 

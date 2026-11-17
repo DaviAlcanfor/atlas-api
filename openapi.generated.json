@@ -4739,6 +4739,26 @@
             },
             "type": "array",
             "title": "Area Codes"
+          },
+          "hdi": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SubdivisionHdi"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "head": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SubdivisionHead"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -4753,6 +4773,78 @@
           "area_codes"
         ],
         "title": "Subdivision"
+      },
+      "SubdivisionHdi": {
+        "properties": {
+          "value": {
+            "type": "number",
+            "title": "Value"
+          },
+          "year": {
+            "type": "integer",
+            "title": "Year"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value",
+          "year"
+        ],
+        "title": "SubdivisionHdi"
+      },
+      "SubdivisionHead": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "office": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Office"
+          },
+          "since": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Since"
+          },
+          "wikidata_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Wikidata Id"
+          },
+          "source_id": {
+            "type": "string",
+            "title": "Source Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "office",
+          "since",
+          "wikidata_id",
+          "source_id"
+        ],
+        "title": "SubdivisionHead"
       },
       "SubdivisionList": {
         "properties": {

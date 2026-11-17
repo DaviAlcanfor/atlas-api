@@ -100,6 +100,8 @@ from atlas_api.schemas import (
     Share,
     SnapshotInfo,
     Speakers,
+    SubdivisionHdi,
+    SubdivisionHead,
     SubdivisionList,
     SubdivisionPopulation,
     Wikipedia,
@@ -697,9 +699,14 @@ def list_subdivisions(s: Session, iso2: str) -> SubdivisionList:
         wikidata_id=x.wikidata_id, code=x.code, name=x.name, capital=x.capital, area_km2=x.area_km2,
         population=SubdivisionPopulation(value=x.population, year=x.population_year) if x.population is not None else None,
         flag=Image(url=x.flag_url, credit=x.flag_credit or "", license=x.flag_license or "") if x.flag_url else None,
-        area_codes=x.area_codes or [])
+        area_codes=x.area_codes or [],
+        hdi=SubdivisionHdi(value=x.hdi, year=x.hdi_year) if x.hdi is not None and x.hdi_year is not None else None,
+        head=SubdivisionHead.model_validate(x.head) if x.head else None)
         for x in rows]
-    return SubdivisionList(items=items, sources=_sources(s, {"wikidata", "anatel"} if iso2 == "BR" else {"wikidata"}) if items else [])  # Anatel table: Brazil only
+    ids = {"wikidata", "anatel"} if iso2 == "BR" else {"wikidata"}  # Anatel table: Brazil only
+    ids |= {"gdl-shdi"} if any(x.hdi is not None for x in rows) else set()
+    ids |= {x.head["source_id"] for x in rows if x.head}  # spec 024 phase 2 (CR-011)
+    return SubdivisionList(items=items, sources=_sources(s, ids) if items else [])
 
 
 # --- ideologies (spec 018) ------------------------------------------------------------------------------------------------
