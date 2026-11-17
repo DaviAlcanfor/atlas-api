@@ -395,7 +395,26 @@ Clients must show the BACI attribution with its version and update date (Etalab 
 date of the most recent update") and must show `label` VERBATIM (CC BY-ND: no shortening or rewording in the text; visual
 truncation with the full text available, e.g. a tooltip, is the client's call to confirm with the owner).
 
+## CR-011: subnational HDI and current head of each subdivision (spec 024 phase 2, 2026-11-17; spec approved 2026-11-12)
+**Applied 2026-11-17 as contract v1.9** (owner: "cola vc logo isso no que precisa").
+Additive, two optional fields on the existing `Subdivision` (absent or null = no data; old clients ignore them):
+```
+SubdivisionHdi  { value: number /* 0..1, 3 decimals */, year: int }
+SubdivisionHead { name: string, office: string|null /* pt-BR post name: "Governador", "Ministro-chefe", "Prefeito" */,
+                  since: string|null /* ISO date the holder took office */, wikidata_id: string|null /* the person */,
+                  source_id: string /* one of SubdivisionList.sources */ }
+Subdivision     += { hdi: SubdivisionHdi|null, head: SubdivisionHead|null }
+```
+`SubdivisionList.sources` adds `gdl-shdi` when any item has `hdi`, and the `source_id` of every `head` shown
+(`wikipedia-heads-br`, `wikipedia-heads-us`, `wikipedia-heads-in`: title carries the Wikipedia revision, url is its permalink).
+- HDI: Global Data Lab SHDI v10.2 as archived at the Radboud Data Repository (https://doi.org/10.34973/qbpx-by38, CC0 1.0),
+  latest year (2023). Only where a GDL region maps to exactly one subdivision by name AND population (see spec): 842 of 3,754.
+- Head: only BR, US and IN for now (Wikipedia lists of current holders, CC BY-SA 4.0, joined by Wikidata id). Other countries:
+  `head` = null (Wikidata is too stale, see spec). Clients should show `since` and the source; heads change between imports.
+Clients must credit "Global Data Lab (Smits & Permanyer), Radboud University" for `hdi` and link the Wikipedia source for `head`.
+
 ## CR-012: Atlas chatbot (spec 025, 2026-11-17; owner approved the spec 2026-11-17)
+**Applied 2026-11-17 as contract v1.10** (owner: "cola vc logo isso no que precisa").
 Additive, one POST endpoint (the API's first; it writes nothing, stores nothing). CR-011 is reserved for spec 024.
 ```
 ChatMessage { role: "user"|"assistant", content: string /* 1..4000 chars */ }

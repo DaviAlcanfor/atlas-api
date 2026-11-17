@@ -1,5 +1,5 @@
 # Atlas API contract v1 (FROZEN)
-Version: 1.8 (latest: v1.8 trade, see the end; base 1.2 additive over 1.1; part A = CR-003: languages_spoken, profile, economy, currencies; approved by the owner 2026-11-12)
+Version: 1.10 (latest: v1.10 chat, see the end; base 1.2 additive over 1.1; part A = CR-003: languages_spoken, profile, economy, currencies; approved by the owner 2026-11-12)
 
 Status: FROZEN. Neither the API agent nor the web agent may edit this file.
 If you find a problem, stop, describe it in `contract/CHANGE_REQUESTS.md`
@@ -319,3 +319,38 @@ GET /v1/countries/{iso2}/trade -> CountryTradeOut      Unknown iso2 -> 404; no B
 Partners may be ISO2 codes outside `/v1/countries` (e.g. HK); TW -> 404 (BACI has no ISO2 for it). Sources always `baci`
 (Etalab 2.0) and `mdic-sh` (CC BY-ND 3.0). Clients must show the BACI attribution with version and update date, and `label`
 VERBATIM (no shortening or rewording of the text).
+
+## v1.9 (CR-011, applied 2026-11-17 on the owner's instruction "cola vc logo isso no que precisa"): subdivision HDI and head
+Additive, two optional fields on the existing `Subdivision` (absent or null = no data; old clients ignore them):
+```
+SubdivisionHdi  { value: number /* 0..1, 3 decimals */, year: int }
+SubdivisionHead { name: string, office: string|null /* pt-BR post name: "Governador", "Ministro-chefe", "Prefeito" */,
+                  since: string|null /* ISO date the holder took office */, wikidata_id: string|null /* the person */,
+                  source_id: string /* one of SubdivisionList.sources */ }
+Subdivision     += { hdi: SubdivisionHdi|null, head: SubdivisionHead|null }
+```
+`SubdivisionList.sources` adds `gdl-shdi` when any item has `hdi`, and the `source_id` of every `head` shown
+(`wikipedia-heads-br`, `wikipedia-heads-us`, `wikipedia-heads-in`: title carries the Wikipedia revision, url is its permalink).
+- HDI: Global Data Lab SHDI v10.2 as archived at the Radboud Data Repository (https://doi.org/10.34973/qbpx-by38, CC0 1.0),
+  latest year (2023). Only where a GDL region maps to exactly one subdivision by name AND population (see spec): 842 of 3,754.
+- Head: only BR, US and IN for now (Wikipedia lists of current holders, CC BY-SA 4.0, joined by Wikidata id). Other countries:
+  `head` = null (Wikidata is too stale, see spec). Clients should show `since` and the source; heads change between imports.
+Clients must credit "Global Data Lab (Smits & Permanyer), Radboud University" for `hdi` and link the Wikipedia source for `head`.
+
+## v1.10 (CR-012, applied 2026-11-17 on the owner's instruction): chatbot
+Additive, one POST endpoint (the API's first; it writes nothing, stores nothing). CR-011 is reserved for spec 024.
+```
+ChatMessage { role: "user"|"assistant", content: string /* 1..4000 chars */ }
+POST /v1/chat  body: { messages: ChatMessage[] /* 1..20, the last one role "user" */ }
+-> 200 text/event-stream, events in this order (each `data:` is one JSON object):
+   event "text"      { delta: string }                 /* 0..n, answer text in pieces (markdown; internal links like /pais/br) */
+   event "tool"      { name: string, args: object }    /* 0..n, a tool the model called (for a "consultando..." hint) */
+   event "countries" { iso2: string[] }                /* 0..1, countries the answer links to, in order of appearance */
+   event "done"      { sources: Source[] }             /* last event on success: sources of the data the tools returned */
+   event "error"     { message: string }               /* last event on failure (pt-BR), instead of "done" */
+422 problem+json: bad body.  429 problem+json (pt-BR detail): over 20 questions/hour per IP or 300/day in total.
+503 problem+json: chat not configured on the server.   Not cached (Cache-Control: no-store); no ETag.
+```
+Model: `openai/gpt-6-luna` only (owner's decision), via the Vercel AI Gateway; the browser keeps the history and resends it.
+Limits are env-overridable (CHAT_PER_IP_HOUR, CHAT_PER_DAY, CHAT_MAX_TOOL_ROUNDS=6, CHAT_MAX_OUTPUT_TOKENS=1200).
+Clients must show the answer as AI-generated and list `done.sources`.
