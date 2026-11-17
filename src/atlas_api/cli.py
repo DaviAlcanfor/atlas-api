@@ -3,6 +3,9 @@
 import-subdivisions: only the subdivisions table and its source rows, from data_out/subdivisions.json (+ shdi.json, heads.json;
 spec 024 phase 2). import-facts does the same as part of everything else.
 
+import-live-events: only data_out/live_events.json (the 30-min job, spec 034), only live_events; no data_version bump.
+import-nobel: only data_out/nobel.json (etl nobel, spec 033), only nobel_prizes and its source row.
+
 import-trade: only data_out/trade.json (etl baci, spec 029), only country_trade and its source rows.
 
 import-news: only data_out/news.json (the 6-hourly job, spec 008), only the news tables.
@@ -23,14 +26,21 @@ from atlas_api import chat_logs
 from atlas_api.config import get_settings
 from atlas_api.db.models import CountryFacts, Polity
 from atlas_api.db.session import make_engine
-from atlas_api.facts import import_facts, import_fx, import_news, import_subdivisions, import_trade
+from atlas_api.facts import (
+    import_facts,
+    import_fx,
+    import_live_events,
+    import_news,
+    import_nobel,
+    import_subdivisions,
+    import_trade,
+)
 from atlas_api.importer import ContentError, import_content, set_version
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(prog="atlas_api.cli")
-    ap.add_argument("command", choices=["import-content", "import-facts", "import-fx", "import-news", "import-trade",
-                                        "import-subdivisions", "currency-codes", "chat-logs"])
+    ap.add_argument("command", choices=["import-content", "import-facts", "import-fx", "import-news", "import-trade", "import-live-events", "import-nobel", "import-subdivisions", "currency-codes", "chat-logs"])
     ap.add_argument("--content", default="content", type=Path)
     ap.add_argument("--data-out", default="data_out", type=Path)
     ap.add_argument("--since", default="1d", help="chat-logs: window, e.g. 1d or 6h")
@@ -66,6 +76,12 @@ def main() -> int:
                 trade = args.data_out / "trade.json"
                 summary = {"countries_with_trade": import_trade(session, trade),
                            "data_version": set_version(session, "trade", hashlib.sha256(trade.read_bytes()).hexdigest()[:16])}
+            elif args.command == "import-live-events":
+                summary = import_live_events(session, args.data_out / "live_events.json")
+            elif args.command == "import-nobel":
+                nobel = args.data_out / "nobel.json"
+                summary = {"nobel_prizes_imported": import_nobel(session, nobel),
+                           "data_version": set_version(session, "nobel", hashlib.sha256(nobel.read_bytes()).hexdigest()[:16])}
             elif args.command == "import-subdivisions":
                 files = [args.data_out / n for n in ("subdivisions.json", "shdi.json", "heads.json")]
                 known = set(session.scalars(select(Polity.iso2).where(Polity.iso2.is_not(None))))

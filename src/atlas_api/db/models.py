@@ -9,6 +9,7 @@ from typing import Any
 from sqlalchemy import (
     CHAR,
     BigInteger,
+    Boolean,
     CheckConstraint,
     Date,
     DateTime,
@@ -587,3 +588,59 @@ class ChatToolLog(Base):
     tool: Mapped[str] = mapped_column(Text)
     args: Mapped[dict[str, Any]] = mapped_column(JSONB)
     ok: Mapped[bool] = mapped_column()
+
+
+class LiveEvent(Base):
+    """spec 034: one recent event (`etl live-events` every 30 min -> `import-live-events`); rows older than 7 days are dropped."""
+
+    __tablename__ = "live_events"
+
+    id: Mapped[str] = mapped_column(Text, primary_key=True)
+    source: Mapped[str] = mapped_column(Text)
+    type: Mapped[str] = mapped_column(Text)
+    lat: Mapped[float] = mapped_column(Float)
+    lng: Mapped[float] = mapped_column(Float)
+    magnitude: Mapped[float | None] = mapped_column(Float)
+    magnitude_unit: Mapped[str | None] = mapped_column(Text)
+    title: Mapped[str] = mapped_column(Text)
+    url: Mapped[str | None] = mapped_column(Text)
+    time: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+class NobelPrize(Base):
+    """spec 033: one prize of one laureate (`etl nobel` -> `import-nobel`). origin = country (today's borders) of birth, or
+    of founding for an organization; affiliations = [{name, city, iso2}] at the time of the award."""
+
+    __tablename__ = "nobel_prizes"
+
+    laureate_id: Mapped[str] = mapped_column(Text, primary_key=True)
+    year: Mapped[int] = mapped_column(Integer, primary_key=True)
+    category: Mapped[str] = mapped_column(Text, primary_key=True)
+    name: Mapped[str] = mapped_column(Text)
+    kind: Mapped[str] = mapped_column(Text)
+    motivation: Mapped[str | None] = mapped_column(Text)
+    portion: Mapped[str | None] = mapped_column(Text)
+    origin_iso2: Mapped[str | None] = mapped_column(CHAR(2), index=True)
+    affiliations: Mapped[list[dict[str, Any]]] = mapped_column(JSONB)
+    wikipedia_url: Mapped[str | None] = mapped_column(Text)
+    url: Mapped[str] = mapped_column(Text)
+class Organization(Base):
+    """spec 032: a curated organization (content/organizations.yaml); its id is a glossary term of kind membership."""
+
+    __tablename__ = "organizations"
+
+    id: Mapped[str] = mapped_column(Text, ForeignKey("glossary_terms.id"), primary_key=True)
+    wikidata_qid: Mapped[str | None] = mapped_column(Text)
+    note: Mapped[str | None] = mapped_column(Text)
+    sources: Mapped[list[dict[str, str | None]]] = mapped_column(JSONB)  # contract Source objects
+
+
+class OrganizationMember(Base):
+    """spec 032: one membership period (a country that left and rejoined has two rows). Dates keep the source's precision."""
+
+    __tablename__ = "organization_members"
+
+    org_id: Mapped[str] = mapped_column(Text, ForeignKey("organizations.id", ondelete="CASCADE"), primary_key=True)
+    iso2: Mapped[str] = mapped_column(CHAR(2), primary_key=True, index=True)
+    joined: Mapped[str] = mapped_column(Text, primary_key=True)
+    left: Mapped[str | None] = mapped_column(Text)
+    suspended: Mapped[bool] = mapped_column(Boolean, server_default="false")
+    note: Mapped[str | None] = mapped_column(Text)
