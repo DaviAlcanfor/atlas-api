@@ -12,6 +12,7 @@ from atlas_api.schemas import (
     CountryHistory,
     CountryIdeologies,
     CountryList,
+    CountryNobel,
     CountryProfile,
     CountryTradeOut,
     LeaderList,
@@ -116,3 +117,10 @@ def get_trade(db: DbSession, iso2: Annotated[str, Path(pattern=r"^[A-Z]{2}$")]) 
     if t is None:
         raise NotFoundError(f"No BACI trade data for {iso2}")
     return t
+
+
+@router.get("/{iso2}/nobel")  # spec 033, CR-014 proposal
+def get_nobel(db: DbSession, iso2: Annotated[str, Path(pattern=r"^[A-Z]{2}$")]) -> CountryNobel:
+    if not queries.country_exists(db, iso2):
+        raise NotFoundError(f"Unknown country {iso2}")
+    return queries.country_nobel(db, iso2)

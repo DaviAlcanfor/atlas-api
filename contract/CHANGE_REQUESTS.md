@@ -431,3 +431,20 @@ POST /v1/chat  body: { messages: ChatMessage[] /* 1..20, the last one role "user
 Model: `openai/gpt-6-luna` only (owner's decision), via the Vercel AI Gateway; the browser keeps the history and resends it.
 Limits are env-overridable (CHAT_PER_IP_HOUR, CHAT_PER_DAY, CHAT_MAX_TOOL_ROUNDS=6, CHAT_MAX_OUTPUT_TOKENS=1200).
 Clients must show the answer as AI-generated and list `done.sources`.
+
+## CR-014: Nobel Prize laureates per country (spec 033, 2026-11-17; owner: "planeja como fazer o resto e dale")
+Additive, one read-only endpoint.
+```
+NobelAffiliation { name: string, city: string|null, iso2: string|null /* today's borders; null = not a /v1/countries country */ }
+NobelPrize   { laureate_id: string, name: string, kind: "person"|"organization", year: int,
+               category: "physics"|"chemistry"|"medicine"|"literature"|"peace"|"economics",
+               motivation: string|null /* official English text of the Nobel Prize API, verbatim, never translated */,
+               portion: string|null /* "1" | "1/2" | "1/3" | "1/4" */,
+               born_here: boolean /* born (organization: founded) in this country, today's borders */,
+               affiliated_here: boolean /* an affiliation at the time of the award is in this country */,
+               affiliations: NobelAffiliation[], wikipedia_url: string|null, url: string /* nobelprize.org laureate page */ }
+CountryNobel { born: int, affiliated: int /* prize counts */, items: NobelPrize[] /* newest first */, sources: Source[] }
+GET /v1/countries/{iso2}/nobel -> CountryNobel   Unknown iso2 -> 404; no laureate -> items [], counts 0, sources [].
+```
+Data: Nobel Prize API v2.1 (CC0 1.0), `etl nobel` + `import-nobel` (manual, yearly). Source id `nobelprize`. Its terms: do not
+alter the data; no Nobel name/logo implying endorsement; citing the API as the source is encouraged (clients show `sources`).
