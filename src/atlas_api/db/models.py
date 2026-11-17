@@ -593,6 +593,23 @@ class LiveEvent(Base):
     title: Mapped[str] = mapped_column(Text)
     url: Mapped[str | None] = mapped_column(Text)
     time: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+class NobelPrize(Base):
+    """spec 033: one prize of one laureate (`etl nobel` -> `import-nobel`). origin = country (today's borders) of birth, or
+    of founding for an organization; affiliations = [{name, city, iso2}] at the time of the award."""
+
+    __tablename__ = "nobel_prizes"
+
+    laureate_id: Mapped[str] = mapped_column(Text, primary_key=True)
+    year: Mapped[int] = mapped_column(Integer, primary_key=True)
+    category: Mapped[str] = mapped_column(Text, primary_key=True)
+    name: Mapped[str] = mapped_column(Text)
+    kind: Mapped[str] = mapped_column(Text)
+    motivation: Mapped[str | None] = mapped_column(Text)
+    portion: Mapped[str | None] = mapped_column(Text)
+    origin_iso2: Mapped[str | None] = mapped_column(CHAR(2), index=True)
+    affiliations: Mapped[list[dict[str, Any]]] = mapped_column(JSONB)
+    wikipedia_url: Mapped[str | None] = mapped_column(Text)
+    url: Mapped[str] = mapped_column(Text)
 class Organization(Base):
     """spec 032: a curated organization (content/organizations.yaml); its id is a glossary term of kind membership."""
 
