@@ -622,6 +622,8 @@ class NobelPrize(Base):
     affiliations: Mapped[list[dict[str, Any]]] = mapped_column(JSONB)
     wikipedia_url: Mapped[str | None] = mapped_column(Text)
     url: Mapped[str] = mapped_column(Text)
+
+
 class Organization(Base):
     """spec 032: a curated organization (content/organizations.yaml); its id is a glossary term of kind membership."""
 
