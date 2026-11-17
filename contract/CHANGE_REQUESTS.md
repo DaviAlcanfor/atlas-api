@@ -431,3 +431,22 @@ POST /v1/chat  body: { messages: ChatMessage[] /* 1..20, the last one role "user
 Model: `openai/gpt-6-luna` only (owner's decision), via the Vercel AI Gateway; the browser keeps the history and resends it.
 Limits are env-overridable (CHAT_PER_IP_HOUR, CHAT_PER_DAY, CHAT_MAX_TOOL_ROUNDS=6, CHAT_MAX_OUTPUT_TOKENS=1200).
 Clients must show the answer as AI-generated and list `done.sources`.
+
+## CR-013: international organizations with join/leave dates (spec 032, 2026-11-17; owner: "planeja como fazer o resto e dale")
+Additive, two read-only endpoints; no field of an existing type changes.
+```
+OrganizationMember { iso2: string, joined: string /* ISO 8601 with the source's precision: "YYYY" | "YYYY-MM" | "YYYY-MM-DD" */,
+                     left: string|null /* same format; null = still a member */, suspended: boolean /* still a member */,
+                     note: string|null }
+Organization       { id: string /* = GlossaryTerm.id of kind "membership" */, label: string, short: string, icon: string|null,
+                     wikidata_qid: string|null, note: string|null,
+                     members: OrganizationMember[] /* every period, current and former; by joined, then iso2 */,
+                     sources: Source[] }
+CountryMembership  { id: string, label: string, joined: string, left: string|null, suspended: boolean, note: string|null }
+GET /v1/organizations                  -> { items: Organization[] }   by label
+GET /v1/countries/{iso2}/organizations -> { items: CountryMembership[], sources: Source[] }
+     current first (by label), then former (latest `left` first). Unknown iso2 -> 404; a country in none -> items [].
+```
+Data: curated `content/organizations.yaml` (12 organizations, one Wikipedia revision permalink each, CC BY-SA 4.0, facts
+only), written by `import-content`. `CountryDetail.memberships` keeps its type; for those 12 labels it now follows the
+curated list (current members, suspended included) instead of Wikidata. Clients must show `sources` (Wikipedia attribution).
