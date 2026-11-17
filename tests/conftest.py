@@ -22,6 +22,7 @@ TEST_URL = make_url(os.environ.get("TEST_DATABASE_URL") or get_settings().databa
 
 def _fresh_database(name: str) -> Engine:
     """Drop + create database `name` (localhost only) and migrate it to head."""
+    name = os.environ.get("TEST_DB_PREFIX", "") + name  # lets parallel sessions use distinct databases
     url = TEST_URL.set(database=name)
     assert url.host in ("localhost", "127.0.0.1"), "test databases must be local"
     assert name.endswith("_test")
