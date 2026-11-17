@@ -1395,6 +1395,76 @@
         }
       }
     },
+    "/v1/live/events": {
+      "get": {
+        "tags": [
+          "live"
+        ],
+        "summary": "Live Events",
+        "operationId": "live_events_v1_live_events_get",
+        "parameters": [
+          {
+            "name": "since",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "ISO 8601; default and minimum: 7 days ago",
+              "title": "Since"
+            },
+            "description": "ISO 8601; default and minimum: 7 days ago"
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "comma-separated event types",
+              "title": "Type"
+            },
+            "description": "comma-separated event types"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LiveEventList"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/chat": {
       "post": {
         "tags": [
@@ -3361,6 +3431,137 @@
           "kind"
         ],
         "title": "Link"
+      },
+      "LiveEventList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/LiveEventOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "fetched_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fetched At"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/Source"
+            },
+            "type": "array",
+            "title": "Sources"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "fetched_at",
+          "sources"
+        ],
+        "title": "LiveEventList"
+      },
+      "LiveEventOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "earthquake",
+              "wildfire",
+              "severe_storm",
+              "volcano",
+              "flood",
+              "landslide",
+              "dust_haze",
+              "temp_extreme",
+              "drought",
+              "snow"
+            ],
+            "title": "Type"
+          },
+          "lat": {
+            "type": "number",
+            "title": "Lat"
+          },
+          "lng": {
+            "type": "number",
+            "title": "Lng"
+          },
+          "magnitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Magnitude"
+          },
+          "magnitude_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Magnitude Unit"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          },
+          "time": {
+            "type": "string",
+            "title": "Time"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "usgs",
+              "eonet"
+            ],
+            "title": "Source"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "type",
+          "lat",
+          "lng",
+          "magnitude",
+          "magnitude_unit",
+          "title",
+          "url",
+          "time",
+          "source"
+        ],
+        "title": "LiveEventOut"
       },
       "Marker": {
         "properties": {

@@ -8,6 +8,7 @@ from etl.baci import pipeline as baci
 from etl.cliopatria import pipeline as cliopatria
 from etl.fx import pipeline as fx
 from etl.gdl import pipeline as gdl
+from etl.live import pipeline as live
 from etl.news import pipeline as news
 from etl.pantheon import pipeline as pantheon
 from etl.restcountries import pipeline as restcountries
@@ -29,7 +30,7 @@ COMMANDS: dict[str, Callable[[], None]] = {
     "wikidata-ideologies": wikidata_ideologies.run, "wikidata-subdivisions": wikidata_subdivisions.run, "pantheon": pantheon.run,
     "wikidata-languages": wikidata_languages.run, "undp": undp.run, "fx": fx.run,
     "wikipedia-history": wikipedia_history.run, "cliopatria": cliopatria.run, "ai-summaries": ai_summaries.run, "news": news.run, "baci": baci.run,
-    "gdl-shdi": gdl.run, "subdivision-heads": wikipedia_heads.run,
+    "gdl-shdi": gdl.run, "subdivision-heads": wikipedia_heads.run, "live-events": live.run,
 }
 
 

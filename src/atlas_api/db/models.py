@@ -575,3 +575,20 @@ class IdeologyParty(Base):
     party_id: Mapped[str] = mapped_column(Text, primary_key=True)
     name: Mapped[str] = mapped_column(Text)
     ord: Mapped[int] = mapped_column(Integer)
+
+
+class LiveEvent(Base):
+    """spec 034: one recent event (`etl live-events` every 30 min -> `import-live-events`); rows older than 7 days are dropped."""
+
+    __tablename__ = "live_events"
+
+    id: Mapped[str] = mapped_column(Text, primary_key=True)
+    source: Mapped[str] = mapped_column(Text)
+    type: Mapped[str] = mapped_column(Text)
+    lat: Mapped[float] = mapped_column(Float)
+    lng: Mapped[float] = mapped_column(Float)
+    magnitude: Mapped[float | None] = mapped_column(Float)
+    magnitude_unit: Mapped[str | None] = mapped_column(Text)
+    title: Mapped[str] = mapped_column(Text)
+    url: Mapped[str | None] = mapped_column(Text)
+    time: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)

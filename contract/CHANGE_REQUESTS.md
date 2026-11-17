@@ -431,3 +431,20 @@ POST /v1/chat  body: { messages: ChatMessage[] /* 1..20, the last one role "user
 Model: `openai/gpt-6-luna` only (owner's decision), via the Vercel AI Gateway; the browser keeps the history and resends it.
 Limits are env-overridable (CHAT_PER_IP_HOUR, CHAT_PER_DAY, CHAT_MAX_TOOL_ROUNDS=6, CHAT_MAX_OUTPUT_TOKENS=1200).
 Clients must show the answer as AI-generated and list `done.sources`.
+
+## CR-015: "acontecendo agora", recent natural events (spec 034, 2026-11-17; owner: "planeja como fazer o resto e dale")
+Additive, one read-only endpoint, refreshed every 30 min by `.github/workflows/live-events.yml`.
+```
+LiveEvent { id: string /* "usgs:<id>" | "eonet:<id>" */,
+            type: "earthquake"|"wildfire"|"severe_storm"|"volcano"|"flood"|"landslide"|"dust_haze"|"temp_extreme"|"drought"|"snow",
+            lat: number, lng: number, magnitude: number|null,
+            magnitude_unit: string|null /* USGS magType ("mww", "mb"...) or EONET unit ("kts", "acres"...) */,
+            title: string /* verbatim from the source, English */, url: string|null /* event page at the source */,
+            time: string /* ISO 8601 UTC; EONET: date of its latest position */, source: "usgs"|"eonet" }
+GET /v1/live/events?since=&type= -> { items: LiveEvent[] /* newest first */, fetched_at: string|null, sources: Source[] }
+     since: ISO 8601, default and floor 7 days ago; type: comma-separated LiveEvent.type values, unknown -> 422.
+     Exception to the caching rules: no ETag, not tied to data_version; Cache-Control "public, max-age=300".
+```
+Data: USGS M4.5+ past-week feed (U.S. public domain; credit "U.S. Geological Survey") and NASA EONET v3 (NASA content, not
+copyrighted in the US; "visualization and general information purposes only", not official). Retention 7 days.
+Clients must credit both and present EONET as informative.
