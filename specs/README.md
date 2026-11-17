@@ -30,6 +30,7 @@ Regras:
 | 025 | [Chatbot do Atlas](025-chatbot.md) | CR-012 | in progress (API em PR) |
 | 029 | [Do que vive a economia: setores, exportações, parceiros](029-economy-structure-trade.md) | fase 1: CR-009; fase 2: CR-010 | in progress (fase 2 da API em PR) |
 | 033 | [Prêmios Nobel por país](033-nobel.md) | CR-014 | in progress (API em PR) |
+| 032 | [Organizações com datas de entrada e saída](032-organizations.md) | CR-013 | in progress (API em PR) |
 
 001, 002, 013 e 014 são só do web. Plano de execução, checklist e avaliação de stack: `atlas-web/specs/PLAN.md` e `atlas-web/specs/ADR-001-stack.md`.
 

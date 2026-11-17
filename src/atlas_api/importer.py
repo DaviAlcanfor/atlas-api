@@ -9,6 +9,7 @@ content/
   glossary.yaml     {terms: [{id, kind, label, short, body, icon, sources[]}]} (spec 004)
   ideologies.yaml   same shape, kind: ideology, + wikidata: [Q-ids] for the ETL (spec 018); merged into the glossary
   regimes.yaml      read by the Wikidata ETL; here only checked: every regime_id needs a term
+  organizations.yaml  {term_id: {wikidata, source, note, members: [{iso2, joined, left, suspended, note}]}} (spec 032)
 
 An event with empty source_ids counts as UNVERIFIED in the summary.
 Idempotent: running twice on the same content changes nothing (same data_version).
@@ -19,6 +20,7 @@ delete by hand until this matters.
 import hashlib
 import itertools
 import json
+import re
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -37,6 +39,8 @@ from atlas_api.db.models import (
     EventSource,
     GlossaryTerm,
     Meta,
+    Organization,
+    OrganizationMember,
     Polity,
     PolityName,
     Source,
@@ -61,9 +65,10 @@ def load_content(root: Path) -> dict[str, Any]:
     glossary = _yaml(root / "glossary.yaml") if (root / "glossary.yaml").exists() else {}
     ideologies = _yaml(root / "ideologies.yaml") if (root / "ideologies.yaml").exists() else {}  # spec 018
     regimes = _yaml(root / "regimes.yaml") if (root / "regimes.yaml").exists() else {}
+    orgs = _yaml(root / "organizations.yaml") if (root / "organizations.yaml").exists() else {}  # spec 032
     return {"sources": sources or [], "succession": succ or [], "polities": polities,
             "glossary": [*((glossary or {}).get("terms") or []), *((ideologies or {}).get("terms") or [])],
-            "regime_ids": sorted((regimes or {}).get("labels") or {})}
+            "regime_ids": sorted((regimes or {}).get("labels") or {}), "organizations": orgs or {}}
 
 
 def _has_cycle(edges: list[tuple[str, str]]) -> bool:
@@ -152,6 +157,40 @@ def validate(content: dict[str, Any]) -> list[str]:
     for rid in content.get("regime_ids", []):
         if rid not in regime_terms:
             errs.append(f"regimes.yaml: regime_id {rid} has no glossary term (kind: regime)")
+    errs += _validate_organizations(content.get("organizations", {}), content["glossary"],
+                                    {p["iso2"] for p in content["polities"] if p.get("iso2")})
+    return errs
+
+
+ISO_DATE = re.compile(r"\d{4}(-\d\d(-\d\d)?)?")
+
+
+def _validate_organizations(orgs: dict[str, Any], glossary: list[dict[str, Any]], iso2s: set[str]) -> list[str]:
+    """spec 032: every org is a membership term, cites a source, and every period has a known iso2 and sane dates."""
+    errs: list[str] = []
+    terms = {t.get("id") for t in glossary if t.get("kind") == "membership"}
+    for oid, o in orgs.items():
+        if oid not in terms:
+            errs.append(f"organizations {oid}: no glossary term of kind membership with this id")
+        src = o.get("source") or {}
+        if not all(isinstance(src.get(k), str) and src[k] for k in ("title", "url", "license", "retrieved")):
+            errs.append(f"organizations {oid}: source needs title, url, license, retrieved")
+        seen: set[tuple[str, str]] = set()
+        for m in o.get("members") or []:
+            iso2, joined, left = m.get("iso2"), m.get("joined"), m.get("left")
+            where = f"organizations {oid} {iso2}"
+            if iso2 not in iso2s:
+                errs.append(f"{where}: unknown iso2 (quote it: NO is a YAML boolean)")
+            if not (isinstance(joined, str) and ISO_DATE.fullmatch(joined)):
+                errs.append(f"{where}: joined must be a quoted \"YYYY[-MM[-DD]]\" string")
+            elif left is not None and not (isinstance(left, str) and ISO_DATE.fullmatch(left) and left[:4] >= joined[:4]):
+                errs.append(f"{where}: left must be a quoted date, not before joined")
+            if (iso2, str(joined)) in seen:
+                errs.append(f"{where}: duplicate period {joined}")
+            seen.add((iso2, str(joined)))
+        open_ = [m.get("iso2") for m in o.get("members") or [] if m.get("left") is None]
+        if len(open_) != len(set(open_)):
+            errs.append(f"organizations {oid}: a country has two open periods")
     return errs
 
 
@@ -231,9 +270,25 @@ def import_content(session: Session, root: Path) -> dict[str, Any]:
             for x in t["sources"]]))
     session.flush()
 
+    # spec 032: organizations are rebuilt from content (nothing points at them).
+    session.execute(delete(OrganizationMember))
+    session.execute(delete(Organization))
+    session.flush()
+    members = 0
+    for oid, o in content["organizations"].items():
+        src = o["source"]
+        session.add(Organization(id=oid, wikidata_qid=o.get("wikidata"), note=o.get("note"), sources=[
+            {"id": f"organizations-{oid}", "title": src["title"], "url": src["url"], "license": src["license"],
+             "retrieved_at": src["retrieved"]}]))
+        for m in o.get("members") or []:
+            members += 1
+            session.add(OrganizationMember(org_id=oid, iso2=m["iso2"], joined=m["joined"], left=m.get("left"),
+                                           suspended=bool(m.get("suspended")), note=m.get("note")))
+    session.flush()
+
     blob = json.dumps(content, sort_keys=True, default=str, ensure_ascii=False)
     version = set_version(session, "content", hashlib.sha256(blob.encode()).hexdigest()[:16])
     return {"polities": len(ids), "events": events, "unverified_events": unverified,
             "sources": len(content["sources"]), "succession": len(content["succession"]),
-            "glossary_terms": len(content["glossary"]),
+            "glossary_terms": len(content["glossary"]), "organization_memberships": members,
             "data_version": version}

@@ -13,6 +13,7 @@ from atlas_api.schemas import (
     CountryIdeologies,
     CountryList,
     CountryNobel,
+    CountryOrganizations,
     CountryProfile,
     CountryTradeOut,
     LeaderList,
@@ -124,3 +125,8 @@ def get_nobel(db: DbSession, iso2: Annotated[str, Path(pattern=r"^[A-Z]{2}$")]) 
     if not queries.country_exists(db, iso2):
         raise NotFoundError(f"Unknown country {iso2}")
     return queries.country_nobel(db, iso2)
+@router.get("/{iso2}/organizations")  # spec 032, CR-013 proposal
+def get_organizations(db: DbSession, iso2: Annotated[str, Path(pattern=r"^[A-Z]{2}$")]) -> CountryOrganizations:
+    if not queries.country_exists(db, iso2):
+        raise NotFoundError(f"Unknown country {iso2}")
+    return queries.country_organizations(db, iso2)
