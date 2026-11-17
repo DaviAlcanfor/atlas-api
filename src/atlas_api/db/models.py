@@ -575,3 +575,15 @@ class IdeologyParty(Base):
     party_id: Mapped[str] = mapped_column(Text, primary_key=True)
     name: Mapped[str] = mapped_column(Text)
     ord: Mapped[int] = mapped_column(Integer)
+
+
+class ChatToolLog(Base):
+    """spec 038: one row per tool call of /v1/chat. Never the user's text, the answer text or an IP; kept 14 days."""
+
+    __tablename__ = "chat_tool_logs"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    ts: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), index=True)
+    tool: Mapped[str] = mapped_column(Text)
+    args: Mapped[dict[str, Any]] = mapped_column(JSONB)
+    ok: Mapped[bool] = mapped_column()
