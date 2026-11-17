@@ -359,6 +359,7 @@ Refreshed every 6 h (`.github/workflows/news.yml`); retention 30 days; the impor
 Clients must cite and link the GDELT Project (its terms: "any use or redistribution of the data must include a citation").
 
 ## CR-009: what the economy lives on (spec 029 phase 1, 2026-11-15; owner: "aprovado tudo")
+**Applied 2026-11-17 as contract v1.7** (owner: "cola vc logo isso no que precisa").
 Additive. One more profile group; nothing else changes.
 ```
 ProfileGroup.id: "life"|"society"|"income"|"environment"|"economy"
@@ -373,6 +374,7 @@ Source: World Bank WDI (CC BY 4.0), same ETL as the other indicators. The same 1
 **Deploy order**: clients validate `ProfileGroup.id` as a closed enum, so the web must accept "economy" BEFORE the API serves it.
 
 ## CR-010: what a country exports and who it trades with (spec 029 phase 2, 2026-11-16; owner: "aprovado tudo" 2026-11-15)
+**Applied 2026-11-17 as contract v1.8** (owner: "cola vc logo isso no que precisa").
 Additive, one read-only endpoint:
 ```
 TradeProduct    { hs: string /* HS 2022 heading, 4 digits */, label: string /* pt-BR, verbatim */,

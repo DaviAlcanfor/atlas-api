@@ -1,5 +1,5 @@
 # Atlas API contract v1 (FROZEN)
-Version: 1.2 (additive over 1.1; part A = CR-003: languages_spoken, profile, economy, currencies; approved by the owner 2026-11-12)
+Version: 1.8 (latest: v1.8 trade, see the end; base 1.2 additive over 1.1; part A = CR-003: languages_spoken, profile, economy, currencies; approved by the owner 2026-11-12)
 
 Status: FROZEN. Neither the API agent nor the web agent may edit this file.
 If you find a problem, stop, describe it in `contract/CHANGE_REQUESTS.md`
@@ -294,3 +294,28 @@ GET /v1/news?region=&type=&lang=&country=&min_p=&limit=&before= -> NewsList   (m
 GET /v1/countries/{iso2}/news?limit= -> NewsList                                (limit 20; unknown iso2 404)
 ```
 Every news item must be shown with a citation and link to the GDELT Project.
+
+## v1.7 (CR-009, applied 2026-11-17 on the owner's instruction "cola vc logo isso"): economy profile group
+```
+ProfileGroup.id: "life"|"society"|"income"|"environment"|"economy"
+GET /v1/countries/{iso2}/profile -> always the 5 groups, in this order. "economy" = NV.AGR.TOTL.ZS, NV.IND.TOTL.ZS,
+     NV.IND.MANF.ZS, NV.SRV.TOTL.ZS (% of GDP), NY.GDP.PETR.RT.ZS, NY.GDP.TOTL.RT.ZS (rents, % of GDP),
+     TX.VAL.FUEL.ZS.UN, TX.VAL.FOOD.ZS.UN, TX.VAL.AGRI.ZS.UN, TX.VAL.MMTL.ZS.UN, TX.VAL.MANF.ZS.UN
+     (% of merchandise exports), TX.VAL.TECH.MF.ZS (% of manufactured exports). Same ProfileIndicator shape and rules
+     (no data for the country = the indicator is left out of the group).
+```
+Source: World Bank WDI (CC BY 4.0). Clients must accept "economy" before the API serves it.
+
+## v1.8 (CR-010, applied 2026-11-17 on the owner's instruction "cola vc logo isso"): trade
+```
+TradeProduct    { hs: string /* HS 2022 heading, 4 digits */, label: string /* pt-BR, verbatim */,
+                  value_usd: number, share: number /* of exports_usd, 0..1 */ }
+TradePartner    { iso2: string, value_usd: number, share: number /* of exports_usd (destinations) or imports_usd (origins), 0..1 */ }
+CountryTradeOut { year: int, exports_usd: number, imports_usd: number /* goods only, current USD */,
+                  top_exports: TradeProduct[] /* up to 10 */, top_destinations: TradePartner[] /* up to 10 */,
+                  top_origins: TradePartner[] /* up to 10 */, sources: Source[] }
+GET /v1/countries/{iso2}/trade -> CountryTradeOut      Unknown iso2 -> 404; no BACI data for the country -> 404.
+```
+Partners may be ISO2 codes outside `/v1/countries` (e.g. HK); TW -> 404 (BACI has no ISO2 for it). Sources always `baci`
+(Etalab 2.0) and `mdic-sh` (CC BY-ND 3.0). Clients must show the BACI attribution with version and update date, and `label`
+VERBATIM (no shortening or rewording of the text).
