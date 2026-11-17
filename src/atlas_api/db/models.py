@@ -578,6 +578,18 @@ class IdeologyParty(Base):
     ord: Mapped[int] = mapped_column(Integer)
 
 
+class ChatToolLog(Base):
+    """spec 038: one row per tool call of /v1/chat. Never the user's text, the answer text or an IP; kept 14 days."""
+
+    __tablename__ = "chat_tool_logs"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    ts: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), index=True)
+    tool: Mapped[str] = mapped_column(Text)
+    args: Mapped[dict[str, Any]] = mapped_column(JSONB)
+    ok: Mapped[bool] = mapped_column()
+
+
 class LiveEvent(Base):
     """spec 034: one recent event (`etl live-events` every 30 min -> `import-live-events`); rows older than 7 days are dropped."""
 
@@ -610,6 +622,8 @@ class NobelPrize(Base):
     affiliations: Mapped[list[dict[str, Any]]] = mapped_column(JSONB)
     wikipedia_url: Mapped[str | None] = mapped_column(Text)
     url: Mapped[str] = mapped_column(Text)
+
+
 class Organization(Base):
     """spec 032: a curated organization (content/organizations.yaml); its id is a glossary term of kind membership."""
 

@@ -22,6 +22,7 @@ from pathlib import Path
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from atlas_api import chat_logs
 from atlas_api.config import get_settings
 from atlas_api.db.models import CountryFacts, Polity
 from atlas_api.db.session import make_engine
@@ -39,9 +40,10 @@ from atlas_api.importer import ContentError, import_content, set_version
 
 def main() -> int:
     ap = argparse.ArgumentParser(prog="atlas_api.cli")
-    ap.add_argument("command", choices=["import-content", "import-facts", "import-fx", "import-news", "import-trade", "import-live-events", "import-nobel", "import-subdivisions", "currency-codes"])
+    ap.add_argument("command", choices=["import-content", "import-facts", "import-fx", "import-news", "import-trade", "import-live-events", "import-nobel", "import-subdivisions", "currency-codes", "chat-logs"])
     ap.add_argument("--content", default="content", type=Path)
     ap.add_argument("--data-out", default="data_out", type=Path)
+    ap.add_argument("--since", default="1d", help="chat-logs: window, e.g. 1d or 6h")
     args = ap.parse_args()
     engine = make_engine(get_settings().database_url)
     if args.command == "currency-codes":
@@ -49,6 +51,14 @@ def main() -> int:
             codes = {code for cs in session.scalars(select(CountryFacts.currencies)) for c in cs or []
                      if (code := c.get("code")) and re.fullmatch(r"[A-Z]{3}", code)}  # ISO 4217 only (Wikidata has stray values)
         print("\n".join(sorted(codes)))
+        return 0
+    if args.command == "chat-logs":
+        with Session(engine) as session:
+            res = chat_logs.summary(session, chat_logs.parse_since(args.since))
+        print(f"tool calls in the last {args.since}: {res['calls']} ({res['errors']} with error)")
+        for label, rows in (("per tool", res["per_tool"]), ("top countries", res["top_countries"])):
+            print(f"{label}:")
+            print(*[f"  {k}: {n}" for k, n in rows] or ["  (none)"], sep="\n")
         return 0
     try:
         with Session(engine) as session, session.begin():  # one transaction
