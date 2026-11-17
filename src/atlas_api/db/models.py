@@ -578,6 +578,21 @@ class IdeologyParty(Base):
     ord: Mapped[int] = mapped_column(Integer)
 
 
+class LiveEvent(Base):
+    """spec 034: one recent event (`etl live-events` every 30 min -> `import-live-events`); rows older than 7 days are dropped."""
+
+    __tablename__ = "live_events"
+
+    id: Mapped[str] = mapped_column(Text, primary_key=True)
+    source: Mapped[str] = mapped_column(Text)
+    type: Mapped[str] = mapped_column(Text)
+    lat: Mapped[float] = mapped_column(Float)
+    lng: Mapped[float] = mapped_column(Float)
+    magnitude: Mapped[float | None] = mapped_column(Float)
+    magnitude_unit: Mapped[str | None] = mapped_column(Text)
+    title: Mapped[str] = mapped_column(Text)
+    url: Mapped[str | None] = mapped_column(Text)
+    time: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
 class NobelPrize(Base):
     """spec 033: one prize of one laureate (`etl nobel` -> `import-nobel`). origin = country (today's borders) of birth, or
     of founding for an organization; affiliations = [{name, city, iso2}] at the time of the award."""

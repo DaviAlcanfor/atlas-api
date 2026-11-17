@@ -35,6 +35,7 @@ from atlas_api.db.models import (
     IndicatorLatest,
     IndicatorStat,
     Leader,
+    LiveEvent,
     Meta,
     NewsItem,
     NewsItemCountry,
@@ -83,6 +84,8 @@ from atlas_api.schemas import (
     Language,
     LanguageSpoken,
     Link,
+    LiveEventList,
+    LiveEventOut,
     Marker,
     NamePeriod,
     NewsItemOut,
@@ -914,6 +917,20 @@ def list_news(s: Session, *, region: str | None = None, event_type: str | None =
         sources=_sources(s, {"gdelt"}) if page else [])
 
 
+# --- live events (spec 034) ----------------------------------------------------------------------------------------------
+def list_live_events(s: Session, since: datetime, types: list[str]) -> LiveEventList:
+    q = select(LiveEvent).where(LiveEvent.time >= since)
+    if types:
+        q = q.where(LiveEvent.type.in_(types))
+    rows = list(s.scalars(q.order_by(LiveEvent.time.desc(), LiveEvent.id)))
+    fetched = s.get(Meta, "live_fetched_at")
+    return LiveEventList(
+        items=[LiveEventOut.model_validate({
+            "id": r.id, "type": r.type, "lat": r.lat, "lng": r.lng, "magnitude": r.magnitude,
+            "magnitude_unit": r.magnitude_unit, "title": r.title, "url": r.url, "time": _ts(r.time) or "",
+            "source": r.source}) for r in rows],
+        fetched_at=fetched.value if fetched else None,
+        sources=_sources(s, {r.source for r in rows}))
 # --- Nobel (spec 033) ----------------------------------------------------------------------------------------------------
 def country_nobel(s: Session, iso2: str) -> CountryNobel:
     rows = list(s.scalars(select(NobelPrize).where(

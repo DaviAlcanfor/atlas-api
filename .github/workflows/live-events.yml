@@ -1,0 +1,31 @@
+# "Acontecendo agora" (spec 034), every 30 minutes: USGS earthquakes (M4.5+, past week) + NASA EONET natural events ->
+# production. Imports ONLY data_out/live_events.json (`atlas_api.cli import-live-events`, table live_events; keeps 7 days).
+# Needs the repository secret DATABASE_URL (Supabase session pooler, postgresql+psycopg://...), the same one news.yml uses.
+name: live-events
+
+on:
+  schedule:
+    - cron: "7,37 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: live-events
+  cancel-in-progress: false
+
+jobs:
+  live-events:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      PYTHONPATH: src
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+      - run: uv sync --no-dev --group etl
+      - name: Fetch USGS + EONET
+        run: uv run python -m etl live-events
+      - name: Import into production
+        run: uv run python -m atlas_api.cli import-live-events
