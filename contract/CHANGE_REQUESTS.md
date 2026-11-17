@@ -359,6 +359,7 @@ Refreshed every 6 h (`.github/workflows/news.yml`); retention 30 days; the impor
 Clients must cite and link the GDELT Project (its terms: "any use or redistribution of the data must include a citation").
 
 ## CR-009: what the economy lives on (spec 029 phase 1, 2026-11-15; owner: "aprovado tudo")
+**Applied 2026-11-17 as contract v1.7** (owner: "cola vc logo isso no que precisa").
 Additive. One more profile group; nothing else changes.
 ```
 ProfileGroup.id: "life"|"society"|"income"|"environment"|"economy"
@@ -373,6 +374,7 @@ Source: World Bank WDI (CC BY 4.0), same ETL as the other indicators. The same 1
 **Deploy order**: clients validate `ProfileGroup.id` as a closed enum, so the web must accept "economy" BEFORE the API serves it.
 
 ## CR-010: what a country exports and who it trades with (spec 029 phase 2, 2026-11-16; owner: "aprovado tudo" 2026-11-15)
+**Applied 2026-11-17 as contract v1.8** (owner: "cola vc logo isso no que precisa").
 Additive, one read-only endpoint:
 ```
 TradeProduct    { hs: string /* HS 2022 heading, 4 digits */, label: string /* pt-BR, verbatim */,
@@ -393,19 +395,20 @@ Clients must show the BACI attribution with its version and update date (Etalab 
 date of the most recent update") and must show `label` VERBATIM (CC BY-ND: no shortening or rewording in the text; visual
 truncation with the full text available, e.g. a tooltip, is the client's call to confirm with the owner).
 
-## CR-011: subnational HDI and current head of each subdivision (spec 024 phase 2, 2026-11-17; spec approved 2026-11-12)
-Additive, two optional fields on the existing `Subdivision` (absent or null = no data; old clients ignore them):
+## CR-012: Atlas chatbot (spec 025, 2026-11-17; owner approved the spec 2026-11-17)
+Additive, one POST endpoint (the API's first; it writes nothing, stores nothing). CR-011 is reserved for spec 024.
 ```
-SubdivisionHdi  { value: number /* 0..1, 3 decimals */, year: int }
-SubdivisionHead { name: string, office: string|null /* pt-BR post name: "Governador", "Ministro-chefe", "Prefeito" */,
-                  since: string|null /* ISO date the holder took office */, wikidata_id: string|null /* the person */,
-                  source_id: string /* one of SubdivisionList.sources */ }
-Subdivision     += { hdi: SubdivisionHdi|null, head: SubdivisionHead|null }
+ChatMessage { role: "user"|"assistant", content: string /* 1..4000 chars */ }
+POST /v1/chat  body: { messages: ChatMessage[] /* 1..20, the last one role "user" */ }
+-> 200 text/event-stream, events in this order (each `data:` is one JSON object):
+   event "text"      { delta: string }                 /* 0..n, answer text in pieces (markdown; internal links like /pais/br) */
+   event "tool"      { name: string, args: object }    /* 0..n, a tool the model called (for a "consultando..." hint) */
+   event "countries" { iso2: string[] }                /* 0..1, countries the answer links to, in order of appearance */
+   event "done"      { sources: Source[] }             /* last event on success: sources of the data the tools returned */
+   event "error"     { message: string }               /* last event on failure (pt-BR), instead of "done" */
+422 problem+json: bad body.  429 problem+json (pt-BR detail): over 20 questions/hour per IP or 300/day in total.
+503 problem+json: chat not configured on the server.   Not cached (Cache-Control: no-store); no ETag.
 ```
-`SubdivisionList.sources` adds `gdl-shdi` when any item has `hdi`, and the `source_id` of every `head` shown
-(`wikipedia-heads-br`, `wikipedia-heads-us`, `wikipedia-heads-in`: title carries the Wikipedia revision, url is its permalink).
-- HDI: Global Data Lab SHDI v10.2 as archived at the Radboud Data Repository (https://doi.org/10.34973/qbpx-by38, CC0 1.0),
-  latest year (2023). Only where a GDL region maps to exactly one subdivision by name AND population (see spec): 842 of 3,754.
-- Head: only BR, US and IN for now (Wikipedia lists of current holders, CC BY-SA 4.0, joined by Wikidata id). Other countries:
-  `head` = null (Wikidata is too stale, see spec). Clients should show `since` and the source; heads change between imports.
-Clients must credit "Global Data Lab (Smits & Permanyer), Radboud University" for `hdi` and link the Wikipedia source for `head`.
+Model: `openai/gpt-6-luna` only (owner's decision), via the Vercel AI Gateway; the browser keeps the history and resends it.
+Limits are env-overridable (CHAT_PER_IP_HOUR, CHAT_PER_DAY, CHAT_MAX_TOOL_ROUNDS=6, CHAT_MAX_OUTPUT_TOKENS=1200).
+Clients must show the answer as AI-generated and list `done.sources`.
