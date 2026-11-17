@@ -38,6 +38,8 @@ from atlas_api.db.models import (
     Meta,
     NewsItem,
     NewsItemCountry,
+    Organization,
+    OrganizationMember,
     Person,
     Polity,
     PolityName,
@@ -58,6 +60,8 @@ from atlas_api.schemas import (
     CountryEconomy,
     CountryIdeologies,
     CountryIdeology,
+    CountryMembership,
+    CountryOrganizations,
     CountryProfile,
     CountrySummary,
     CountryTradeOut,
@@ -81,6 +85,7 @@ from atlas_api.schemas import (
     NamePeriod,
     NewsItemOut,
     NewsList,
+    OrganizationList,
     Party,
     PartyRef,
     PersonList,
@@ -116,6 +121,12 @@ from atlas_api.schemas import IdeologyFigure as IdeologyFigureOut
 from atlas_api.schemas import Leader as LeaderOut
 from atlas_api.schemas import (
     Meta as MetaOut,
+)
+from atlas_api.schemas import (
+    Organization as OrganizationOut,
+)
+from atlas_api.schemas import (
+    OrganizationMember as OrganizationMemberOut,
 )
 from atlas_api.schemas import Period as PeriodOut
 from atlas_api.schemas import Person as PersonOut
@@ -264,7 +275,7 @@ def get_country(s: Session, iso2: str) -> CountryDetail | None:
         currencies=[Currency(code=x["code"], name=x["name"], symbol=x.get("symbol"))
                     for x in (f.currencies or [] if f else []) if x.get("code") and x.get("name")],
         population=population, area_km2=f.area_km2 if f else None,
-        memberships=sorted(f.memberships or []) if f else [],
+        memberships=_memberships(iso2, f.memberships if f else None, _curated(s)),
         politics=_politics(p),
         timeline=[_event(e) for e in p.events],  # relationship is ordered by (year_start, id)
         sources=[_source(x) for _, x in sorted(sources.items())],
@@ -272,6 +283,26 @@ def get_country(s: Session, iso2: str) -> CountryDetail | None:
         regime_id=f.regime_id if f else None, clues=_clues(f),
         languages_spoken=_languages_spoken(s, iso2),
     )
+
+
+Curated = tuple[set[str], dict[str, set[str]]]
+
+
+def _curated(s: Session) -> Curated:
+    """spec 032: (labels managed by content/organizations.yaml, iso2 -> labels of its CURRENT curated memberships)."""
+    managed = set(s.scalars(select(GlossaryTerm.label).join(Organization, Organization.id == GlossaryTerm.id)))
+    by_iso: dict[str, set[str]] = {}
+    for iso2, label in s.execute(select(OrganizationMember.iso2, GlossaryTerm.label)
+                                 .join(GlossaryTerm, GlossaryTerm.id == OrganizationMember.org_id)
+                                 .where(OrganizationMember.left.is_(None))):
+        by_iso.setdefault(iso2, set()).add(label)
+    return managed, by_iso
+
+
+def _memberships(iso2: str, facts: list[str] | None, cur: Curated) -> list[str]:
+    """The curated list replaces Wikidata's for the same label, so a country that left (AE from OPEP) drops out."""
+    managed, by_iso = cur
+    return sorted({m for m in facts or [] if m not in managed} | by_iso.get(iso2, set()))
 
 
 def country_exists(s: Session, iso2: str) -> bool:
@@ -325,10 +356,11 @@ EXAMPLES_MAX = 8
 def _examples(s: Session, terms: list[GlossaryTerm]) -> dict[str, list[str]]:
     """term id -> up to 8 iso2, by country name: same regime_id / region contains the label /
     membership in the list. One pass over the 196 country rows."""
-    rows = list(s.execute(
+    cur = _curated(s)
+    rows = [(r[0], r[1], r[2], _memberships(r[0] or "", r[3], cur)) for r in s.execute(
         select(Polity.iso2, CountryFacts.regime_id, CountryFacts.region, CountryFacts.memberships)
         .join(CountryFacts, CountryFacts.iso2 == Polity.iso2).order_by(Polity.name, Polity.id)
-    ))
+    )]
     out: dict[str, list[str]] = {}
     for t in terms:
         if t.kind == "regime":
@@ -877,3 +909,36 @@ def list_news(s: Session, *, region: str | None = None, event_type: str | None =
         fetched_at=fetched.value if fetched else None,
         next=f"{_ts(last.published_at)}|{last.id}" if last else None,
         sources=_sources(s, {"gdelt"}) if page else [])
+
+
+# --- organizations (spec 032) --------------------------------------------------------------------------------------------
+def _org_sources(o: Organization) -> list[SourceOut]:
+    return [SourceOut.model_validate(x) for x in o.sources]
+
+
+def list_organizations(s: Session) -> OrganizationList:
+    terms = {t.id: t for t in s.scalars(select(GlossaryTerm).join(Organization, Organization.id == GlossaryTerm.id))}
+    members: dict[str, list[OrganizationMemberOut]] = {}
+    for m in s.scalars(select(OrganizationMember).order_by(OrganizationMember.joined, OrganizationMember.iso2)):
+        members.setdefault(m.org_id, []).append(OrganizationMemberOut(iso2=m.iso2, joined=m.joined, left=m.left,
+                                                                       suspended=m.suspended, note=m.note))
+    orgs = sorted(s.scalars(select(Organization)), key=lambda o: terms[o.id].label)
+    return OrganizationList(items=[OrganizationOut(
+        id=o.id, label=terms[o.id].label, short=terms[o.id].short, icon=terms[o.id].icon, wikidata_qid=o.wikidata_qid,
+        note=o.note, members=members.get(o.id, []), sources=_org_sources(o)) for o in orgs])
+
+
+def country_organizations(s: Session, iso2: str) -> CountryOrganizations:
+    rows = list(s.execute(select(OrganizationMember, GlossaryTerm.label, Organization)
+                          .join(Organization, Organization.id == OrganizationMember.org_id)
+                          .join(GlossaryTerm, GlossaryTerm.id == Organization.id)
+                          .where(OrganizationMember.iso2 == iso2)))
+    current = sorted((r for r in rows if r[0].left is None), key=lambda r: r[1])
+    former = sorted((r for r in rows if r[0].left is not None), key=lambda r: r[0].left or "", reverse=True)
+    sources: dict[str, SourceOut] = {}
+    for _, _, o in rows:
+        sources.update({x.id: x for x in _org_sources(o)})
+    return CountryOrganizations(
+        items=[CountryMembership(id=m.org_id, label=label, joined=m.joined, left=m.left, suspended=m.suspended, note=m.note)
+               for m, label, _ in current + former],
+        sources=[sources[k] for k in sorted(sources)])

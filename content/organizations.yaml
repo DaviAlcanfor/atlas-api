@@ -1,43 +1,495 @@
-# Spec 026: curated membership lists (Wikidata P463 is complete only for the UN; see etl/wikidata/pipeline.py ORGS).
-# Key = the label stored in country_facts.memberships, which must equal a `membership` term's label in glossary.yaml.
-# Current full members only, by ISO 3166-1 alpha-2. Suspended members stay members (their membership is not ended),
-# except where noted. AGENT DRAFT (2026-11-13), pending human review like glossary.yaml.
-Mercosul:
-  source: {title: "Mercosul: países do Mercosul", url: "https://www.mercosur.int/pt-br/quem-somos/paises-do-mercosul/", retrieved: "2026-11-13"}
-  note: "Bolívia: membro pleno desde 2024. Venezuela: suspensa desde 2016, fora da lista."
-  members: [AR, BO, BR, PY, UY]
-BRICS:
-  source: {title: "BRICS (Wikipédia)", url: "https://pt.wikipedia.org/wiki/BRICS", retrieved: "2026-11-13"}
-  note: "Ampliações de 2024 (Egito, Etiópia, Irã, Emirados Árabes Unidos) e 2025 (Indonésia). A Arábia Saudita não confirmou a adesão: fora."
-  members: [BR, RU, IN, CN, ZA, EG, ET, IR, AE, ID]
-G7:
-  source: {title: "G7 (Wikipédia)", url: "https://pt.wikipedia.org/wiki/G7", retrieved: "2026-11-13"}
-  members: [CA, FR, DE, IT, JP, GB, US]
-G20:
-  source: {title: "G20 (Wikipédia)", url: "https://pt.wikipedia.org/wiki/G20", retrieved: "2026-11-13"}
-  note: "Os 19 países; a União Europeia e a União Africana também são membros, mas não são países."
-  members: [AR, AU, BR, CA, CN, FR, DE, IN, ID, IT, JP, KR, MX, RU, SA, ZA, TR, GB, US]
-União Europeia:
-  source: {title: "União Europeia: países", url: "https://european-union.europa.eu/principles-countries-history/eu-countries_pt", retrieved: "2026-11-13"}
-  members: [AT, BE, BG, HR, CY, CZ, DK, EE, FI, FR, DE, GR, HU, IE, IT, LV, LT, LU, MT, NL, PL, PT, RO, SK, SI, ES, SE]
-OTAN:
-  source: {title: "NATO member countries", url: "https://www.nato.int/cps/en/natohq/topics_52044.htm", retrieved: "2026-11-13"}
-  members: [AL, BE, BG, CA, HR, CZ, DK, EE, FI, FR, DE, GR, HU, IS, IT, LV, LT, LU, ME, NL, MK, NO, PL, PT, RO, SK, SI, ES, SE, TR, GB, US]
-OPEP:
-  source: {title: "OPEC Member Countries", url: "https://www.opec.org/opec_web/en/about_us/25.htm", retrieved: "2026-11-13"}
-  note: "Angola saiu em 2024."
-  members: [DZ, CG, GQ, GA, IR, IQ, KW, LY, NG, SA, AE, VE]
-ASEAN:
-  source: {title: "ASEAN Member States", url: "https://asean.org/member-states/", retrieved: "2026-11-13"}
-  note: "Timor-Leste entrou em outubro de 2025."
-  members: [BN, KH, ID, LA, MY, MM, PH, SG, TH, VN, TL]
-União Africana:
-  source: {title: "African Union: Member States", url: "https://au.int/en/member_states/countryprofiles2", retrieved: "2026-11-13"}
-  note: "Os 54 países africanos da ONU (membros suspensos incluídos). A República Árabe Saaraui Democrática também é membro, mas não tem código ISO."
-  members: [DZ, AO, BJ, BW, BF, BI, CV, CM, CF, TD, KM, CG, CD, CI, DJ, EG, GQ, ER, SZ, ET, GA, GM, GH, GN, GW, KE, LS, LR, LY, MG, MW, ML, MR, MU, MA, MZ, NA, NE, NG, RW, ST, SN, SC, SL, SO, ZA, SS, SD, TZ, TG, TN, UG, ZM, ZW]
-CPLP:
-  source: {title: "CPLP: Estados-membros", url: "https://www.cplp.org/id-2595.aspx", retrieved: "2026-11-13"}
-  members: [AO, BR, CV, GW, GQ, MZ, PT, ST, TL]
-OCDE:
-  source: {title: "OECD: Members and partners", url: "https://www.oecd.org/en/about/members-partners.html", retrieved: "2026-11-13"}
-  members: [AU, AT, BE, CA, CL, CO, CR, CZ, DK, EE, FI, FR, DE, GR, HU, IS, IE, IL, IT, JP, KR, LV, LT, LU, MX, NL, NZ, NO, PL, PT, SK, SI, ES, SE, CH, TR, GB, US]
+# Spec 032 (extends 026): curated memberships WITH join/leave dates. Wikidata P463 is complete only for the UN and its
+# dates are patchy (see specs/032-organizations.md, cross-check). Written to the DB by `import-content`.
+# Key = id of a glossary term of kind `membership` (its label is what CountryDetail.memberships shows).
+# One row per membership period: a country that left and rejoined has two rows. Dates are ISO 8601 strings with the
+# source's precision ("YYYY", "YYYY-MM" or "YYYY-MM-DD"); `left` absent = still a member; `suspended: true` = member
+# with rights suspended (still a member). Every membership cites its organization's `source` (Wikipedia revision
+# permalink, CC BY-SA 4.0: facts only, no text copied). ISO2 codes are quoted strings (NO is a YAML boolean).
+# Built by hand from the cited revisions on 2026-11-17. AGENT DRAFT, pending human review like glossary.yaml.
+
+onu:
+  wikidata: Q1065
+  source: {title: "Member states of the United Nations (Wikipedia, en)", url: "https://en.wikipedia.org/w/index.php?title=Member_states_of_the_United_Nations&oldid=1385797650", license: "CC BY-SA 4.0", retrieved: "2026-11-17"}
+  note: "Data de admissão. Membros originais: 24/10/1945 (entrada em vigor da Carta)."
+  members:
+    - {iso2: "AD", joined: "1993-07-28"}
+    - {iso2: "AE", joined: "1971-12-09"}
+    - {iso2: "AF", joined: "1946-11-19"}
+    - {iso2: "AG", joined: "1981-11-11"}
+    - {iso2: "AL", joined: "1955-12-14"}
+    - {iso2: "AM", joined: "1992-03-02"}
+    - {iso2: "AO", joined: "1976-12-01"}
+    - {iso2: "AR", joined: "1945-10-24"}
+    - {iso2: "AT", joined: "1955-12-14"}
+    - {iso2: "AU", joined: "1945-11-01"}
+    - {iso2: "AZ", joined: "1992-03-02"}
+    - {iso2: "BA", joined: "1992-05-22"}
+    - {iso2: "BB", joined: "1966-12-09"}
+    - {iso2: "BD", joined: "1974-09-17"}
+    - {iso2: "BE", joined: "1945-12-27"}
+    - {iso2: "BF", joined: "1960-09-20"}
+    - {iso2: "BG", joined: "1955-12-14"}
+    - {iso2: "BH", joined: "1971-09-21"}
+    - {iso2: "BI", joined: "1962-09-18"}
+    - {iso2: "BJ", joined: "1960-09-20"}
+    - {iso2: "BN", joined: "1984-09-21"}
+    - {iso2: "BO", joined: "1945-11-14"}
+    - {iso2: "BR", joined: "1945-10-24"}
+    - {iso2: "BS", joined: "1973-09-18"}
+    - {iso2: "BT", joined: "1971-09-21"}
+    - {iso2: "BW", joined: "1966-10-17"}
+    - {iso2: "BY", joined: "1945-10-24"}
+    - {iso2: "BZ", joined: "1981-09-25"}
+    - {iso2: "CA", joined: "1945-11-09"}
+    - {iso2: "CD", joined: "1960-09-20"}
+    - {iso2: "CF", joined: "1960-09-20"}
+    - {iso2: "CG", joined: "1960-09-20"}
+    - {iso2: "CH", joined: "2002-09-10"}
+    - {iso2: "CI", joined: "1960-09-20"}
+    - {iso2: "CL", joined: "1945-10-24"}
+    - {iso2: "CM", joined: "1960-09-20"}
+    - {iso2: "CN", joined: "1945-10-24"}
+    - {iso2: "CO", joined: "1945-11-05"}
+    - {iso2: "CR", joined: "1945-11-02"}
+    - {iso2: "CU", joined: "1945-10-24"}
+    - {iso2: "CV", joined: "1975-09-16"}
+    - {iso2: "CY", joined: "1960-09-20"}
+    - {iso2: "CZ", joined: "1993-01-19"}
+    - {iso2: "DE", joined: "1973-09-18"}
+    - {iso2: "DJ", joined: "1977-09-20"}
+    - {iso2: "DK", joined: "1945-10-24"}
+    - {iso2: "DM", joined: "1978-12-18"}
+    - {iso2: "DO", joined: "1945-10-24"}
+    - {iso2: "DZ", joined: "1962-10-08"}
+    - {iso2: "EC", joined: "1945-12-21"}
+    - {iso2: "EE", joined: "1991-09-17"}
+    - {iso2: "EG", joined: "1945-10-24"}
+    - {iso2: "ER", joined: "1993-05-28"}
+    - {iso2: "ES", joined: "1955-12-14"}
+    - {iso2: "ET", joined: "1945-11-13"}
+    - {iso2: "FI", joined: "1955-12-14"}
+    - {iso2: "FJ", joined: "1970-10-13"}
+    - {iso2: "FM", joined: "1991-09-17"}
+    - {iso2: "FR", joined: "1945-10-24"}
+    - {iso2: "GA", joined: "1960-09-20"}
+    - {iso2: "GB", joined: "1945-10-24"}
+    - {iso2: "GD", joined: "1974-09-17"}
+    - {iso2: "GE", joined: "1992-07-31"}
+    - {iso2: "GH", joined: "1957-03-08"}
+    - {iso2: "GM", joined: "1965-09-21"}
+    - {iso2: "GN", joined: "1958-12-12"}
+    - {iso2: "GQ", joined: "1968-11-12"}
+    - {iso2: "GR", joined: "1945-10-25"}
+    - {iso2: "GT", joined: "1945-11-21"}
+    - {iso2: "GW", joined: "1974-09-17"}
+    - {iso2: "GY", joined: "1966-09-20"}
+    - {iso2: "HN", joined: "1945-12-17"}
+    - {iso2: "HR", joined: "1992-05-22"}
+    - {iso2: "HT", joined: "1945-10-24"}
+    - {iso2: "HU", joined: "1955-12-14"}
+    - {iso2: "ID", joined: "1950-09-28"}
+    - {iso2: "IE", joined: "1955-12-14"}
+    - {iso2: "IL", joined: "1949-05-11"}
+    - {iso2: "IN", joined: "1945-10-30"}
+    - {iso2: "IQ", joined: "1945-12-21"}
+    - {iso2: "IR", joined: "1945-10-24"}
+    - {iso2: "IS", joined: "1946-11-19"}
+    - {iso2: "IT", joined: "1955-12-14"}
+    - {iso2: "JM", joined: "1962-09-18"}
+    - {iso2: "JO", joined: "1955-12-14"}
+    - {iso2: "JP", joined: "1956-12-18"}
+    - {iso2: "KE", joined: "1963-12-16"}
+    - {iso2: "KG", joined: "1992-03-02"}
+    - {iso2: "KH", joined: "1955-12-14"}
+    - {iso2: "KI", joined: "1999-09-14"}
+    - {iso2: "KM", joined: "1975-11-12"}
+    - {iso2: "KN", joined: "1983-09-23"}
+    - {iso2: "KP", joined: "1991-09-17"}
+    - {iso2: "KR", joined: "1991-09-17"}
+    - {iso2: "KW", joined: "1963-05-14"}
+    - {iso2: "KZ", joined: "1992-03-02"}
+    - {iso2: "LA", joined: "1955-12-14"}
+    - {iso2: "LB", joined: "1945-10-24"}
+    - {iso2: "LC", joined: "1979-09-18"}
+    - {iso2: "LI", joined: "1990-09-18"}
+    - {iso2: "LK", joined: "1955-12-14"}
+    - {iso2: "LR", joined: "1945-11-02"}
+    - {iso2: "LS", joined: "1966-10-17"}
+    - {iso2: "LT", joined: "1991-09-17"}
+    - {iso2: "LU", joined: "1945-10-24"}
+    - {iso2: "LV", joined: "1991-09-17"}
+    - {iso2: "LY", joined: "1955-12-14"}
+    - {iso2: "MA", joined: "1956-11-12"}
+    - {iso2: "MC", joined: "1993-05-28"}
+    - {iso2: "MD", joined: "1992-03-02"}
+    - {iso2: "ME", joined: "2006-06-28"}
+    - {iso2: "MG", joined: "1960-09-20"}
+    - {iso2: "MH", joined: "1991-09-17"}
+    - {iso2: "MK", joined: "1993-04-08"}
+    - {iso2: "ML", joined: "1960-09-28"}
+    - {iso2: "MM", joined: "1948-04-19"}
+    - {iso2: "MN", joined: "1961-10-27"}
+    - {iso2: "MR", joined: "1961-10-27"}
+    - {iso2: "MT", joined: "1964-12-01"}
+    - {iso2: "MU", joined: "1968-04-24"}
+    - {iso2: "MV", joined: "1965-09-21"}
+    - {iso2: "MW", joined: "1964-12-01"}
+    - {iso2: "MX", joined: "1945-11-07"}
+    - {iso2: "MY", joined: "1957-09-17"}
+    - {iso2: "MZ", joined: "1975-09-16"}
+    - {iso2: "NA", joined: "1990-04-23"}
+    - {iso2: "NE", joined: "1960-09-20"}
+    - {iso2: "NG", joined: "1960-10-07"}
+    - {iso2: "NI", joined: "1945-10-24"}
+    - {iso2: "NL", joined: "1945-12-10"}
+    - {iso2: "NO", joined: "1945-11-27"}
+    - {iso2: "NP", joined: "1955-12-14"}
+    - {iso2: "NR", joined: "1999-09-14"}
+    - {iso2: "NZ", joined: "1945-10-24"}
+    - {iso2: "OM", joined: "1971-10-07"}
+    - {iso2: "PA", joined: "1945-11-13"}
+    - {iso2: "PE", joined: "1945-10-31"}
+    - {iso2: "PG", joined: "1975-10-10"}
+    - {iso2: "PH", joined: "1945-10-24"}
+    - {iso2: "PK", joined: "1947-09-30"}
+    - {iso2: "PL", joined: "1945-10-24"}
+    - {iso2: "PT", joined: "1955-12-14"}
+    - {iso2: "PW", joined: "1994-12-15"}
+    - {iso2: "PY", joined: "1945-10-24"}
+    - {iso2: "QA", joined: "1971-09-21"}
+    - {iso2: "RO", joined: "1955-12-14"}
+    - {iso2: "RS", joined: "2000-11-01"}
+    - {iso2: "RU", joined: "1945-10-24"}
+    - {iso2: "RW", joined: "1962-09-18"}
+    - {iso2: "SA", joined: "1945-10-24"}
+    - {iso2: "SB", joined: "1978-09-19"}
+    - {iso2: "SC", joined: "1976-09-21"}
+    - {iso2: "SD", joined: "1956-11-12"}
+    - {iso2: "SE", joined: "1946-11-19"}
+    - {iso2: "SG", joined: "1965-09-21"}
+    - {iso2: "SI", joined: "1992-05-22"}
+    - {iso2: "SK", joined: "1993-01-19"}
+    - {iso2: "SL", joined: "1961-09-27"}
+    - {iso2: "SM", joined: "1992-03-02"}
+    - {iso2: "SN", joined: "1960-09-28"}
+    - {iso2: "SO", joined: "1960-09-20"}
+    - {iso2: "SR", joined: "1975-12-04"}
+    - {iso2: "SS", joined: "2011-07-14"}
+    - {iso2: "ST", joined: "1975-09-16"}
+    - {iso2: "SV", joined: "1945-10-24"}
+    - {iso2: "SY", joined: "1945-10-24"}
+    - {iso2: "SZ", joined: "1968-09-24"}
+    - {iso2: "TD", joined: "1960-09-20"}
+    - {iso2: "TG", joined: "1960-09-20"}
+    - {iso2: "TH", joined: "1946-12-16"}
+    - {iso2: "TJ", joined: "1992-03-02"}
+    - {iso2: "TL", joined: "2002-09-27"}
+    - {iso2: "TM", joined: "1992-03-02"}
+    - {iso2: "TN", joined: "1956-11-12"}
+    - {iso2: "TO", joined: "1999-09-14"}
+    - {iso2: "TR", joined: "1945-10-24"}
+    - {iso2: "TT", joined: "1962-09-18"}
+    - {iso2: "TV", joined: "2000-09-05"}
+    - {iso2: "TZ", joined: "1961-12-14"}
+    - {iso2: "UA", joined: "1945-10-24"}
+    - {iso2: "UG", joined: "1962-10-25"}
+    - {iso2: "US", joined: "1945-10-24"}
+    - {iso2: "UY", joined: "1945-12-18"}
+    - {iso2: "UZ", joined: "1992-03-02"}
+    - {iso2: "VC", joined: "1980-09-16"}
+    - {iso2: "VE", joined: "1945-11-15"}
+    - {iso2: "VN", joined: "1977-09-20"}
+    - {iso2: "VU", joined: "1981-09-15"}
+    - {iso2: "WS", joined: "1976-12-15"}
+    - {iso2: "YE", joined: "1947-09-30"}
+    - {iso2: "ZA", joined: "1945-11-07"}
+    - {iso2: "ZM", joined: "1964-12-01"}
+    - {iso2: "ZW", joined: "1980-08-25"}
+uniao-europeia:
+  wikidata: Q458
+  source: {title: "Member state of the European Union (Wikipedia, en)", url: "https://en.wikipedia.org/w/index.php?title=Member_state_of_the_European_Union&oldid=1386146667", license: "CC BY-SA 4.0", retrieved: "2026-11-17"}
+  note: "Fundadores: 25/03/1957, assinatura do Tratado de Roma (CEE), como na fonte."
+  members:
+    - {iso2: "BE", joined: "1957-03-25"}
+    - {iso2: "FR", joined: "1957-03-25"}
+    - {iso2: "DE", joined: "1957-03-25"}
+    - {iso2: "IT", joined: "1957-03-25"}
+    - {iso2: "LU", joined: "1957-03-25"}
+    - {iso2: "NL", joined: "1957-03-25"}
+    - {iso2: "DK", joined: "1973-01-01"}
+    - {iso2: "IE", joined: "1973-01-01"}
+    - {iso2: "GB", joined: "1973-01-01", left: "2020-01-31", note: "Brexit"}
+    - {iso2: "GR", joined: "1981-01-01"}
+    - {iso2: "PT", joined: "1986-01-01"}
+    - {iso2: "ES", joined: "1986-01-01"}
+    - {iso2: "AT", joined: "1995-01-01"}
+    - {iso2: "FI", joined: "1995-01-01"}
+    - {iso2: "SE", joined: "1995-01-01"}
+    - {iso2: "CY", joined: "2004-05-01"}
+    - {iso2: "CZ", joined: "2004-05-01"}
+    - {iso2: "EE", joined: "2004-05-01"}
+    - {iso2: "HU", joined: "2004-05-01"}
+    - {iso2: "LV", joined: "2004-05-01"}
+    - {iso2: "LT", joined: "2004-05-01"}
+    - {iso2: "MT", joined: "2004-05-01"}
+    - {iso2: "PL", joined: "2004-05-01"}
+    - {iso2: "SK", joined: "2004-05-01"}
+    - {iso2: "SI", joined: "2004-05-01"}
+    - {iso2: "BG", joined: "2007-01-01"}
+    - {iso2: "RO", joined: "2007-01-01"}
+    - {iso2: "HR", joined: "2013-07-01"}
+otan:
+  wikidata: Q7184
+  source: {title: "Member states of NATO (Wikipedia, en)", url: "https://en.wikipedia.org/w/index.php?title=Member_states_of_NATO&oldid=1383947570", license: "CC BY-SA 4.0", retrieved: "2026-11-17"}
+  note: "Data de adesão (fundadores: entrada em vigor do Tratado do Atlântico Norte). Alemanha: 1955 como Alemanha Ocidental."
+  members:
+    - {iso2: "BE", joined: "1949-08-24"}
+    - {iso2: "CA", joined: "1949-08-24"}
+    - {iso2: "DK", joined: "1949-08-24"}
+    - {iso2: "FR", joined: "1949-08-24"}
+    - {iso2: "IS", joined: "1949-08-24"}
+    - {iso2: "IT", joined: "1949-08-24"}
+    - {iso2: "LU", joined: "1949-08-24"}
+    - {iso2: "NL", joined: "1949-08-24"}
+    - {iso2: "NO", joined: "1949-08-24"}
+    - {iso2: "PT", joined: "1949-08-24"}
+    - {iso2: "GB", joined: "1949-08-24"}
+    - {iso2: "US", joined: "1949-08-24"}
+    - {iso2: "GR", joined: "1952-02-18"}
+    - {iso2: "TR", joined: "1952-02-18"}
+    - {iso2: "DE", joined: "1955-05-06"}
+    - {iso2: "ES", joined: "1982-05-30"}
+    - {iso2: "CZ", joined: "1999-03-12"}
+    - {iso2: "HU", joined: "1999-03-12"}
+    - {iso2: "PL", joined: "1999-03-12"}
+    - {iso2: "BG", joined: "2004-03-29"}
+    - {iso2: "EE", joined: "2004-03-29"}
+    - {iso2: "LV", joined: "2004-03-29"}
+    - {iso2: "LT", joined: "2004-03-29"}
+    - {iso2: "RO", joined: "2004-03-29"}
+    - {iso2: "SK", joined: "2004-03-29"}
+    - {iso2: "SI", joined: "2004-03-29"}
+    - {iso2: "AL", joined: "2009-04-01"}
+    - {iso2: "HR", joined: "2009-04-01"}
+    - {iso2: "ME", joined: "2017-06-05"}
+    - {iso2: "MK", joined: "2020-03-27"}
+    - {iso2: "FI", joined: "2023-04-04"}
+    - {iso2: "SE", joined: "2024-03-07"}
+ocde:
+  wikidata: Q41550
+  source: {title: "OECD (Wikipedia, en)", url: "https://en.wikipedia.org/w/index.php?title=OECD&oldid=1386155426", license: "CC BY-SA 4.0", retrieved: "2026-11-17"}
+  note: "Data de adesão (depósito da ratificação da Convenção da OCDE): a última data da linha do país na fonte."
+  members:
+    - {iso2: "AU", joined: "1971-06-07"}
+    - {iso2: "AT", joined: "1961-09-29"}
+    - {iso2: "BE", joined: "1961-09-13"}
+    - {iso2: "CA", joined: "1961-04-10"}
+    - {iso2: "CL", joined: "2010-05-07"}
+    - {iso2: "CO", joined: "2020-04-28"}
+    - {iso2: "CR", joined: "2021-05-25"}
+    - {iso2: "CZ", joined: "1995-12-21"}
+    - {iso2: "DK", joined: "1961-05-30"}
+    - {iso2: "EE", joined: "2010-12-09"}
+    - {iso2: "FI", joined: "1969-01-28"}
+    - {iso2: "FR", joined: "1961-08-07"}
+    - {iso2: "DE", joined: "1961-09-27"}
+    - {iso2: "GR", joined: "1961-09-27"}
+    - {iso2: "HU", joined: "1996-05-07"}
+    - {iso2: "IS", joined: "1961-06-05"}
+    - {iso2: "IE", joined: "1961-08-17"}
+    - {iso2: "IL", joined: "2010-09-07"}
+    - {iso2: "IT", joined: "1962-03-29"}
+    - {iso2: "JP", joined: "1964-04-28"}
+    - {iso2: "LV", joined: "2016-07-01"}
+    - {iso2: "LT", joined: "2018-07-05"}
+    - {iso2: "LU", joined: "1961-12-07"}
+    - {iso2: "MX", joined: "1994-05-18"}
+    - {iso2: "NL", joined: "1961-11-13"}
+    - {iso2: "NZ", joined: "1973-05-29"}
+    - {iso2: "NO", joined: "1961-07-04"}
+    - {iso2: "PL", joined: "1996-11-22"}
+    - {iso2: "PT", joined: "1961-08-04"}
+    - {iso2: "SK", joined: "2000-12-14"}
+    - {iso2: "SI", joined: "2010-07-21"}
+    - {iso2: "KR", joined: "1996-12-12"}
+    - {iso2: "ES", joined: "1961-08-03"}
+    - {iso2: "SE", joined: "1961-09-28"}
+    - {iso2: "CH", joined: "1961-09-28"}
+    - {iso2: "TR", joined: "1961-08-02"}
+    - {iso2: "GB", joined: "1961-05-02"}
+    - {iso2: "US", joined: "1961-04-12"}
+opep:
+  wikidata: Q7795
+  source: {title: "OPEC (Wikipedia, en)", url: "https://en.wikipedia.org/w/index.php?title=OPEC&oldid=1384638255", license: "CC BY-SA 4.0", retrieved: "2026-11-17"}
+  note: "A fonte dá anos. Fundadores: 1960. Gabão: a tabela diz 1975–1995 e o texto da mesma página 1975–1994 (ficou a tabela). Indonésia: a tabela diz jan–nov 2016 e o texto 2014–2016 (ficou a tabela). Emirados Árabes Unidos: saíram em 01/05/2026 (membro desde 1967 como Abu Dhabi)."
+  members:
+    - {iso2: "IR", joined: "1960"}
+    - {iso2: "IQ", joined: "1960"}
+    - {iso2: "KW", joined: "1960"}
+    - {iso2: "SA", joined: "1960"}
+    - {iso2: "VE", joined: "1960"}
+    - {iso2: "QA", joined: "1961", left: "2019-01-01"}
+    - {iso2: "ID", joined: "1962", left: "2008"}
+    - {iso2: "ID", joined: "2016-01", left: "2016-11"}
+    - {iso2: "LY", joined: "1962"}
+    - {iso2: "AE", joined: "1967", left: "2026-05-01"}
+    - {iso2: "DZ", joined: "1969"}
+    - {iso2: "NG", joined: "1971"}
+    - {iso2: "EC", joined: "1973", left: "1992"}
+    - {iso2: "EC", joined: "2007", left: "2020"}
+    - {iso2: "GA", joined: "1975", left: "1995"}
+    - {iso2: "GA", joined: "2016"}
+    - {iso2: "AO", joined: "2007", left: "2023"}
+    - {iso2: "GQ", joined: "2017"}
+    - {iso2: "CG", joined: "2018"}
+asean:
+  wikidata: Q7768
+  source: {title: "Member states of ASEAN (Wikipedia, en)", url: "https://en.wikipedia.org/w/index.php?title=Member_states_of_ASEAN&oldid=1368489261", license: "CC BY-SA 4.0", retrieved: "2026-11-17"}
+  members:
+    - {iso2: "ID", joined: "1967-08-08"}
+    - {iso2: "MY", joined: "1967-08-08"}
+    - {iso2: "PH", joined: "1967-08-08"}
+    - {iso2: "SG", joined: "1967-08-08"}
+    - {iso2: "TH", joined: "1967-08-08"}
+    - {iso2: "BN", joined: "1984-01-07"}
+    - {iso2: "VN", joined: "1995-07-28"}
+    - {iso2: "LA", joined: "1997-07-23"}
+    - {iso2: "MM", joined: "1997-07-23"}
+    - {iso2: "KH", joined: "1999-04-30"}
+    - {iso2: "TL", joined: "2025-10-26"}
+uniao-africana:
+  wikidata: Q7159
+  source: {title: "Member states of the African Union (Wikipedia, en)", url: "https://en.wikipedia.org/w/index.php?title=Member_states_of_the_African_Union&oldid=1384120008", license: "CC BY-SA 4.0", retrieved: "2026-11-17"}
+  note: "Data de adesão à Organização da Unidade Africana (1963–2002), antecessora da UA, como na fonte. Suspensos na revisão citada: Burkina Faso, Guiné-Bissau, Madagascar, Mali, Níger e Sudão. A República Árabe Saaraui Democrática (1982) também é membro, mas não tem código ISO."
+  members:
+    - {iso2: "DZ", joined: "1963-05-25"}
+    - {iso2: "AO", joined: "1979-02-11"}
+    - {iso2: "BJ", joined: "1963-05-25"}
+    - {iso2: "BW", joined: "1966-10-31"}
+    - {iso2: "BF", joined: "1963-05-25", suspended: true}
+    - {iso2: "BI", joined: "1963-05-25"}
+    - {iso2: "CM", joined: "1963-05-25"}
+    - {iso2: "CV", joined: "1975-07-18"}
+    - {iso2: "CF", joined: "1963-05-25"}
+    - {iso2: "TD", joined: "1963-05-25"}
+    - {iso2: "KM", joined: "1975-07-18"}
+    - {iso2: "CD", joined: "1963-05-25"}
+    - {iso2: "CG", joined: "1963-05-25"}
+    - {iso2: "DJ", joined: "1977-06-27"}
+    - {iso2: "EG", joined: "1963-05-25"}
+    - {iso2: "GQ", joined: "1968-10-12"}
+    - {iso2: "ER", joined: "1993-05-24"}
+    - {iso2: "SZ", joined: "1968-09-24"}
+    - {iso2: "ET", joined: "1963-05-25"}
+    - {iso2: "GA", joined: "1963-05-25"}
+    - {iso2: "GM", joined: "1965-10-01"}
+    - {iso2: "GH", joined: "1963-05-25"}
+    - {iso2: "GN", joined: "1963-05-25"}
+    - {iso2: "GW", joined: "1973-11-19", suspended: true}
+    - {iso2: "CI", joined: "1963-05-25"}
+    - {iso2: "KE", joined: "1963-12-13"}
+    - {iso2: "LS", joined: "1966-10-31"}
+    - {iso2: "LR", joined: "1963-05-25"}
+    - {iso2: "LY", joined: "1963-05-25"}
+    - {iso2: "MG", joined: "1963-05-25", suspended: true}
+    - {iso2: "MW", joined: "1964-07-13"}
+    - {iso2: "ML", joined: "1963-05-25", suspended: true}
+    - {iso2: "MR", joined: "1963-05-25"}
+    - {iso2: "MU", joined: "1968-08-01"}
+    - {iso2: "MZ", joined: "1975-07-18"}
+    - {iso2: "NA", joined: "1990-06-01"}
+    - {iso2: "NE", joined: "1963-05-25", suspended: true}
+    - {iso2: "NG", joined: "1963-05-25"}
+    - {iso2: "RW", joined: "1963-05-25"}
+    - {iso2: "ST", joined: "1975-07-18"}
+    - {iso2: "SN", joined: "1963-05-25"}
+    - {iso2: "SC", joined: "1976-06-29"}
+    - {iso2: "SL", joined: "1963-05-25"}
+    - {iso2: "SO", joined: "1963-05-25"}
+    - {iso2: "ZA", joined: "1994-06-06"}
+    - {iso2: "SS", joined: "2011-08-15"}
+    - {iso2: "SD", joined: "1963-05-25", suspended: true}
+    - {iso2: "TZ", joined: "1963-05-25"}
+    - {iso2: "TG", joined: "1963-05-25"}
+    - {iso2: "TN", joined: "1963-05-25"}
+    - {iso2: "UG", joined: "1963-05-25"}
+    - {iso2: "ZM", joined: "1964-12-16"}
+    - {iso2: "ZW", joined: "1980-06-01"}
+    - {iso2: "MA", joined: "1963-05-25", left: "1984-11-12"}
+    - {iso2: "MA", joined: "2017-01-31"}
+brics:
+  wikidata: Q243630
+  source: {title: "Member states of BRICS (Wikipedia, en)", url: "https://en.wikipedia.org/w/index.php?title=Member_states_of_BRICS&oldid=1381460796", license: "CC BY-SA 4.0", retrieved: "2026-11-17"}
+  note: "Fundadores: primeira cúpula (16/06/2009); os chanceleres se reúnem desde set/2006. Arábia Saudita: status disputado na fonte (convidada para 01/01/2024, nunca confirmou), fora da lista."
+  members:
+    - {iso2: "BR", joined: "2009-06-16"}
+    - {iso2: "RU", joined: "2009-06-16"}
+    - {iso2: "IN", joined: "2009-06-16"}
+    - {iso2: "CN", joined: "2009-06-16"}
+    - {iso2: "ZA", joined: "2010-12-24"}
+    - {iso2: "EG", joined: "2024-01-01"}
+    - {iso2: "ET", joined: "2024-01-01"}
+    - {iso2: "IR", joined: "2024-01-01"}
+    - {iso2: "AE", joined: "2024-01-01"}
+    - {iso2: "ID", joined: "2025-01-06"}
+g7:
+  wikidata: Q1764511
+  source: {title: "G7 (Wikipedia, en)", url: "https://en.wikipedia.org/w/index.php?title=G7&oldid=1386063718", license: "CC BY-SA 4.0", retrieved: "2026-11-17"}
+  note: "Primeira cúpula (G6) em Rambouillet, novembro de 1975; o Canadá entrou em 1976. A União Europeia participa, mas não é país. A Rússia fez parte do G8 (1997–2014), que é outro grupo."
+  members:
+    - {iso2: "FR", joined: "1975-11"}
+    - {iso2: "DE", joined: "1975-11"}
+    - {iso2: "IT", joined: "1975-11"}
+    - {iso2: "JP", joined: "1975-11"}
+    - {iso2: "GB", joined: "1975-11"}
+    - {iso2: "US", joined: "1975-11"}
+    - {iso2: "CA", joined: "1976"}
+g20:
+  wikidata: Q19771
+  source: {title: "G20 (Wikipedia, en)", url: "https://en.wikipedia.org/w/index.php?title=G20&oldid=1386105485", license: "CC BY-SA 4.0", retrieved: "2026-11-17"}
+  note: "Criado em 26/09/1999. A União Europeia e a União Africana (2023) também são membros, mas não são países."
+  members:
+    - {iso2: "AR", joined: "1999-09-26"}
+    - {iso2: "AU", joined: "1999-09-26"}
+    - {iso2: "BR", joined: "1999-09-26"}
+    - {iso2: "CA", joined: "1999-09-26"}
+    - {iso2: "CN", joined: "1999-09-26"}
+    - {iso2: "FR", joined: "1999-09-26"}
+    - {iso2: "DE", joined: "1999-09-26"}
+    - {iso2: "IN", joined: "1999-09-26"}
+    - {iso2: "ID", joined: "1999-09-26"}
+    - {iso2: "IT", joined: "1999-09-26"}
+    - {iso2: "JP", joined: "1999-09-26"}
+    - {iso2: "KR", joined: "1999-09-26"}
+    - {iso2: "MX", joined: "1999-09-26"}
+    - {iso2: "RU", joined: "1999-09-26"}
+    - {iso2: "SA", joined: "1999-09-26"}
+    - {iso2: "ZA", joined: "1999-09-26"}
+    - {iso2: "TR", joined: "1999-09-26"}
+    - {iso2: "GB", joined: "1999-09-26"}
+    - {iso2: "US", joined: "1999-09-26"}
+mercosul:
+  wikidata: Q4264
+  source: {title: "Mercosur (Wikipedia, en)", url: "https://en.wikipedia.org/w/index.php?title=Mercosur&oldid=1384013871", license: "CC BY-SA 4.0", retrieved: "2026-11-17"}
+  note: "Fundadores: Tratado de Assunção, 26/03/1991. Venezuela: membro pleno desde julho de 2012, suspensa desde 01/12/2016. Bolívia: membro pleno desde julho de 2024."
+  members:
+    - {iso2: "AR", joined: "1991-03-26"}
+    - {iso2: "BR", joined: "1991-03-26"}
+    - {iso2: "PY", joined: "1991-03-26"}
+    - {iso2: "UY", joined: "1991-03-26"}
+    - {iso2: "VE", joined: "2012-07", suspended: true}
+    - {iso2: "BO", joined: "2024-07"}
+cplp:
+  wikidata: Q182500
+  source: {title: "Member states of the Community of Portuguese Language Countries (Wikipedia, en)", url: "https://en.wikipedia.org/w/index.php?title=Member_states_of_the_Community_of_Portuguese_Language_Countries&oldid=1359374312", license: "CC BY-SA 4.0", retrieved: "2026-11-17"}
+  note: "Fundadores: 17/07/1996 (fundação, no artigo da CPLP). Guiné-Bissau suspensa (golpe de 2025)."
+  members:
+    - {iso2: "AO", joined: "1996-07-17"}
+    - {iso2: "BR", joined: "1996-07-17"}
+    - {iso2: "CV", joined: "1996-07-17"}
+    - {iso2: "GW", joined: "1996-07-17", suspended: true}
+    - {iso2: "MZ", joined: "1996-07-17"}
+    - {iso2: "PT", joined: "1996-07-17"}
+    - {iso2: "ST", joined: "1996-07-17"}
+    - {iso2: "TL", joined: "2002"}
+    - {iso2: "GQ", joined: "2014"}

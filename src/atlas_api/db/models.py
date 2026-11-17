@@ -9,6 +9,7 @@ from typing import Any
 from sqlalchemy import (
     CHAR,
     BigInteger,
+    Boolean,
     CheckConstraint,
     Date,
     DateTime,
@@ -587,3 +588,25 @@ class ChatToolLog(Base):
     tool: Mapped[str] = mapped_column(Text)
     args: Mapped[dict[str, Any]] = mapped_column(JSONB)
     ok: Mapped[bool] = mapped_column()
+class Organization(Base):
+    """spec 032: a curated organization (content/organizations.yaml); its id is a glossary term of kind membership."""
+
+    __tablename__ = "organizations"
+
+    id: Mapped[str] = mapped_column(Text, ForeignKey("glossary_terms.id"), primary_key=True)
+    wikidata_qid: Mapped[str | None] = mapped_column(Text)
+    note: Mapped[str | None] = mapped_column(Text)
+    sources: Mapped[list[dict[str, str | None]]] = mapped_column(JSONB)  # contract Source objects
+
+
+class OrganizationMember(Base):
+    """spec 032: one membership period (a country that left and rejoined has two rows). Dates keep the source's precision."""
+
+    __tablename__ = "organization_members"
+
+    org_id: Mapped[str] = mapped_column(Text, ForeignKey("organizations.id", ondelete="CASCADE"), primary_key=True)
+    iso2: Mapped[str] = mapped_column(CHAR(2), primary_key=True, index=True)
+    joined: Mapped[str] = mapped_column(Text, primary_key=True)
+    left: Mapped[str | None] = mapped_column(Text)
+    suspended: Mapped[bool] = mapped_column(Boolean, server_default="false")
+    note: Mapped[str | None] = mapped_column(Text)
