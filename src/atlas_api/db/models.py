@@ -513,7 +513,7 @@ class Subdivision(Base):
     area_codes: Mapped[list[str] | None] = mapped_column(JSONB)  # spec 026: DDD
     hdi: Mapped[float | None] = mapped_column(Float)  # spec 024 phase 2: Global Data Lab SHDI
     hdi_year: Mapped[int | None] = mapped_column(Integer)
-    head: Mapped[dict[str, Any] | None] = mapped_column(JSONB)  # spec 024 phase 2: {name, office, since, wikidata_id, source_id}
+    head: Mapped[dict[str, Any] | None] = mapped_column(JSONB(none_as_null=True))  # spec 024 phase 2: {name, office, since, wikidata_id, source_id}
 
 
 class HistoryEvent(Base):
