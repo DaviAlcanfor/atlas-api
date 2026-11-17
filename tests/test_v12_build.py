@@ -7,7 +7,7 @@ from etl.undp.pipeline import build as undp_build
 from etl.wikidata.languages import attributes, classify
 from etl.wikidata.pipeline import composition
 
-from atlas_api.facts import _ranks, currency_stats
+from atlas_api.importer.facts import _ranks, currency_stats
 
 E = "http://www.wikidata.org/entity/"
 

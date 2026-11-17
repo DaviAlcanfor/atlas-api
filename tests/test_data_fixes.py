@@ -10,8 +10,8 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from atlas_api import queries
-from atlas_api.facts import import_facts
-from atlas_api.importer import import_content
+from atlas_api.importer.content import import_content
+from atlas_api.importer.facts import import_facts
 from atlas_api.main import create_app
 from conftest import _fresh_database
 
@@ -36,7 +36,7 @@ def _facts(root: Path, **kw: object) -> Path:
 
 def test_import_facts_changes_data_version_and_etag(tmp_path: Path,
                                                    monkeypatch: pytest.MonkeyPatch) -> None:
-    from atlas_api.config import get_settings
+    from atlas_api.core.config import get_settings
 
     monkeypatch.setenv("DATA_VERSION_TTL", "0")  # read the version on every request
     get_settings.cache_clear()
@@ -140,7 +140,7 @@ def test_saturated_pool_degrades_fast(api_client: TestClient, monkeypatch: pytes
     """spec 019 item 5: with every connection taken, requests get a quick 503 and health answers."""
     import time
 
-    from atlas_api.config import get_settings
+    from atlas_api.core.config import get_settings
 
     for k, v in {"DB_POOL_SIZE": "1", "DB_MAX_OVERFLOW": "0", "DB_POOL_TIMEOUT": "0.5",
                  "DATA_VERSION_TTL": "0"}.items():

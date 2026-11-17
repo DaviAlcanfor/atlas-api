@@ -19,11 +19,17 @@ from pathlib import Path
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from atlas_api.config import get_settings
+from atlas_api.core.config import get_settings
 from atlas_api.db.models import CountryFacts, Polity
 from atlas_api.db.session import make_engine
-from atlas_api.facts import import_facts, import_fx, import_news, import_subdivisions, import_trade
-from atlas_api.importer import ContentError, import_content, set_version
+from atlas_api.importer.content import ContentError, import_content, set_version
+from atlas_api.importer.facts import (
+    import_facts,
+    import_fx,
+    import_news,
+    import_subdivisions,
+    import_trade,
+)
 
 
 def main() -> int:

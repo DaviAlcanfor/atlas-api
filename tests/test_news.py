@@ -16,7 +16,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
-from atlas_api.facts import import_news
+from atlas_api.importer.facts import import_news
 
 
 def _names() -> list[tuple[re.Pattern[str], str]]:

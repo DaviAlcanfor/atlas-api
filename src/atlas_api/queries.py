@@ -47,7 +47,7 @@ from atlas_api.db.models import (
     Subdivision,
     Succession,
 )
-from atlas_api.rules import has_content, name_as_of
+from atlas_api.domain.rules import has_content, name_as_of
 from atlas_api.schemas import (
     CapitalCoord,
     Clues,

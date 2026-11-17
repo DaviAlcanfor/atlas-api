@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Query
 
 from atlas_api import queries
-from atlas_api.deps import DbSession
+from atlas_api.core.deps import DbSession
 from atlas_api.schemas import SearchResults
 
 router = APIRouter(tags=["search"])

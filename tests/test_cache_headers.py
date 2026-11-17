@@ -34,7 +34,7 @@ def test_errors_carry_version_but_are_not_cacheable(api_client: TestClient) -> N
 
 
 def test_cors_exposes_headers(api_client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
-    from atlas_api.config import get_settings
+    from atlas_api.core.config import get_settings
 
     monkeypatch.setenv("CORS_ORIGINS", "http://localhost:5173")
     get_settings.cache_clear()

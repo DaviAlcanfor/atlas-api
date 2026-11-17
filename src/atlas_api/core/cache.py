@@ -16,8 +16,8 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from atlas_api import queries
-from atlas_api.config import get_settings
-from atlas_api.errors import problem
+from atlas_api.core.config import get_settings
+from atlas_api.core.errors import problem
 
 CACHE_CONTROL = "public, max-age=300, stale-while-revalidate=86400"
 _NO_CACHE_PATHS = {"/v1/health"}

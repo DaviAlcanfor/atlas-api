@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
-from atlas_api.facts import import_trade
+from atlas_api.importer.facts import import_trade
 
 CSV = """t,i,j,k,v,q
 2024,76,156,270900,600,1

@@ -1,6 +1,6 @@
 import pytest
 
-from atlas_api.rules import (
+from atlas_api.domain.rules import (
     exists_in_year,
     has_content,
     name_as_of,

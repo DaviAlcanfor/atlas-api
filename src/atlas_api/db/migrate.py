@@ -13,7 +13,7 @@ from alembic.config import Config
 from sqlalchemy import Engine, text
 
 LOCK_ID = 727_100_001  # arbitrary, constant: same key in every replica
-MIGRATIONS = Path(__file__).resolve().parents[2] / "migrations"
+MIGRATIONS = Path(__file__).resolve().parents[3] / "migrations"
 
 log = logging.getLogger(__name__)
 

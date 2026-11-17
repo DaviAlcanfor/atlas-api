@@ -1,9 +1,9 @@
 from fastapi import APIRouter
 
 from atlas_api import queries
-from atlas_api.deps import DbSession
-from atlas_api.errors import InvalidParameterError, NotFoundError
-from atlas_api.rules import nearest_snapshot
+from atlas_api.core.deps import DbSession
+from atlas_api.core.errors import InvalidParameterError, NotFoundError
+from atlas_api.domain.rules import nearest_snapshot
 from atlas_api.schemas import SnapshotLinks, SnapshotList, SnapshotNearest
 
 router = APIRouter(prefix="/snapshots", tags=["snapshots"])

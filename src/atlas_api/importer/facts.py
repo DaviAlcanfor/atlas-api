@@ -56,7 +56,7 @@ from atlas_api.db.models import (
     Source,
     Subdivision,
 )
-from atlas_api.importer import set_version
+from atlas_api.importer.content import set_version
 
 
 def import_facts(session: Session, path: Path) -> dict[str, Any]:

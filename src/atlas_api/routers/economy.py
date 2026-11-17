@@ -6,8 +6,8 @@ from typing import Annotated
 from fastapi import APIRouter, Path, Query
 
 from atlas_api import queries
-from atlas_api.deps import DbSession
-from atlas_api.errors import InvalidParameterError, NotFoundError
+from atlas_api.core.deps import DbSession
+from atlas_api.core.errors import InvalidParameterError, NotFoundError
 from atlas_api.schemas import CurrencyDetail, CurrencyHistory, EconomyCompare
 
 router = APIRouter(tags=["economy"])

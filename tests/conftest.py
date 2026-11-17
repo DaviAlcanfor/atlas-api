@@ -11,9 +11,9 @@ from sqlalchemy import Engine, create_engine, text
 from sqlalchemy.engine import make_url
 from sqlalchemy.orm import Session
 
-from atlas_api.config import get_settings
-from atlas_api.facts import import_facts
-from atlas_api.importer import import_content
+from atlas_api.core.config import get_settings
+from atlas_api.importer.content import import_content
+from atlas_api.importer.facts import import_facts
 from atlas_api.main import create_app
 
 # same host/port as the dev DB (.env DATABASE_URL); TEST_DATABASE_URL overrides
