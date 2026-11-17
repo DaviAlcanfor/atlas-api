@@ -12,6 +12,7 @@ from atlas_api.db.session import make_engine, make_session_factory
 from atlas_api.errors import register_error_handlers
 from atlas_api.migrate import upgrade_to_head
 from atlas_api.routers import (
+    chat,
     countries,
     economy,
     glossary,
@@ -55,12 +56,13 @@ def create_app(database_url: str | None = None) -> FastAPI:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=get_settings().cors_origins,
-        allow_methods=["GET"],
+        allow_methods=["GET", "POST"],  # POST: /v1/chat only (spec 025)
         allow_headers=["*"],
         expose_headers=["ETag", "X-Data-Version"],
     )
     register_error_handlers(app)
-    for module in (health, meta, countries, polities, snapshots, search, glossary, economy, ideologies, indicators, news):
+    for module in (health, meta, countries, polities, snapshots, search, glossary, economy, ideologies, indicators, news,
+                   chat):
         app.include_router(module.router, prefix="/v1")
     return app
 

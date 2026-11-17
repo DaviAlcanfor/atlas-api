@@ -392,3 +392,21 @@ HS 2022, agregado por Atlas", and `mdic-sh` (licence "CC BY-ND 3.0"), MDIC/Secex
 Clients must show the BACI attribution with its version and update date (Etalab 2.0 requires "the name of the 'Grantor' and the
 date of the most recent update") and must show `label` VERBATIM (CC BY-ND: no shortening or rewording in the text; visual
 truncation with the full text available, e.g. a tooltip, is the client's call to confirm with the owner).
+
+## CR-012: Atlas chatbot (spec 025, 2026-11-17; owner approved the spec 2026-11-17)
+Additive, one POST endpoint (the API's first; it writes nothing, stores nothing). CR-011 is reserved for spec 024.
+```
+ChatMessage { role: "user"|"assistant", content: string /* 1..4000 chars */ }
+POST /v1/chat  body: { messages: ChatMessage[] /* 1..20, the last one role "user" */ }
+-> 200 text/event-stream, events in this order (each `data:` is one JSON object):
+   event "text"      { delta: string }                 /* 0..n, answer text in pieces (markdown; internal links like /pais/br) */
+   event "tool"      { name: string, args: object }    /* 0..n, a tool the model called (for a "consultando..." hint) */
+   event "countries" { iso2: string[] }                /* 0..1, countries the answer links to, in order of appearance */
+   event "done"      { sources: Source[] }             /* last event on success: sources of the data the tools returned */
+   event "error"     { message: string }               /* last event on failure (pt-BR), instead of "done" */
+422 problem+json: bad body.  429 problem+json (pt-BR detail): over 20 questions/hour per IP or 300/day in total.
+503 problem+json: chat not configured on the server.   Not cached (Cache-Control: no-store); no ETag.
+```
+Model: `openai/gpt-6-luna` only (owner's decision), via the Vercel AI Gateway; the browser keeps the history and resends it.
+Limits are env-overridable (CHAT_PER_IP_HOUR, CHAT_PER_DAY, CHAT_MAX_TOOL_ROUNDS=6, CHAT_MAX_OUTPUT_TOKENS=1200).
+Clients must show the answer as AI-generated and list `done.sources`.

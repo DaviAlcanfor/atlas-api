@@ -2,7 +2,7 @@
 from functools import lru_cache
 from typing import Annotated
 
-from pydantic import field_validator
+from pydantic import SecretStr, field_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
@@ -21,6 +21,12 @@ class Settings(BaseSettings):
     db_pool_timeout: float = 3.0
     # data_version (ETag) is re-read from the DB at most every N seconds per process (0 = every request)
     data_version_ttl: float = 5.0
+    # spec 025 chat: the Vercel AI Gateway key (same as the ETL) and the abuse/cost limits
+    ai_gateway_api_key: SecretStr | None = None
+    chat_per_ip_hour: int = 20
+    chat_per_day: int = 300
+    chat_max_tool_rounds: int = 6
+    chat_max_output_tokens: int = 1200
 
     @field_validator("cors_origins", mode="before")
     @classmethod
