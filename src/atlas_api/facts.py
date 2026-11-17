@@ -50,6 +50,7 @@ from atlas_api.db.models import (
     Meta,
     NewsItem,
     NewsItemCountry,
+    NobelPrize,
     Person,
     Polity,
     Snapshot,
@@ -271,6 +272,24 @@ def import_trade(session: Session, path: Path) -> int:
             for iso2, x in data["countries"].items() if iso2 in known]
     if rows:
         session.execute(insert(CountryTrade), rows)
+    session.flush()
+    return len(rows)
+
+
+def import_nobel(session: Session, path: Path) -> int:
+    """spec 033: data_out/nobel.json (etl nobel) -> nobel_prizes (rebuilt) + the `nobelprize` source row. Touches only these.
+    Countries that are not polities are stored as null (the API only answers for polities)."""
+    data = json.loads(path.read_text(encoding="utf-8"))
+    src = data["source"]
+    session.merge(Source(id=src["id"], title=src["title"], url=src["url"], license=src["license"],
+                         retrieved_at=datetime.fromisoformat(src["retrieved_at"])))
+    known = set(session.scalars(select(Polity.iso2).where(Polity.iso2.is_not(None))))
+    session.execute(delete(NobelPrize))
+    rows = [{**x, "origin_iso2": x["origin_iso2"] if x["origin_iso2"] in known else None,
+             "affiliations": [{**a, "iso2": a["iso2"] if a["iso2"] in known else None} for a in x["affiliations"]]}
+            for x in data["items"]]
+    if rows:
+        session.execute(insert(NobelPrize), rows)
     session.flush()
     return len(rows)
 

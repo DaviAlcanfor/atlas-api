@@ -38,6 +38,7 @@ from atlas_api.db.models import (
     Meta,
     NewsItem,
     NewsItemCountry,
+    NobelPrize,
     Organization,
     OrganizationMember,
     Person,
@@ -61,6 +62,7 @@ from atlas_api.schemas import (
     CountryIdeologies,
     CountryIdeology,
     CountryMembership,
+    CountryNobel,
     CountryOrganizations,
     CountryProfile,
     CountrySummary,
@@ -85,6 +87,7 @@ from atlas_api.schemas import (
     NamePeriod,
     NewsItemOut,
     NewsList,
+    NobelPrizeOut,
     OrganizationList,
     Party,
     PartyRef,
@@ -911,6 +914,18 @@ def list_news(s: Session, *, region: str | None = None, event_type: str | None =
         sources=_sources(s, {"gdelt"}) if page else [])
 
 
+# --- Nobel (spec 033) ----------------------------------------------------------------------------------------------------
+def country_nobel(s: Session, iso2: str) -> CountryNobel:
+    rows = list(s.scalars(select(NobelPrize).where(
+        (NobelPrize.origin_iso2 == iso2) | NobelPrize.affiliations.contains([{"iso2": iso2}]))
+        .order_by(NobelPrize.year.desc(), NobelPrize.category, NobelPrize.laureate_id)))
+    items = [NobelPrizeOut.model_validate({
+        "laureate_id": r.laureate_id, "name": r.name, "kind": r.kind, "year": r.year, "category": r.category,
+        "motivation": r.motivation, "portion": r.portion, "born_here": r.origin_iso2 == iso2,
+        "affiliated_here": any(a.get("iso2") == iso2 for a in r.affiliations), "affiliations": r.affiliations,
+        "wikipedia_url": r.wikipedia_url, "url": r.url}) for r in rows]
+    return CountryNobel(born=sum(x.born_here for x in items), affiliated=sum(x.affiliated_here for x in items),
+                        items=items, sources=_sources(s, {"nobelprize"}) if items else [])
 # --- organizations (spec 032) --------------------------------------------------------------------------------------------
 def _org_sources(o: Organization) -> list[SourceOut]:
     return [SourceOut.model_validate(x) for x in o.sources]

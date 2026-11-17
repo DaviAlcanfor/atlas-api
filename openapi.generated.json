@@ -557,6 +557,49 @@
         }
       }
     },
+    "/v1/countries/{iso2}/nobel": {
+      "get": {
+        "tags": [
+          "countries"
+        ],
+        "summary": "Get Nobel",
+        "operationId": "get_nobel_v1_countries__iso2__nobel_get",
+        "parameters": [
+          {
+            "name": "iso2",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z]{2}$",
+              "title": "Iso2"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CountryNobel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/countries/{iso2}/organizations": {
       "get": {
         "tags": [
@@ -2179,6 +2222,40 @@
         ],
         "title": "CountryMembership"
       },
+      "CountryNobel": {
+        "properties": {
+          "born": {
+            "type": "integer",
+            "title": "Born"
+          },
+          "affiliated": {
+            "type": "integer",
+            "title": "Affiliated"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/NobelPrizeOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/Source"
+            },
+            "type": "array",
+            "title": "Sources"
+          }
+        },
+        "type": "object",
+        "required": [
+          "born",
+          "affiliated",
+          "items",
+          "sources"
+        ],
+        "title": "CountryNobel"
+      },
       "CountryOrganizations": {
         "properties": {
           "items": {
@@ -3705,6 +3782,147 @@
           "sources"
         ],
         "title": "NewsList"
+      },
+      "NobelAffiliation": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "iso2": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Iso2"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "city",
+          "iso2"
+        ],
+        "title": "NobelAffiliation"
+      },
+      "NobelPrizeOut": {
+        "properties": {
+          "laureate_id": {
+            "type": "string",
+            "title": "Laureate Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "person",
+              "organization"
+            ],
+            "title": "Kind"
+          },
+          "year": {
+            "type": "integer",
+            "title": "Year"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "physics",
+              "chemistry",
+              "medicine",
+              "literature",
+              "peace",
+              "economics"
+            ],
+            "title": "Category"
+          },
+          "motivation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Motivation"
+          },
+          "portion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Portion"
+          },
+          "born_here": {
+            "type": "boolean",
+            "title": "Born Here"
+          },
+          "affiliated_here": {
+            "type": "boolean",
+            "title": "Affiliated Here"
+          },
+          "affiliations": {
+            "items": {
+              "$ref": "#/components/schemas/NobelAffiliation"
+            },
+            "type": "array",
+            "title": "Affiliations"
+          },
+          "wikipedia_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Wikipedia Url"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "laureate_id",
+          "name",
+          "kind",
+          "year",
+          "category",
+          "motivation",
+          "portion",
+          "born_here",
+          "affiliated_here",
+          "affiliations",
+          "wikipedia_url",
+          "url"
+        ],
+        "title": "NobelPrizeOut"
       },
       "Organization": {
         "properties": {
