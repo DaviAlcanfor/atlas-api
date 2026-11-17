@@ -189,6 +189,19 @@ class SubdivisionPopulation(BaseModel):  # v1.3 proposal (spec 024, CR-004)
     year: int | None
 
 
+class SubdivisionHdi(BaseModel):  # CR-011 (spec 024 phase 2)
+    value: float
+    year: int
+
+
+class SubdivisionHead(BaseModel):  # CR-011 (spec 024 phase 2)
+    name: str
+    office: str | None  # pt-BR name of the post ("Governador", "Ministro-chefe"); null when the source has none
+    since: str | None  # ISO date the holder took office
+    wikidata_id: str | None
+    source_id: str  # one of SubdivisionList.sources
+
+
 class Subdivision(BaseModel):  # v1.3 proposal (spec 024, CR-004)
     wikidata_id: str
     code: str | None
@@ -198,6 +211,8 @@ class Subdivision(BaseModel):  # v1.3 proposal (spec 024, CR-004)
     population: SubdivisionPopulation | None
     flag: Image | None
     area_codes: list[str]  # spec 026 (CR-004 addendum 4): telephone area codes (DDD); [] = no data
+    hdi: SubdivisionHdi | None = None  # CR-011: subnational HDI (Global Data Lab)
+    head: SubdivisionHead | None = None  # CR-011: current governor / chief minister (Wikipedia lists)
 
 
 class SubdivisionList(BaseModel):  # v1.3 proposal (spec 024, CR-004)

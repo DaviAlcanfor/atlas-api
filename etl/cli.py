@@ -7,6 +7,7 @@ from etl.ai import summaries as ai_summaries
 from etl.baci import pipeline as baci
 from etl.cliopatria import pipeline as cliopatria
 from etl.fx import pipeline as fx
+from etl.gdl import pipeline as gdl
 from etl.news import pipeline as news
 from etl.pantheon import pipeline as pantheon
 from etl.restcountries import pipeline as restcountries
@@ -18,6 +19,7 @@ from etl.wikidata import languages as wikidata_languages
 from etl.wikidata import leaders as wikidata_leaders
 from etl.wikidata import pipeline as wikidata
 from etl.wikidata import subdivisions as wikidata_subdivisions
+from etl.wikipedia import heads as wikipedia_heads
 from etl.wikipedia import history as wikipedia_history
 from etl.worldbank import pipeline as worldbank
 
@@ -27,6 +29,7 @@ COMMANDS: dict[str, Callable[[], None]] = {
     "wikidata-ideologies": wikidata_ideologies.run, "wikidata-subdivisions": wikidata_subdivisions.run, "pantheon": pantheon.run,
     "wikidata-languages": wikidata_languages.run, "undp": undp.run, "fx": fx.run,
     "wikipedia-history": wikipedia_history.run, "cliopatria": cliopatria.run, "ai-summaries": ai_summaries.run, "news": news.run, "baci": baci.run,
+    "gdl-shdi": gdl.run, "subdivision-heads": wikipedia_heads.run,
 }
 
 
