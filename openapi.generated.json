@@ -557,6 +557,49 @@
         }
       }
     },
+    "/v1/countries/{iso2}/organizations": {
+      "get": {
+        "tags": [
+          "countries"
+        ],
+        "summary": "Get Organizations",
+        "operationId": "get_organizations_v1_countries__iso2__organizations_get",
+        "parameters": [
+          {
+            "name": "iso2",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z]{2}$",
+              "title": "Iso2"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CountryOrganizations"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/polities": {
       "get": {
         "tags": [
@@ -1465,6 +1508,27 @@
         }
       }
     },
+    "/v1/organizations": {
+      "get": {
+        "tags": [
+          "organizations"
+        ],
+        "summary": "List Organizations",
+        "operationId": "list_organizations_v1_organizations_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationList"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/chat": {
       "post": {
         "tags": [
@@ -2132,6 +2196,82 @@
           "items"
         ],
         "title": "CountryList"
+      },
+      "CountryMembership": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "joined": {
+            "type": "string",
+            "title": "Joined"
+          },
+          "left": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Left"
+          },
+          "suspended": {
+            "type": "boolean",
+            "title": "Suspended"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "joined",
+          "left",
+          "suspended",
+          "note"
+        ],
+        "title": "CountryMembership"
+      },
+      "CountryOrganizations": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CountryMembership"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/Source"
+            },
+            "type": "array",
+            "title": "Sources"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "sources"
+        ],
+        "title": "CountryOrganizations"
       },
       "CountryProfile": {
         "properties": {
@@ -3766,6 +3906,144 @@
           "sources"
         ],
         "title": "NewsList"
+      },
+      "Organization": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "short": {
+            "type": "string",
+            "title": "Short"
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon"
+          },
+          "wikidata_qid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Wikidata Qid"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "members": {
+            "items": {
+              "$ref": "#/components/schemas/OrganizationMember"
+            },
+            "type": "array",
+            "title": "Members"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/Source"
+            },
+            "type": "array",
+            "title": "Sources"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "short",
+          "icon",
+          "wikidata_qid",
+          "note",
+          "members",
+          "sources"
+        ],
+        "title": "Organization"
+      },
+      "OrganizationList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Organization"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "OrganizationList"
+      },
+      "OrganizationMember": {
+        "properties": {
+          "iso2": {
+            "type": "string",
+            "title": "Iso2"
+          },
+          "joined": {
+            "type": "string",
+            "title": "Joined"
+          },
+          "left": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Left"
+          },
+          "suspended": {
+            "type": "boolean",
+            "title": "Suspended"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "iso2",
+          "joined",
+          "left",
+          "suspended",
+          "note"
+        ],
+        "title": "OrganizationMember"
       },
       "Party": {
         "properties": {

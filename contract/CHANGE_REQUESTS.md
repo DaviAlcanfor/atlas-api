@@ -448,3 +448,21 @@ GET /v1/live/events?since=&type= -> { items: LiveEvent[] /* newest first */, fet
 Data: USGS M4.5+ past-week feed (U.S. public domain; credit "U.S. Geological Survey") and NASA EONET v3 (NASA content, not
 copyrighted in the US; "visualization and general information purposes only", not official). Retention 7 days.
 Clients must credit both and present EONET as informative.
+## CR-013: international organizations with join/leave dates (spec 032, 2026-11-17; owner: "planeja como fazer o resto e dale")
+Additive, two read-only endpoints; no field of an existing type changes.
+```
+OrganizationMember { iso2: string, joined: string /* ISO 8601 with the source's precision: "YYYY" | "YYYY-MM" | "YYYY-MM-DD" */,
+                     left: string|null /* same format; null = still a member */, suspended: boolean /* still a member */,
+                     note: string|null }
+Organization       { id: string /* = GlossaryTerm.id of kind "membership" */, label: string, short: string, icon: string|null,
+                     wikidata_qid: string|null, note: string|null,
+                     members: OrganizationMember[] /* every period, current and former; by joined, then iso2 */,
+                     sources: Source[] }
+CountryMembership  { id: string, label: string, joined: string, left: string|null, suspended: boolean, note: string|null }
+GET /v1/organizations                  -> { items: Organization[] }   by label
+GET /v1/countries/{iso2}/organizations -> { items: CountryMembership[], sources: Source[] }
+     current first (by label), then former (latest `left` first). Unknown iso2 -> 404; a country in none -> items [].
+```
+Data: curated `content/organizations.yaml` (12 organizations, one Wikipedia revision permalink each, CC BY-SA 4.0, facts
+only), written by `import-content`. `CountryDetail.memberships` keeps its type; for those 12 labels it now follows the
+curated list (current members, suspended included) instead of Wikidata. Clients must show `sources` (Wikipedia attribution).

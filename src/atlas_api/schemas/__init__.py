@@ -4,6 +4,7 @@ from atlas_api.schemas.countries import *
 from atlas_api.schemas.economy import *
 from atlas_api.schemas.glossary import *
 from atlas_api.schemas.live import *
+from atlas_api.schemas.organizations import *
 from atlas_api.schemas.polities import *
 from atlas_api.schemas.search import *
 from atlas_api.schemas.snapshots import *
