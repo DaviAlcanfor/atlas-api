@@ -18,7 +18,7 @@ import httpx
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from atlas_api import queries
+from atlas_api import chat_logs, queries
 
 log = logging.getLogger("atlas_api.chat")
 MODEL = "openai/gpt-6-luna"  # owner's decision (2026-11-17): changing it needs his approval
@@ -285,6 +285,7 @@ def answer(messages: list[dict[str, str]], key: str, factory: Callable[[], Sessi
                     args = args if isinstance(args, dict) else {}
                     yield sse("tool", {"name": c["name"], "args": args})
                     result = run_tool(factory, c["name"], args)
+                    chat_logs.record(factory, c["name"], args, not (isinstance(result, dict) and "erro" in result))
                     collect_sources(result, sources)
                     msgs.append({"role": "tool", "tool_call_id": c["id"],
                                  "content": json.dumps(result, ensure_ascii=False)[:TOOL_RESULT_CAP]})

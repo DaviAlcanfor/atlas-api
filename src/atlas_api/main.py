@@ -19,8 +19,10 @@ from atlas_api.routers import (
     health,
     ideologies,
     indicators,
+    live,
     meta,
     news,
+    organizations,
     polities,
     search,
     snapshots,
@@ -62,7 +64,7 @@ def create_app(database_url: str | None = None) -> FastAPI:
     )
     register_error_handlers(app)
     for module in (health, meta, countries, polities, snapshots, search, glossary, economy, ideologies, indicators, news,
-                   chat):
+                   live, organizations, chat):
         app.include_router(module.router, prefix="/v1")
     return app
 
