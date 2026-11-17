@@ -58,5 +58,5 @@ campos `hdi` e `head` no item de `GET /v1/countries/{iso2}/subdivisions`. Texto 
 ## Tarefas (fase 2)
 - [x] Ler termos do GDL e da Wikipedia; testar o Wikidata contra a lista atual
 - [x] ETL `gdl-shdi` + `subdivision-heads`, migração 0019, endpoint, testes, CR-011
-- [x] Script de produção ensaiado numa cópia do banco local
+- [x] Script de produção ensaiado numa cópia do banco local (2026-11-17, `atlas_rehearsal`, duas vezes: 0019 aplicada, 3.698 estados, 842 com IDH, 109 com governador; segunda rodada idêntica)
 - [ ] Contrato (dono: colar o CR-011 nos dois repos) e web (mostrar IDH e governador no cartão do estado)
