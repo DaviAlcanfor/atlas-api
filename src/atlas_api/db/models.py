@@ -658,3 +658,21 @@ class OrganizationMember(Base):
     left: Mapped[str | None] = mapped_column(Text)
     suspended: Mapped[bool] = mapped_column(Boolean, server_default="false")
     note: Mapped[str | None] = mapped_column(Text)
+
+
+class PolityWikipedia(Base):
+    """spec 042: lead of the Wikipedia article of a historical entity (`etl wikipedia-polities` -> `import-polity-summaries`).
+    Keyed by Wikidata Q-id: most Cliopatria entities are not rows of `polities`. thumbnail_url is stored but not served
+    (image licences live on each file's page)."""
+
+    __tablename__ = "polity_summaries"
+
+    wikidata_qid: Mapped[str] = mapped_column(Text, primary_key=True)
+    lang: Mapped[str] = mapped_column(Text)
+    title: Mapped[str] = mapped_column(Text)
+    extract: Mapped[str] = mapped_column(Text)
+    page_url: Mapped[str] = mapped_column(Text)
+    license: Mapped[str] = mapped_column(Text)
+    revision: Mapped[int | None] = mapped_column(BigInteger)
+    fetched_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    thumbnail_url: Mapped[str | None] = mapped_column(Text)

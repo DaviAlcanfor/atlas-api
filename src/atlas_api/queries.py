@@ -46,6 +46,7 @@ from atlas_api.db.models import (
     Person,
     Polity,
     PolityName,
+    PolityWikipedia,
     Snapshot,
     SnapshotLink,
     Source,
@@ -143,6 +144,7 @@ from atlas_api.schemas import (
 )
 from atlas_api.schemas import Source as SourceOut
 from atlas_api.schemas import Subdivision as SubdivisionOut
+from atlas_api.schemas.polities import WikipediaSummary
 
 log = logging.getLogger("atlas_api")
 YEAR_MIN = -3400  # ponytail: fixed lower bound of the slider = first Cliopatria year (spec 012); move to config if it ever changes
@@ -441,6 +443,18 @@ def _links(s: Session, polity_id: str, *, predecessors: bool) -> list[Link]:
     return [Link(polity_id=p.id, name=p.name, year=sc.year, kind=sc.kind) for sc, p in rows]
 
 
+def wikipedia_summary(s: Session, qid: str | None) -> WikipediaSummary | None:
+    """spec 042: the stored Wikipedia lead of a Wikidata item, with the attribution CC BY-SA 4.0 asks for; null when none."""
+    row = s.get(PolityWikipedia, qid) if qid else None
+    if row is None:
+        return None
+    return WikipediaSummary(
+        text=row.extract, lang=row.lang, title=row.title, url=row.page_url, license=row.license,
+        license_url="https://creativecommons.org/licenses/by-sa/4.0/",
+        attribution=f"Texto: Wikipédia ({row.lang}), artigo \"{row.title}\", licença {row.license}",
+        revision=row.revision, fetched_at=_ts(row.fetched_at) or "")
+
+
 def get_polity(s: Session, polity_id: str) -> PolityDetail | None:
     p = s.scalar(
         select(Polity).where(Polity.id == polity_id)
@@ -460,6 +474,7 @@ def get_polity(s: Session, polity_id: str) -> PolityDetail | None:
         wikipedia=Wikipedia(title=p.wikipedia_title,
                             url="https://pt.wikipedia.org/wiki/" + p.wikipedia_title.replace(" ", "_"))
         if p.wikipedia_title else None,
+        wikipedia_summary=wikipedia_summary(s, p.wikidata_qid),
         sources=[_source(x) for _, x in sorted(sources.items())],
         updated_at=_ts(p.updated_at) or "",
     )
