@@ -482,3 +482,12 @@ GET /v1/countries/{iso2}/organizations -> { items: CountryMembership[], sources:
 Data: curated `content/organizations.yaml` (12 organizations, one Wikipedia revision permalink each, CC BY-SA 4.0, facts
 only), written by `import-content`. `CountryDetail.memberships` keeps its type; for those 12 labels it now follows the
 curated list (current members, suspended included) instead of Wikidata. Clients must show `sources` (Wikipedia attribution).
+## CR-016: chat modes and `map` event (spec 039, 2026-11-18; owner approved spec 039)
+Additive; `POST /v1/chat` keeps working unchanged when `mode` is absent.
+```
+POST /v1/chat   body gains: mode?: "learn" | "analyse" | "tell"   (absent = today's behaviour; unknown value -> 422)
+SSE new event:  map  { iso2: string[], layer?: string, year?: int }
+     emitted only when `mode` was sent AND the answer yields a valid layer or year; sent after `countries`, before `done`.
+     iso2: existing countries the answer links to; layer: "content"|"regime"|"flags"|"ranking"; year: int in [year_min, year_max], never 0.
+     Every value is validated on the server; clients still ignore values they do not know.
+```

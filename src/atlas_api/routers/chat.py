@@ -19,6 +19,7 @@ class ChatMessage(BaseModel):
 
 class ChatIn(BaseModel):
     messages: Annotated[list[ChatMessage], Field(min_length=1, max_length=20)]
+    mode: chat.Mode | None = None  # spec 039: unknown value = 422
 
     @field_validator("messages")
     @classmethod
@@ -47,6 +48,6 @@ def post_chat(body: ChatIn, request: Request) -> Response:
     if refusal:
         return problem(429, refusal, "Limite do chat atingido")
     events = chat.answer([m.model_dump() for m in body.messages], key, request.app.state.session_factory,
-                         st.chat_max_tool_rounds, st.chat_max_output_tokens)
+                         st.chat_max_tool_rounds, st.chat_max_output_tokens, body.mode)
     return StreamingResponse(events, media_type="text/event-stream",
                              headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"})
