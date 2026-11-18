@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     data_version_ttl: float = 5.0
     # spec 025 chat: the Vercel AI Gateway key (same as the ETL) and the abuse/cost limits
     ai_gateway_api_key: SecretStr | None = None
+    chat_enabled: bool = False  # the /v1/chat router is only mounted when true
     chat_per_ip_hour: int = 20
     chat_per_day: int = 300
     chat_max_tool_rounds: int = 6

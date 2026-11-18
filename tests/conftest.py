@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from atlas_api.core.config import get_settings
 from atlas_api.importer.content import import_content
 from atlas_api.importer.facts import import_facts
+os.environ.setdefault("CHAT_ENABLED", "true")  # the chat router is off by default; its tests need it on
 from atlas_api.main import create_app
 
 # same host/port as the dev DB (.env DATABASE_URL); TEST_DATABASE_URL overrides. TEST_DB_PREFIX (default "atlas") names the

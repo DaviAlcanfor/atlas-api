@@ -63,8 +63,11 @@ def create_app(database_url: str | None = None) -> FastAPI:
         expose_headers=["ETag", "X-Data-Version"],
     )
     register_error_handlers(app)
-    for module in (health, meta, countries, polities, snapshots, search, glossary, economy, ideologies, indicators, news,
-                   live, organizations, chat):
+    modules = [health, meta, countries, polities, snapshots, search, glossary, economy, ideologies, indicators, news,
+               live, organizations]
+    if get_settings().chat_enabled:  # chatbot is off in production for now (owner, 2026-11-18); CHAT_ENABLED=true turns it back on
+        modules.append(chat)
+    for module in modules:
         app.include_router(module.router, prefix="/v1")
     return app
 
