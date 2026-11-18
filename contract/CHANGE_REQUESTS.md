@@ -491,3 +491,19 @@ SSE new event:  map  { iso2: string[], layer?: string, year?: int }
      iso2: existing countries the answer links to; layer: "content"|"regime"|"flags"|"ranking"; year: int in [year_min, year_max], never 0.
      Every value is validated on the server; clients still ignore values they do not know.
 ```
+## CR-017: technology and chips trade per country (spec 041, 2026-11-18; owner approved "faz o resto")
+Additive, one read-only endpoint; no field of an existing type changes.
+```
+TechPartner  { iso2: string, value_usd: float, share: float /* of THIS product flow, 0..1 */ }       // same shape as TradePartner (CR-010)
+TechProduct  { hs: "8542"|"8471"|"8802"|"8803"|"8541"|"8517" /* HS 2022, 4 digits */,
+               label: string /* pt-BR heading, verbatim from MDIC/Secex NCM_SH (CC BY-ND 3.0: never reworded) */,
+               flow: "export"|"import", value_usd: float,
+               share: float /* of the country's exports (flow export) or imports (flow import), 0..1 */,
+               partners: TechPartner[] /* up to 5 destinations (export) or origins (import), by value */ }
+CountryTech  { year: int|null /* null = no BACI data */, products: TechProduct[] /* by hs in the order above, export before import;
+               only flows with trade */, sources: Source[] }
+GET /v1/countries/{iso2}/tech -> CountryTech   Unknown iso2 -> 404; no BACI data (e.g. TW) -> { year: null, products: [], sources: [] }.
+```
+Data: BACI (CEPII, Etalab 2.0, HS22, 2024) already used by `/trade`; `etl baci` reads the same zip, `import-trade` fills the new table
+`country_tech_trade` (migration 0024, additive). Labels from MDIC/Secex (source ids `baci`, `mdic-sh`). `TX.VAL.TECH.MF.ZS` (high-tech
+share of manufactured exports) is NOT part of this endpoint: it is already in `GET /v1/indicators` and the profile.

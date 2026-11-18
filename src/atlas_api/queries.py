@@ -20,6 +20,7 @@ from atlas_api.db.models import (
     CountryFacts,
     CountryHistory,
     CountryLanguage,
+    CountryTechTrade,
     CountryTrade,
     CurrencyStat,
     Event,
@@ -67,6 +68,7 @@ from atlas_api.schemas import (
     CountryOrganizations,
     CountryProfile,
     CountrySummary,
+    CountryTechOut,
     CountryTradeOut,
     Counts,
     Currency,
@@ -877,6 +879,15 @@ def get_trade(s: Session, iso2: str) -> CountryTradeOut | None:
         "year": t.year, "exports_usd": t.exports_usd, "imports_usd": t.imports_usd, "top_exports": t.top_exports,
         "top_destinations": t.top_destinations, "top_origins": t.top_origins,
         "sources": _sources(s, set(t.source_ids))})
+
+
+def get_tech(s: Session, iso2: str) -> CountryTechOut | None:
+    """spec 041: tech HS4 trade of the country; None when BACI has no data for it (the route then answers empty)."""
+    t = s.get(CountryTechTrade, iso2)
+    if t is None:
+        return None
+    return CountryTechOut.model_validate({"year": t.year, "products": t.products,
+                                          "sources": _sources(s, set(t.source_ids))})
 
 
 # --- news (spec 008) -----------------------------------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 # 041 - Tecnologia e chips por país (onda 4, B13)
-Status: approved (dono, 2026-11-18: "faz o resto") | BLOQUEADA por lacuna de dado (ver abaixo); nenhuma rota escrita |
-Contrato: CR-017 NÃO escrita (o delta depende da decisão abaixo) | Origem: B13 do PLAN | Relacionada: 029
+Status: in progress (aprovada pelo dono em 2026-11-18: "faz o resto"; opção A em PR) |
+Contrato: CR-017 | Origem: B13 do PLAN | Relacionada: 029
 
 ## Pedido
 Seção "Tecnologia e chips" por país, derivada do BACI **já no banco**, sem fonte nova: exportações e importações dos produtos
@@ -20,33 +20,36 @@ Os 6 códigos só aparecem se estiverem entre os 10 maiores produtos EXPORTADOS 
 dado (ou, pior, passar por "não exporta chips"), o que seria inventar uma ausência.
 
 ### Não baixado
-Regra do dono: sem baixar arquivos grandes. Nada foi baixado. (Observação: o zip HS22 de 301 MB JÁ está em
-`etl_cache/baci/BACI_HS22_V202601.zip` do checkout principal; reagregar dele não exige download.)
+Regra do dono: sem baixar arquivos grandes. Nada foi baixado. O zip HS22 de 301 MB JÁ estava em `etl_cache/baci/`; a opção A reagrega dele.
 
 ### `TX.VAL.TECH.MF.ZS`
 Já está no ETL do Banco Mundial (`etl/worldbank/pipeline.py`, "Exportações: alta tecnologia", % das exportações de
 manufaturados; a descrição do pedido diz "industriais", o rótulo do indicador é "manufaturados") e em `queries.py`; sai pelo
 catálogo `GET /v1/indicators` e pelo perfil. Não precisa de rota nova.
 
-## Opções para destravar (decisão do dono)
-A. **Recomendada**: estender o ETL `etl baci` (lendo o zip já em cache) para gravar, por país e para os 6 HS4, exportação e
-   importação (valor, parte do total, top 5 parceiros) em tabela aditiva `country_tech_trade` (migração 0NNN aditiva, 1 linha por
-   país x HS4 x fluxo, JSONB só nos parceiros), `import-trade` a preenche; rota `GET /v1/countries/{iso2}/tech`. Sem fonte nova.
-B. Só o que já existe: devolver os HS4 que por acaso estão no top 10 de exportação. Não recomendado (lacuna acima).
+## Decisão (dono, 2026-11-18): opção A
+Estender `etl baci` (lê o zip HS22 já em `etl_cache/baci/`, sem baixar nada); o `trade.json` ganha `tech` por país; `import-trade`
+preenche a tabela nova `country_tech_trade` (migração 0024, ADITIVA: 1 linha por país, `products` em JSONB; o esquema migra sozinho
+no deploy). Rótulos: os mesmos nomes pt-BR literais do MDIC/Secex (`NCM_SH.csv`, CC BY-ND 3.0, fonte `mdic-sh`, lida na 029).
+Regras: valor do produto = soma dos fluxos do HS4 no ano; `share` = parte das exportações (ou importações) do país; parceiros =
+até 5 por fluxo, `share` sobre o valor do produto naquele fluxo; parceiro sem ISO2 (p.ex. Taiwan = "Other Asia, nes" no BACI)
+conta no valor, nunca aparece como parceiro.
 
-## Contract delta (proposta para A; CR-017 só será escrita após a decisão)
+## Contract delta (= CR-017)
 ```
 GET /v1/countries/{iso2}/tech -> {
-  year: int,
-  products: [{ hs: string, label: string (pt-BR, MDIC), flow: "export"|"import", value_usd: float, share: float,
-               partners: [{ iso2: string, value_usd: float, share: float }] }],   // até 6 produtos x 2 fluxos; partners até 5
+  year: int|null,
+  products: [{ hs: "8542"|"8471"|"8802"|"8803"|"8541"|"8517", label: string (pt-BR, MDIC), flow: "export"|"import",
+               value_usd: float, share: float,
+               partners: [{ iso2: string, value_usd: float, share: float }] }],   // partners até 5
   sources: [Source]
 }
 ```
-404 para iso2 desconhecido; país sem dado = `products: []`.
+404 para iso2 desconhecido; país sem dado no BACI (p.ex. TW) = `{year: null, products: [], sources: []}`.
 
 ## Tarefas
 - [x] Inspecionar o que o BACI importado guarda (lacuna registrada acima)
-- [ ] Dono escolhe A ou B
-- [ ] ETL + migração aditiva + `import-trade` + rota + testes + CR-017 + OpenAPI
+- [x] Dono escolhe A (2026-11-18)
+- [x] ETL + migração 0024 aditiva + `import-trade` + rota + testes + CR-017 + OpenAPI
+- [ ] O dono cola a CR-017 no contrato dos 2 repos e roda `import-trade` em produção (ANTES do merge não é obrigatório: a rota responde vazio sem dados)
 - [ ] Web

@@ -33,6 +33,7 @@ from atlas_api.db.models import (
     CountryFacts,
     CountryHistory,
     CountryLanguage,
+    CountryTechTrade,
     CountryTrade,
     CurrencyStat,
     FxRate,
@@ -260,7 +261,7 @@ def import_briefs(session: Session, path: Path, known: set[str | None]) -> int:
 
 
 def import_trade(session: Session, path: Path) -> int:
-    """spec 029 phase 2: data_out/trade.json (etl baci) -> country_trade (rebuilt) + its source rows. Touches only these.
+    """spec 029 phase 2: data_out/trade.json (etl baci) -> country_trade + country_tech_trade (spec 041), both rebuilt + its source rows. Touches only these.
     Countries that are not polities (territories, e.g. HK) are not stored; they still appear as partners of others."""
     data = json.loads(path.read_text(encoding="utf-8"))
     retrieved = datetime.fromisoformat(data["retrieved_at"])
@@ -269,10 +270,15 @@ def import_trade(session: Session, path: Path) -> int:
     known = set(session.scalars(select(Polity.iso2).where(Polity.iso2.is_not(None))))
     ids = [x["id"] for x in data["sources"]]
     session.execute(delete(CountryTrade))
-    rows = [{"iso2": iso2, "year": data["year"], "source_ids": ids, **x}
+    session.execute(delete(CountryTechTrade))
+    rows = [{"iso2": iso2, "year": data["year"], "source_ids": ids, **{k: v for k, v in x.items() if k != "tech"}}
             for iso2, x in data["countries"].items() if iso2 in known]
     if rows:
         session.execute(insert(CountryTrade), rows)
+    tech = [{"iso2": iso2, "year": data["year"], "source_ids": ids, "products": x["tech"]}
+            for iso2, x in data["countries"].items() if iso2 in known and x.get("tech")]
+    if tech:
+        session.execute(insert(CountryTechTrade), tech)
     session.flush()
     return len(rows)
 

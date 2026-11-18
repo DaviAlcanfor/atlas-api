@@ -494,6 +494,18 @@ class CountryTrade(Base):
     source_ids: Mapped[list[str]] = mapped_column(JSONB)
 
 
+class CountryTechTrade(Base):
+    """spec 041: BACI trade of the tech HS4 headings (8542, 8471, 8802, 8803, 8541, 8517) per country, as served:
+    [{hs, label, flow, value_usd, share, partners: [{iso2, value_usd, share}]}] (`etl baci` -> `import-trade`)."""
+
+    __tablename__ = "country_tech_trade"
+
+    iso2: Mapped[str] = mapped_column(CHAR(2), ForeignKey("polities.iso2"), primary_key=True)
+    year: Mapped[int] = mapped_column(Integer)
+    products: Mapped[list[dict[str, Any]]] = mapped_column(JSONB)
+    source_ids: Mapped[list[str]] = mapped_column(JSONB)
+
+
 class Subdivision(Base):
     """spec 024: one admin-1 unit drawn by the web (Natural Earth wikidataid); `ord` = order in the web's file."""
 
