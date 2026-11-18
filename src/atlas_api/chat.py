@@ -12,6 +12,7 @@ import time
 from collections import deque
 from collections.abc import Callable, Iterator
 from datetime import UTC, datetime
+from enum import StrEnum
 from typing import Any
 
 import httpx
@@ -27,6 +28,8 @@ MAX_CALLS_PER_ROUND = 8  # tool calls executed per model turn (a model may ask f
 TOOL_RESULT_CAP = 32_000  # chars of JSON per tool result sent to the model (all 196 countries fit; bounds input cost)
 ISO2 = re.compile(r"^[A-Z]{2}$")
 LINK = re.compile(r"/pais/([a-zA-Z]{2})\b")
+MAP_LINK = re.compile(r"/mapa\?([^\s)]*)")  # spec 039: [texto](/mapa?camada=regime&ano=1700), only read when a mode is set
+MAP_LAYERS = ("content", "regime", "flags", "ranking")  # the web's LayerId minus the geoguessr game
 
 SYSTEM = """Você é o assistente do Atlas, um globo interativo com dados de países.
 Regras:
@@ -38,6 +41,33 @@ Regras:
 - Ao mencionar um país, use um link interno em markdown: [Brasil](/pais/br) (código ISO2 em minúsculas).
 - Códigos de país são ISO2 em maiúsculas nas ferramentas (BR, AR, US). Se não souber o código, use a ferramenta `search`.
 - Para "quais países são X", use `list_countries` (filtros de região/regime) ou `indicator_ranking`."""
+
+
+class Mode(StrEnum):
+    """spec 039: only ever set from the request's `mode` field, never from user or tool text."""
+    learn = "learn"
+    analyse = "analyse"
+    tell = "tell"
+
+
+_MAP_RULE = """
+- Para o usuário ver algo no mapa, inclua um link interno [texto](/mapa?camada=regime&ano=1700) (camada: content, regime,
+  flags ou ranking; ano inteiro, sem ano 0, negativo = a.C.). Use só quando fizer sentido; combine com links /pais/xx."""
+MODES: dict[Mode, str] = {
+    Mode.learn: """
+Modo Aprender:
+- Explique em etapas curtas, uma ideia por vez, sempre ligada aos dados que as ferramentas retornaram.
+- Termine toda resposta oferecendo 2 ou 3 opções para seguir (por exemplo: "simplifica", "continua", "me testa").""" + _MAP_RULE,
+    Mode.analyse: """
+Modo Analisar:
+- Compare países e indicadores informando, para cada número: valor, ano, fonte e método quando o dado trouxer.
+- Aponte as lacunas (países ou anos sem dado) e os limites da comparação (anos diferentes, definições diferentes).""" + _MAP_RULE,
+    Mode.tell: """
+Modo Narrar:
+- Conte uma história em etapas curtas, só com conteúdo que o Atlas tem (períodos e fronteiras da viagem no tempo, fatos com fonte).
+- Nunca descreva rotas militares nem batalhas sem dado do Atlas; se o Atlas não tem, diga que não tem.
+- Quando algo for incerto ou ambíguo, diga a incerteza explicitamente.""" + _MAP_RULE,
+}
 
 
 # --- tools: the API's own queries, called in-process ------------------------------------------------------------------
@@ -245,10 +275,23 @@ def _chunks(http: httpx.Client, key: str, payload: dict[str, Any]) -> Iterator[d
             yield json.loads(data)
 
 
+def _map_view(text: str) -> tuple[str | None, int | None]:
+    """First valid layer and year of the answer's /mapa links; anything else is dropped."""
+    layer = year = None
+    for q in MAP_LINK.findall(text):
+        for k, _, v in (p.partition("=") for p in q.split("&")):
+            if k == "camada" and layer is None and v in MAP_LAYERS:
+                layer = v
+            if k == "ano" and year is None and re.fullmatch(r"-?\d{1,5}", v) \
+                    and int(v) != 0 and queries.YEAR_MIN <= int(v) <= queries.year_max():
+                year = int(v)
+    return layer, year
+
+
 def answer(messages: list[dict[str, str]], key: str, factory: Callable[[], Session], max_rounds: int,
-           max_tokens: int) -> Iterator[str]:
-    """Streams the SSE events of one answer: text*, tool*, countries?, done | error."""
-    msgs: list[dict[str, Any]] = [{"role": "system", "content": SYSTEM}, *messages]
+           max_tokens: int, mode: Mode | None = None) -> Iterator[str]:
+    """Streams the SSE events of one answer: text*, tool*, countries?, map?, done | error."""
+    msgs: list[dict[str, Any]] = [{"role": "system", "content": SYSTEM + (MODES[mode] if mode else "")}, *messages]
     sources: dict[str, dict[str, Any]] = {}
     text = ""
     try:
@@ -289,6 +332,7 @@ def answer(messages: list[dict[str, str]], key: str, factory: Callable[[], Sessi
                     collect_sources(result, sources)
                     msgs.append({"role": "tool", "tool_call_id": c["id"],
                                  "content": json.dumps(result, ensure_ascii=False)[:TOOL_RESULT_CAP]})
+        layer, year = _map_view(text) if mode else (None, None)
         iso2s: list[str] = []  # the countries the answer links to (/pais/xx): the globe flies there
         if linked := list(dict.fromkeys(m.upper() for m in LINK.findall(text))):
             with factory() as s:
@@ -299,4 +343,6 @@ def answer(messages: list[dict[str, str]], key: str, factory: Callable[[], Sessi
         return
     if iso2s:
         yield sse("countries", {"iso2": iso2s})
+    if layer or year is not None:  # spec 039: only server-validated values
+        yield sse("map", {"iso2": iso2s} | ({"layer": layer} if layer else {}) | ({"year": year} if year is not None else {}))
     yield sse("done", {"sources": list(sources.values())})

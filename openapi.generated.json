@@ -1648,6 +1648,16 @@
             "maxItems": 20,
             "minItems": 1,
             "title": "Messages"
+          },
+          "mode": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Mode"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -3837,6 +3847,16 @@
           "counts"
         ],
         "title": "Meta"
+      },
+      "Mode": {
+        "type": "string",
+        "enum": [
+          "learn",
+          "analyse",
+          "tell"
+        ],
+        "title": "Mode",
+        "description": "spec 039: only ever set from the request's `mode` field, never from user or tool text."
       },
       "NamePeriod": {
         "properties": {
