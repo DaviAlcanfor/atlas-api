@@ -1,0 +1,99 @@
+{
+ "wildfires": [
+  {
+   "id": "EONET_26465",
+   "title": "Wildfire Range 47, Forrest, Mississippi",
+   "description": "16 Miles SE from Hattiesburg, MS",
+   "link": "https://eonet.gsfc.nasa.gov/api/v3/events/EONET_26465",
+   "closed": null,
+   "categories": [
+    {
+     "id": "wildfires",
+     "title": "Wildfires"
+    }
+   ],
+   "sources": [
+    {
+     "id": "IRWIN",
+     "url": "https://irwin.doi.gov/observer/incidents/2026-MSMNF-000723"
+    }
+   ],
+   "geometry": [
+    {
+     "magnitudeValue": 2378.77,
+     "magnitudeUnit": "acres",
+     "date": "2026-11-13T15:18:00Z",
+     "type": "Point",
+     "coordinates": [
+      -89.159329,
+      31.099822
+     ]
+    }
+   ]
+  },
+  {
+   "id": "EONET_26464",
+   "title": "Wildfire 201W, Perry, Mississippi",
+   "description": "7 Miles SW from New Augusta, MS",
+   "link": "https://eonet.gsfc.nasa.gov/api/v3/events/EONET_26464",
+   "closed": null,
+   "categories": [
+    {
+     "id": "wildfires",
+     "title": "Wildfires"
+    }
+   ],
+   "sources": [
+    {
+     "id": "IRWIN",
+     "url": "https://irwin.doi.gov/observer/incidents/2026-MSMNF-000720"
+    }
+   ],
+   "geometry": [
+    {
+     "magnitudeValue": 2700.0,
+     "magnitudeUnit": "acres",
+     "date": "2026-11-13T13:31:00Z",
+     "type": "Point",
+     "coordinates": [
+      -89.079783,
+      31.119783
+     ]
+    }
+   ]
+  }
+ ],
+ "severeStorms": [
+  {
+   "id": "EONET_26494",
+   "title": "Tropical Cyclone Akvan",
+   "description": null,
+   "link": "https://eonet.gsfc.nasa.gov/api/v3/events/EONET_26494",
+   "closed": null,
+   "categories": [
+    {
+     "id": "severeStorms",
+     "title": "Severe Storms"
+    }
+   ],
+   "sources": [
+    {
+     "id": "JTWC",
+     "url": "https://www.metoc.navy.mil/jtwc/products/io0526.tcw"
+    }
+   ],
+   "geometry": [
+    {
+     "magnitudeValue": 35.0,
+     "magnitudeUnit": "kts",
+     "date": "2026-11-16T18:00:00Z",
+     "type": "Point",
+     "coordinates": [
+      86.8,
+      11.4
+     ]
+    }
+   ]
+  }
+ ]
+}

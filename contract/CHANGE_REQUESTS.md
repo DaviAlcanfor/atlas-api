@@ -359,6 +359,7 @@ Refreshed every 6 h (`.github/workflows/news.yml`); retention 30 days; the impor
 Clients must cite and link the GDELT Project (its terms: "any use or redistribution of the data must include a citation").
 
 ## CR-009: what the economy lives on (spec 029 phase 1, 2026-11-15; owner: "aprovado tudo")
+**Applied 2026-11-17 as contract v1.7** (owner: "cola vc logo isso no que precisa").
 Additive. One more profile group; nothing else changes.
 ```
 ProfileGroup.id: "life"|"society"|"income"|"environment"|"economy"
@@ -373,6 +374,7 @@ Source: World Bank WDI (CC BY 4.0), same ETL as the other indicators. The same 1
 **Deploy order**: clients validate `ProfileGroup.id` as a closed enum, so the web must accept "economy" BEFORE the API serves it.
 
 ## CR-010: what a country exports and who it trades with (spec 029 phase 2, 2026-11-16; owner: "aprovado tudo" 2026-11-15)
+**Applied 2026-11-17 as contract v1.8** (owner: "cola vc logo isso no que precisa").
 Additive, one read-only endpoint:
 ```
 TradeProduct    { hs: string /* HS 2022 heading, 4 digits */, label: string /* pt-BR, verbatim */,
@@ -394,6 +396,7 @@ date of the most recent update") and must show `label` VERBATIM (CC BY-ND: no sh
 truncation with the full text available, e.g. a tooltip, is the client's call to confirm with the owner).
 
 ## CR-011: subnational HDI and current head of each subdivision (spec 024 phase 2, 2026-11-17; spec approved 2026-11-12)
+**Applied 2026-11-17 as contract v1.9** (owner: "cola vc logo isso no que precisa").
 Additive, two optional fields on the existing `Subdivision` (absent or null = no data; old clients ignore them):
 ```
 SubdivisionHdi  { value: number /* 0..1, 3 decimals */, year: int }
@@ -409,3 +412,73 @@ Subdivision     += { hdi: SubdivisionHdi|null, head: SubdivisionHead|null }
 - Head: only BR, US and IN for now (Wikipedia lists of current holders, CC BY-SA 4.0, joined by Wikidata id). Other countries:
   `head` = null (Wikidata is too stale, see spec). Clients should show `since` and the source; heads change between imports.
 Clients must credit "Global Data Lab (Smits & Permanyer), Radboud University" for `hdi` and link the Wikipedia source for `head`.
+
+## CR-012: Atlas chatbot (spec 025, 2026-11-17; owner approved the spec 2026-11-17)
+**Applied 2026-11-17 as contract v1.10** (owner: "cola vc logo isso no que precisa").
+Additive, one POST endpoint (the API's first; it writes nothing, stores nothing). CR-011 is reserved for spec 024.
+```
+ChatMessage { role: "user"|"assistant", content: string /* 1..4000 chars */ }
+POST /v1/chat  body: { messages: ChatMessage[] /* 1..20, the last one role "user" */ }
+-> 200 text/event-stream, events in this order (each `data:` is one JSON object):
+   event "text"      { delta: string }                 /* 0..n, answer text in pieces (markdown; internal links like /pais/br) */
+   event "tool"      { name: string, args: object }    /* 0..n, a tool the model called (for a "consultando..." hint) */
+   event "countries" { iso2: string[] }                /* 0..1, countries the answer links to, in order of appearance */
+   event "done"      { sources: Source[] }             /* last event on success: sources of the data the tools returned */
+   event "error"     { message: string }               /* last event on failure (pt-BR), instead of "done" */
+422 problem+json: bad body.  429 problem+json (pt-BR detail): over 20 questions/hour per IP or 300/day in total.
+503 problem+json: chat not configured on the server.   Not cached (Cache-Control: no-store); no ETag.
+```
+Model: `openai/gpt-6-luna` only (owner's decision), via the Vercel AI Gateway; the browser keeps the history and resends it.
+Limits are env-overridable (CHAT_PER_IP_HOUR, CHAT_PER_DAY, CHAT_MAX_TOOL_ROUNDS=6, CHAT_MAX_OUTPUT_TOKENS=1200).
+Clients must show the answer as AI-generated and list `done.sources`.
+
+## CR-015: "acontecendo agora", recent natural events (spec 034, 2026-11-17; owner: "planeja como fazer o resto e dale")
+Additive, one read-only endpoint, refreshed every 30 min by `.github/workflows/live-events.yml`.
+```
+LiveEvent { id: string /* "usgs:<id>" | "eonet:<id>" */,
+            type: "earthquake"|"wildfire"|"severe_storm"|"volcano"|"flood"|"landslide"|"dust_haze"|"temp_extreme"|"drought"|"snow",
+            lat: number, lng: number, magnitude: number|null,
+            magnitude_unit: string|null /* USGS magType ("mww", "mb"...) or EONET unit ("kts", "acres"...) */,
+            title: string /* verbatim from the source, English */, url: string|null /* event page at the source */,
+            time: string /* ISO 8601 UTC; EONET: date of its latest position */, source: "usgs"|"eonet" }
+GET /v1/live/events?since=&type= -> { items: LiveEvent[] /* newest first */, fetched_at: string|null, sources: Source[] }
+     since: ISO 8601, default and floor 7 days ago; type: comma-separated LiveEvent.type values, unknown -> 422.
+     Exception to the caching rules: no ETag, not tied to data_version; Cache-Control "public, max-age=300".
+```
+Data: USGS M4.5+ past-week feed (U.S. public domain; credit "U.S. Geological Survey") and NASA EONET v3 (NASA content, not
+copyrighted in the US; "visualization and general information purposes only", not official). Retention 7 days.
+Clients must credit both and present EONET as informative.
+## CR-014: Nobel Prize laureates per country (spec 033, 2026-11-17; owner: "planeja como fazer o resto e dale")
+Additive, one read-only endpoint.
+```
+NobelAffiliation { name: string, city: string|null, iso2: string|null /* today's borders; null = not a /v1/countries country */ }
+NobelPrize   { laureate_id: string, name: string, kind: "person"|"organization", year: int,
+               category: "physics"|"chemistry"|"medicine"|"literature"|"peace"|"economics",
+               motivation: string|null /* official English text of the Nobel Prize API, verbatim, never translated */,
+               portion: string|null /* "1" | "1/2" | "1/3" | "1/4" */,
+               born_here: boolean /* born (organization: founded) in this country, today's borders */,
+               affiliated_here: boolean /* an affiliation at the time of the award is in this country */,
+               affiliations: NobelAffiliation[], wikipedia_url: string|null, url: string /* nobelprize.org laureate page */ }
+CountryNobel { born: int, affiliated: int /* prize counts */, items: NobelPrize[] /* newest first */, sources: Source[] }
+GET /v1/countries/{iso2}/nobel -> CountryNobel   Unknown iso2 -> 404; no laureate -> items [], counts 0, sources [].
+```
+Data: Nobel Prize API v2.1 (CC0 1.0), `etl nobel` + `import-nobel` (manual, yearly). Source id `nobelprize`. Its terms: do not
+alter the data; no Nobel name/logo implying endorsement; citing the API as the source is encouraged (clients show `sources`).
+## CR-013: international organizations with join/leave dates (spec 032, 2026-11-17; owner: "planeja como fazer o resto e dale")
+Additive, two read-only endpoints; no field of an existing type changes.
+```
+OrganizationMember { iso2: string, joined: string /* ISO 8601 with the source's precision: "YYYY" | "YYYY-MM" | "YYYY-MM-DD" */,
+                     left: string|null /* same format; null = still a member */, suspended: boolean /* still a member */,
+                     note: string|null }
+Organization       { id: string /* = GlossaryTerm.id of kind "membership" */, label: string, short: string, icon: string|null,
+                     wikidata_qid: string|null, note: string|null,
+                     members: OrganizationMember[] /* every period, current and former; by joined, then iso2 */,
+                     sources: Source[] }
+CountryMembership  { id: string, label: string, joined: string, left: string|null, suspended: boolean, note: string|null }
+GET /v1/organizations                  -> { items: Organization[] }   by label
+GET /v1/countries/{iso2}/organizations -> { items: CountryMembership[], sources: Source[] }
+     current first (by label), then former (latest `left` first). Unknown iso2 -> 404; a country in none -> items [].
+```
+Data: curated `content/organizations.yaml` (12 organizations, one Wikipedia revision permalink each, CC BY-SA 4.0, facts
+only), written by `import-content`. `CountryDetail.memberships` keeps its type; for those 12 labels it now follows the
+curated list (current members, suspended included) instead of Wikidata. Clients must show `sources` (Wikipedia attribution).

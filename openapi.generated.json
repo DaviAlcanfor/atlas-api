@@ -557,6 +557,92 @@
         }
       }
     },
+    "/v1/countries/{iso2}/nobel": {
+      "get": {
+        "tags": [
+          "countries"
+        ],
+        "summary": "Get Nobel",
+        "operationId": "get_nobel_v1_countries__iso2__nobel_get",
+        "parameters": [
+          {
+            "name": "iso2",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z]{2}$",
+              "title": "Iso2"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CountryNobel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/countries/{iso2}/organizations": {
+      "get": {
+        "tags": [
+          "countries"
+        ],
+        "summary": "Get Organizations",
+        "operationId": "get_organizations_v1_countries__iso2__organizations_get",
+        "parameters": [
+          {
+            "name": "iso2",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z]{2}$",
+              "title": "Iso2"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CountryOrganizations"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/polities": {
       "get": {
         "tags": [
@@ -1394,6 +1480,137 @@
           }
         }
       }
+    },
+    "/v1/live/events": {
+      "get": {
+        "tags": [
+          "live"
+        ],
+        "summary": "Live Events",
+        "operationId": "live_events_v1_live_events_get",
+        "parameters": [
+          {
+            "name": "since",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "ISO 8601; default and minimum: 7 days ago",
+              "title": "Since"
+            },
+            "description": "ISO 8601; default and minimum: 7 days ago"
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "comma-separated event types",
+              "title": "Type"
+            },
+            "description": "comma-separated event types"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LiveEventList"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/organizations": {
+      "get": {
+        "tags": [
+          "organizations"
+        ],
+        "summary": "List Organizations",
+        "operationId": "list_organizations_v1_organizations_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationList"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/chat": {
+      "post": {
+        "tags": [
+          "chat"
+        ],
+        "summary": "Post Chat",
+        "operationId": "post_chat_v1_chat_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              },
+              "text/event-stream": {}
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1420,6 +1637,48 @@
           "lng"
         ],
         "title": "CapitalCoord"
+      },
+      "ChatIn": {
+        "properties": {
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/ChatMessage"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Messages"
+          }
+        },
+        "type": "object",
+        "required": [
+          "messages"
+        ],
+        "title": "ChatIn"
+      },
+      "ChatMessage": {
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "assistant"
+            ],
+            "title": "Role"
+          },
+          "content": {
+            "type": "string",
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Content"
+          }
+        },
+        "type": "object",
+        "required": [
+          "role",
+          "content"
+        ],
+        "title": "ChatMessage"
       },
       "Clues": {
         "properties": {
@@ -1980,6 +2239,116 @@
           "items"
         ],
         "title": "CountryList"
+      },
+      "CountryMembership": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "joined": {
+            "type": "string",
+            "title": "Joined"
+          },
+          "left": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Left"
+          },
+          "suspended": {
+            "type": "boolean",
+            "title": "Suspended"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "joined",
+          "left",
+          "suspended",
+          "note"
+        ],
+        "title": "CountryMembership"
+      },
+      "CountryNobel": {
+        "properties": {
+          "born": {
+            "type": "integer",
+            "title": "Born"
+          },
+          "affiliated": {
+            "type": "integer",
+            "title": "Affiliated"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/NobelPrizeOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/Source"
+            },
+            "type": "array",
+            "title": "Sources"
+          }
+        },
+        "type": "object",
+        "required": [
+          "born",
+          "affiliated",
+          "items",
+          "sources"
+        ],
+        "title": "CountryNobel"
+      },
+      "CountryOrganizations": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CountryMembership"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/Source"
+            },
+            "type": "array",
+            "title": "Sources"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "sources"
+        ],
+        "title": "CountryOrganizations"
       },
       "CountryProfile": {
         "properties": {
@@ -3280,6 +3649,137 @@
         ],
         "title": "Link"
       },
+      "LiveEventList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/LiveEventOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "fetched_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fetched At"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/Source"
+            },
+            "type": "array",
+            "title": "Sources"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "fetched_at",
+          "sources"
+        ],
+        "title": "LiveEventList"
+      },
+      "LiveEventOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "earthquake",
+              "wildfire",
+              "severe_storm",
+              "volcano",
+              "flood",
+              "landslide",
+              "dust_haze",
+              "temp_extreme",
+              "drought",
+              "snow"
+            ],
+            "title": "Type"
+          },
+          "lat": {
+            "type": "number",
+            "title": "Lat"
+          },
+          "lng": {
+            "type": "number",
+            "title": "Lng"
+          },
+          "magnitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Magnitude"
+          },
+          "magnitude_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Magnitude Unit"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          },
+          "time": {
+            "type": "string",
+            "title": "Time"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "usgs",
+              "eonet"
+            ],
+            "title": "Source"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "type",
+          "lat",
+          "lng",
+          "magnitude",
+          "magnitude_unit",
+          "title",
+          "url",
+          "time",
+          "source"
+        ],
+        "title": "LiveEventOut"
+      },
       "Marker": {
         "properties": {
           "lat": {
@@ -3483,6 +3983,285 @@
           "sources"
         ],
         "title": "NewsList"
+      },
+      "NobelAffiliation": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "iso2": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Iso2"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "city",
+          "iso2"
+        ],
+        "title": "NobelAffiliation"
+      },
+      "NobelPrizeOut": {
+        "properties": {
+          "laureate_id": {
+            "type": "string",
+            "title": "Laureate Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "person",
+              "organization"
+            ],
+            "title": "Kind"
+          },
+          "year": {
+            "type": "integer",
+            "title": "Year"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "physics",
+              "chemistry",
+              "medicine",
+              "literature",
+              "peace",
+              "economics"
+            ],
+            "title": "Category"
+          },
+          "motivation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Motivation"
+          },
+          "portion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Portion"
+          },
+          "born_here": {
+            "type": "boolean",
+            "title": "Born Here"
+          },
+          "affiliated_here": {
+            "type": "boolean",
+            "title": "Affiliated Here"
+          },
+          "affiliations": {
+            "items": {
+              "$ref": "#/components/schemas/NobelAffiliation"
+            },
+            "type": "array",
+            "title": "Affiliations"
+          },
+          "wikipedia_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Wikipedia Url"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "laureate_id",
+          "name",
+          "kind",
+          "year",
+          "category",
+          "motivation",
+          "portion",
+          "born_here",
+          "affiliated_here",
+          "affiliations",
+          "wikipedia_url",
+          "url"
+        ],
+        "title": "NobelPrizeOut"
+      },
+      "Organization": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "short": {
+            "type": "string",
+            "title": "Short"
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon"
+          },
+          "wikidata_qid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Wikidata Qid"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "members": {
+            "items": {
+              "$ref": "#/components/schemas/OrganizationMember"
+            },
+            "type": "array",
+            "title": "Members"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/Source"
+            },
+            "type": "array",
+            "title": "Sources"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "short",
+          "icon",
+          "wikidata_qid",
+          "note",
+          "members",
+          "sources"
+        ],
+        "title": "Organization"
+      },
+      "OrganizationList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Organization"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "OrganizationList"
+      },
+      "OrganizationMember": {
+        "properties": {
+          "iso2": {
+            "type": "string",
+            "title": "Iso2"
+          },
+          "joined": {
+            "type": "string",
+            "title": "Joined"
+          },
+          "left": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Left"
+          },
+          "suspended": {
+            "type": "boolean",
+            "title": "Suspended"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "iso2",
+          "joined",
+          "left",
+          "suspended",
+          "note"
+        ],
+        "title": "OrganizationMember"
       },
       "Party": {
         "properties": {

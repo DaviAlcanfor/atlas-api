@@ -47,9 +47,11 @@ from atlas_api.db.models import (
     IndicatorLatest,
     IndicatorStat,
     Leader,
+    LiveEvent,
     Meta,
     NewsItem,
     NewsItemCountry,
+    NobelPrize,
     Person,
     Polity,
     Snapshot,
@@ -271,6 +273,50 @@ def import_trade(session: Session, path: Path) -> int:
             for iso2, x in data["countries"].items() if iso2 in known]
     if rows:
         session.execute(insert(CountryTrade), rows)
+    session.flush()
+    return len(rows)
+
+
+LIVE_RETENTION_DAYS = 7
+LIVE_SOURCES = {
+    "usgs": ("USGS Earthquake Hazards Program, M4.5+ earthquakes of the past week (GeoJSON feed)",
+             "https://earthquake.usgs.gov/earthquakes/feed/v1.0/geojson.php", "Public domain (U.S. Geological Survey)"),
+    "eonet": ("NASA Earth Observatory Natural Event Tracker (EONET v3)", "https://eonet.gsfc.nasa.gov/",
+              "NASA (not subject to copyright in the United States); visualization and general information only"),
+}
+
+
+def import_live_events(session: Session, path: Path) -> dict[str, int]:
+    """spec 034: data_out/live_events.json -> live_events. A source the ETL fetched (ok) has its rows replaced; a failed one
+    keeps its previous rows. Then rows older than 7 days go. Touches only live_events, its 2 source rows and
+    meta.live_fetched_at; data_version does not move (the /v1/live routes are outside the ETag cache)."""
+    data = json.loads(path.read_text(encoding="utf-8"))
+    fetched = datetime.fromisoformat(data["fetched_at"])
+    for sid, (title, url, lic) in LIVE_SOURCES.items():
+        session.merge(Source(id=sid, title=title, url=url, license=lic, retrieved_at=fetched))
+    ok = [sid for sid, good in data["ok"].items() if good]
+    session.execute(delete(LiveEvent).where(LiveEvent.source.in_(ok)))
+    rows = [{**x, "time": datetime.fromisoformat(x["time"])} for x in data["items"] if x["source"] in ok]
+    if rows:
+        session.execute(insert(LiveEvent), rows)
+    old = session.execute(delete(LiveEvent).where(LiveEvent.time < fetched - timedelta(days=LIVE_RETENTION_DAYS)))
+    session.merge(Meta(key="live_fetched_at", value=data["fetched_at"]))
+    session.flush()
+    return {"live_events_imported": len(rows), "live_events_expired": old.rowcount}  # type: ignore[attr-defined]
+def import_nobel(session: Session, path: Path) -> int:
+    """spec 033: data_out/nobel.json (etl nobel) -> nobel_prizes (rebuilt) + the `nobelprize` source row. Touches only these.
+    Countries that are not polities are stored as null (the API only answers for polities)."""
+    data = json.loads(path.read_text(encoding="utf-8"))
+    src = data["source"]
+    session.merge(Source(id=src["id"], title=src["title"], url=src["url"], license=src["license"],
+                         retrieved_at=datetime.fromisoformat(src["retrieved_at"])))
+    known = set(session.scalars(select(Polity.iso2).where(Polity.iso2.is_not(None))))
+    session.execute(delete(NobelPrize))
+    rows = [{**x, "origin_iso2": x["origin_iso2"] if x["origin_iso2"] in known else None,
+             "affiliations": [{**a, "iso2": a["iso2"] if a["iso2"] in known else None} for a in x["affiliations"]]}
+            for x in data["items"]]
+    if rows:
+        session.execute(insert(NobelPrize), rows)
     session.flush()
     return len(rows)
 

@@ -5,7 +5,7 @@ A separate agent builds the web front in ANOTHER repo (not visible here).
 
 ## Rules
 - `contract/CONTRACT.md` is FROZEN. Never edit. Problems go in `contract/CHANGE_REQUESTS.md`, then stop and tell the user.
-- Secrets only via env vars (`DATABASE_URL`, `RESTCOUNTRIES_API_KEY`, `CORS_ORIGINS`). Never a real `.env` in git.
+- Secrets only via env vars (`DATABASE_URL`, `RESTCOUNTRIES_API_KEY`, `CORS_ORIGINS`, `AI_GATEWAY_API_KEY`). Never a real `.env` in git.
 - The API process (`src/atlas_api`) must NEVER import the `etl` dependency group.
 - Only writer to the DB: `python -m atlas_api.cli import-content` (idempotent, one transaction). No write endpoints.
   The scheduled jobs write only their own tables: `import-fx` (fx, daily) and `import-news` (news_items, every 6 h; spec 008).
@@ -41,6 +41,7 @@ Status: draft -> approved (only the user approves) -> in progress -> done. No fe
 A spec's "Contract delta" is a proposal: approved specs of one phase become ONE change request; the user updates the contract in both repos.
 
 ## Production
+- `POST /v1/chat` (spec 025) needs `AI_GATEWAY_API_KEY` on FastAPI Cloud (503 without it). Model is ONLY `openai/gpt-6-luna` (owner).
 - Schema migrations run AT STARTUP (`src/atlas_api/migrate.py`, advisory lock; `AUTO_MIGRATE=false` to skip): merging a PR with a new
   migration no longer breaks production. Keep migrations ADDITIVE (the old release runs while the new one boots). DATA is still manual:
   `import-content` / `import-facts` against `SUPABASE_DATABASE_URL` from a worktree of the deployed code (see `scripts/prod-migrate-example.ps1`).

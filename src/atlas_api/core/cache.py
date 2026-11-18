@@ -21,6 +21,7 @@ from atlas_api.core.errors import problem
 
 CACHE_CONTROL = "public, max-age=300, stale-while-revalidate=86400"
 _NO_CACHE_PATHS = {"/v1/health"}
+_OWN_CACHE_PREFIX = "/v1/live/"  # spec 034: refreshed every 30 min without moving data_version; the route sets Cache-Control
 
 
 async def _data_version(request: Request, factory: Callable[[], Session]) -> str:
@@ -56,7 +57,8 @@ async def add_cache_headers(
     request: Request, call_next: Callable[[Request], Awaitable[Response]]
 ) -> Response:
     factory = getattr(request.app.state, "session_factory", None)
-    if request.method != "GET" or request.url.path in _NO_CACHE_PATHS or factory is None:
+    if (request.method != "GET" or request.url.path in _NO_CACHE_PATHS or request.url.path.startswith(_OWN_CACHE_PREFIX)
+            or factory is None):
         return await call_next(request)
     try:
         version = await _data_version(request, factory)

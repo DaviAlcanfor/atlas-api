@@ -16,12 +16,15 @@ from atlas_api.importer.content import import_content
 from atlas_api.importer.facts import import_facts
 from atlas_api.main import create_app
 
-# same host/port as the dev DB (.env DATABASE_URL); TEST_DATABASE_URL overrides
-TEST_URL = make_url(os.environ.get("TEST_DATABASE_URL") or get_settings().database_url).set(database="atlas_test")
+# same host/port as the dev DB (.env DATABASE_URL); TEST_DATABASE_URL overrides. TEST_DB_PREFIX (default "atlas") names the
+# throwaway databases <prefix>_test and <prefix>_api_test, so two checkouts can run the suite at once.
+PREFIX = os.environ.get("TEST_DB_PREFIX", "atlas")
+TEST_URL = make_url(os.environ.get("TEST_DATABASE_URL") or get_settings().database_url).set(database=f"{PREFIX}_test")
 
 
 def _fresh_database(name: str) -> Engine:
     """Drop + create database `name` (localhost only) and migrate it to head."""
+    name = os.environ.get("TEST_DB_PREFIX", "") + name  # lets parallel sessions use distinct databases
     url = TEST_URL.set(database=name)
     assert url.host in ("localhost", "127.0.0.1"), "test databases must be local"
     assert name.endswith("_test")
@@ -48,7 +51,7 @@ def engine() -> Iterator[Engine]:
 @pytest.fixture(scope="session")
 def api_client() -> Iterator[TestClient]:
     """The real app against a throwaway DB loaded with the REAL content/ and data_out/ files."""
-    eng = _fresh_database("atlas_api_test")
+    eng = _fresh_database(f"{PREFIX}_api_test")
     with Session(eng) as s, s.begin():
         import_content(s, Path("content"))
         if Path("data_out/wikidata.json").exists():

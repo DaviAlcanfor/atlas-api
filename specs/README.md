@@ -27,7 +27,11 @@ Regras:
 | 017 | [Idiomas oficiais e outros](017-languages.md) | v1.2 | approved |
 | 018 | [Ideologias e pensadores](018-ideologies.md) | v1.2 | approved |
 | 019 | [Correções de dados (data_version, DK, imagens, capitais, carga)](019-data-fixes.md) | - | done local (bucket de imagens: falta credencial) |
+| 025 | [Chatbot do Atlas](025-chatbot.md) | CR-012 | in progress (API em PR) |
 | 029 | [Do que vive a economia: setores, exportações, parceiros](029-economy-structure-trade.md) | fase 1: CR-009; fase 2: CR-010 | in progress (fase 2 da API em PR) |
+| 034 | ["Acontecendo agora": terremotos e eventos naturais](034-live-events.md) | CR-015 | in progress (API em PR) |
+| 033 | [Prêmios Nobel por país](033-nobel.md) | CR-014 | in progress (API em PR) |
+| 032 | [Organizações com datas de entrada e saída](032-organizations.md) | CR-013 | in progress (API em PR) |
 
 001, 002, 013 e 014 são só do web. Plano de execução, checklist e avaliação de stack: `atlas-web/specs/PLAN.md` e `atlas-web/specs/ADR-001-stack.md`.
 

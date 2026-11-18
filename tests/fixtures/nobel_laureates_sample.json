@@ -1,0 +1,727 @@
+{
+ "laureates": [
+  {
+   "id": "2",
+   "knownName": {
+    "en": "Hendrik A. Lorentz",
+    "se": "Hendrik A. Lorentz"
+   },
+   "givenName": {
+    "en": "Hendrik A.",
+    "se": "Hendrik A."
+   },
+   "familyName": {
+    "en": "Lorentz",
+    "se": "Lorentz"
+   },
+   "fullName": {
+    "en": "Hendrik Antoon Lorentz",
+    "se": "Hendrik Antoon Lorentz"
+   },
+   "fileName": "lorentz",
+   "gender": "male",
+   "birth": {
+    "date": "1853-07-18",
+    "year": "1853",
+    "place": {
+     "city": {
+      "en": "Arnhem",
+      "no": "Arnhem",
+      "se": "Arnhem"
+     },
+     "country": {
+      "en": "the Netherlands",
+      "no": "Nederland",
+      "se": "Nederländerna"
+     },
+     "cityNow": {
+      "en": "Arnhem",
+      "no": "Arnhem",
+      "se": "Arnhem",
+      "sameAs": [
+       "https://www.wikidata.org/wiki/Q1310",
+       "https://www.wikipedia.org/wiki/Arnhem"
+      ],
+      "latitude": "51.984257",
+      "longitude": "5.910857"
+     },
+     "countryNow": {
+      "en": "the Netherlands",
+      "no": "Nederland",
+      "se": "Nederländerna",
+      "sameAs": [
+       "https://www.wikidata.org/wiki/Q55"
+      ],
+      "latitude": "52.316667",
+      "longitude": "5.550000"
+     },
+     "continent": {
+      "en": "Europe",
+      "no": "Europa",
+      "se": "Europa"
+     },
+     "locationString": {
+      "en": "Arnhem, the Netherlands",
+      "no": "Arnhem, Nederland",
+      "se": "Arnhem, Nederländerna"
+     }
+    }
+   },
+   "death": {
+    "date": "1928-02-04",
+    "place": {
+     "country": {
+      "en": "the Netherlands",
+      "no": "Nederland",
+      "se": "Nederländerna",
+      "sameAs": "https://www.wikidata.org/wiki/Q55"
+     },
+     "countryNow": {
+      "en": "the Netherlands",
+      "no": "Nederland",
+      "se": "Nederländerna",
+      "sameAs": [
+       "https://www.wikidata.org/wiki/Q55"
+      ],
+      "latitude": "52.316667",
+      "longitude": "5.550000"
+     },
+     "continent": {
+      "en": "Europe",
+      "no": "Europa",
+      "se": "Europa"
+     },
+     "locationString": {
+      "en": "the Netherlands",
+      "no": "Nederland",
+      "se": "Nederländerna"
+     }
+    }
+   },
+   "wikipedia": {
+    "slug": "Hendrik_Lorentz",
+    "english": "https://en.wikipedia.org/wiki/Hendrik_Lorentz"
+   },
+   "wikidata": {
+    "id": "Q41688",
+    "url": "https://www.wikidata.org/wiki/Q41688"
+   },
+   "sameAs": [
+    "https://www.wikidata.org/wiki/Q41688",
+    "https://en.wikipedia.org/wiki/Hendrik_Lorentz"
+   ],
+   "links": [
+    {
+     "rel": "laureate",
+     "href": "https://api.nobelprize.org/2/laureate/2",
+     "action": "GET",
+     "types": "application/json"
+    },
+    {
+     "rel": "external",
+     "href": "https://www.nobelprize.org/laureate/2",
+     "title": "Hendrik A. Lorentz - Facts",
+     "action": "GET",
+     "types": "text/html",
+     "class": [
+      "laureate facts"
+     ]
+    }
+   ],
+   "nobelPrizes": [
+    {
+     "awardYear": "1902",
+     "category": {
+      "en": "Physics",
+      "no": "Fysikk",
+      "se": "Fysik"
+     },
+     "categoryFullName": {
+      "en": "The Nobel Prize in Physics",
+      "no": "Nobelprisen i fysikk",
+      "se": "Nobelpriset i fysik"
+     },
+     "sortOrder": "1",
+     "portion": "1/2",
+     "dateAwarded": "1902-11-11",
+     "prizeStatus": "received",
+     "motivation": {
+      "en": "in recognition of the extraordinary service they rendered by their researches into the influence of magnetism upon radiation phenomena",
+      "se": "såsom ett erkännande av den utomordentliga förtjänst de inlagt genom sina undersökningar över magnetismens inflytande på strålningsfenomenen"
+     },
+     "prizeAmount": 141847,
+     "prizeAmountAdjusted": 10191492,
+     "affiliations": [
+      {
+       "name": {
+        "en": "Leiden University",
+        "no": "Leiden University",
+        "se": "Leiden University"
+       },
+       "nameNow": {
+        "en": "Leiden University"
+       },
+       "city": {
+        "en": "Leiden",
+        "no": "Leiden",
+        "se": "Leiden"
+       },
+       "country": {
+        "en": "the Netherlands",
+        "no": "Nederland",
+        "se": "Nederländerna"
+       },
+       "cityNow": {
+        "en": "Leiden",
+        "no": "Leiden",
+        "se": "Leiden",
+        "sameAs": [
+         "https://www.wikidata.org/wiki/Q43631",
+         "https://www.wikipedia.org/wiki/Leiden"
+        ],
+        "latitude": "52.160787",
+        "longitude": "4.495746"
+       },
+       "countryNow": {
+        "en": "the Netherlands",
+        "no": "Nederland",
+        "se": "Nederländerna",
+        "sameAs": [
+         "https://www.wikidata.org/wiki/Q55"
+        ],
+        "latitude": "52.316667",
+        "longitude": "5.550000"
+       },
+       "continent": {
+        "en": "Europe"
+       },
+       "locationString": {
+        "en": "Leiden, the Netherlands",
+        "no": "Leiden, Nederland",
+        "se": "Leiden, Nederländerna"
+       }
+      }
+     ],
+     "links": [
+      {
+       "rel": "nobelPrize",
+       "href": "https://api.nobelprize.org/2/nobelPrize/phy/1902",
+       "action": "GET",
+       "types": "application/json"
+      },
+      {
+       "rel": "external",
+       "href": "https://www.nobelprize.org/prizes/physics/1902/lorentz/facts/",
+       "title": "Hendrik A. Lorentz - Facts",
+       "action": "GET",
+       "types": "text/html",
+       "class": [
+        "laureate facts"
+       ]
+      },
+      {
+       "rel": "external",
+       "href": "https://www.nobelprize.org/prizes/physics/1902/summary/",
+       "title": "The Nobel Prize in Physics 1902",
+       "action": "GET",
+       "types": "text/html",
+       "class": [
+        "prize summary"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "482",
+   "orgName": {
+    "en": "International Committee of the Red Cross",
+    "no": "Den internasjonale Røde Kors-komiteen",
+    "se": "Internationella Rödakorskommittén"
+   },
+   "nativeName": "Comité international de la Croix Rouge",
+   "fileName": "red-cross",
+   "founded": {
+    "date": "1863-00-00",
+    "place": {
+     "city": {
+      "en": "Geneva",
+      "no": "Genève",
+      "se": "Genève"
+     },
+     "country": {
+      "en": "Switzerland",
+      "no": "Sveits",
+      "se": "Schweiz",
+      "sameAs": "https://www.wikidata.org/wiki/Q39"
+     },
+     "cityNow": {
+      "en": "Geneva",
+      "no": "Genève",
+      "se": "Genève",
+      "sameAs": [
+       "https://www.wikidata.org/wiki/Q71",
+       "https://www.wikipedia.org/wiki/Geneva"
+      ]
+     },
+     "countryNow": {
+      "en": "Switzerland",
+      "no": "Sveits",
+      "se": "Schweiz",
+      "sameAs": [
+       "https://www.wikidata.org/wiki/Q39"
+      ]
+     },
+     "continent": {
+      "en": "Europe",
+      "no": "Europa",
+      "se": "Europa"
+     },
+     "locationString": {
+      "en": "Geneva, Switzerland",
+      "no": "Genève, Sveits",
+      "se": "Genève, Schweiz"
+     }
+    }
+   },
+   "wikipedia": {
+    "slug": "International_Committee_of_the_Red_Cross",
+    "english": "https://en.wikipedia.org/wiki/International_Committee_of_the_Red_Cross"
+   },
+   "wikidata": {
+    "id": "Q5987345",
+    "url": "https://www.wikidata.org/wiki/Q5987345"
+   },
+   "sameAs": [
+    "https://www.wikidata.org/wiki/Q5987345",
+    "https://en.wikipedia.org/wiki/International_Committee_of_the_Red_Cross"
+   ],
+   "links": [
+    {
+     "rel": "laureate",
+     "href": "https://api.nobelprize.org/2/laureate/482",
+     "action": "GET",
+     "types": "application/json"
+    },
+    {
+     "rel": "external",
+     "href": "https://www.nobelprize.org/laureate/482",
+     "title": " - Facts",
+     "action": "GET",
+     "types": "text/html",
+     "class": [
+      "laureate facts"
+     ]
+    }
+   ],
+   "nobelPrizes": [
+    {
+     "awardYear": "1917",
+     "category": {
+      "en": "Peace",
+      "no": "Fred",
+      "se": "Fred"
+     },
+     "categoryFullName": {
+      "en": "The Nobel Peace Prize",
+      "no": "Nobels fredspris",
+      "se": "Nobels fredspris"
+     },
+     "sortOrder": "1",
+     "portion": "1",
+     "dateAwarded": "1917-12-10",
+     "prizeStatus": "received",
+     "motivation": {
+      "en": "for the efforts to take care of wounded soldiers and prisoners of war and their families",
+      "no": "for sin innsats for å ivareta sårede soldater og krigsfanger og deres familier"
+     },
+     "prizeAmount": 133823,
+     "prizeAmountAdjusted": 4957724,
+     "links": [
+      {
+       "rel": "nobelPrize",
+       "href": "https://api.nobelprize.org/2/nobelPrize/pea/1917",
+       "action": "GET",
+       "types": "application/json"
+      },
+      {
+       "rel": "external",
+       "href": "https://www.nobelprize.org/prizes/peace/1917/red-cross/facts/",
+       "title": " - Facts",
+       "action": "GET",
+       "types": "text/html",
+       "class": [
+        "laureate facts"
+       ]
+      },
+      {
+       "rel": "external",
+       "href": "https://www.nobelprize.org/prizes/peace/1917/summary/",
+       "title": "The Nobel Peace Prize 1917",
+       "action": "GET",
+       "types": "text/html",
+       "class": [
+        "prize summary"
+       ]
+      }
+     ]
+    },
+    {
+     "awardYear": "1944",
+     "category": {
+      "en": "Peace",
+      "no": "Fred",
+      "se": "Fred"
+     },
+     "categoryFullName": {
+      "en": "The Nobel Peace Prize",
+      "no": "Nobels fredspris",
+      "se": "Nobels fredspris"
+     },
+     "sortOrder": "1",
+     "portion": "1",
+     "dateAwarded": "1945-11-12",
+     "prizeStatus": "received",
+     "motivation": {
+      "en": "for the great work it has performed during the war on behalf of humanity",
+      "no": "for det store arbeidet komiteen utførte på vegne av menneskeheten under krigen"
+     },
+     "prizeAmount": 121841,
+     "prizeAmountAdjusted": 3174561,
+     "links": [
+      {
+       "rel": "nobelPrize",
+       "href": "https://api.nobelprize.org/2/nobelPrize/pea/1944",
+       "action": "GET",
+       "types": "application/json"
+      },
+      {
+       "rel": "external",
+       "href": "https://www.nobelprize.org/prizes/peace/1944/red-cross/facts/",
+       "title": " - Facts",
+       "action": "GET",
+       "types": "text/html",
+       "class": [
+        "laureate facts"
+       ]
+      },
+      {
+       "rel": "external",
+       "href": "https://www.nobelprize.org/prizes/peace/1944/summary/",
+       "title": "The Nobel Peace Prize 1944",
+       "action": "GET",
+       "types": "text/html",
+       "class": [
+        "prize summary"
+       ]
+      }
+     ]
+    },
+    {
+     "awardYear": "1963",
+     "category": {
+      "en": "Peace",
+      "no": "Fred",
+      "se": "Fred"
+     },
+     "categoryFullName": {
+      "en": "The Nobel Peace Prize",
+      "no": "Nobels fredspris",
+      "se": "Nobels fredspris"
+     },
+     "sortOrder": "1",
+     "portion": "1/2",
+     "dateAwarded": "1963-10-10",
+     "prizeStatus": "received",
+     "motivation": {
+      "en": "for promoting the principles of the Geneva Convention and cooperation with the UN",
+      "no": "for å ha fremmet prinsippene i Genève-konvensjonen og samarbeidet med FN"
+     },
+     "prizeAmount": 265000,
+     "prizeAmountAdjusted": 3590371,
+     "links": [
+      {
+       "rel": "nobelPrize",
+       "href": "https://api.nobelprize.org/2/nobelPrize/pea/1963",
+       "action": "GET",
+       "types": "application/json"
+      },
+      {
+       "rel": "external",
+       "href": "https://www.nobelprize.org/prizes/peace/1963/red-cross/facts/",
+       "title": " - Facts",
+       "action": "GET",
+       "types": "text/html",
+       "class": [
+        "laureate facts"
+       ]
+      },
+      {
+       "rel": "external",
+       "href": "https://www.nobelprize.org/prizes/peace/1963/summary/",
+       "title": "The Nobel Peace Prize 1963",
+       "action": "GET",
+       "types": "text/html",
+       "class": [
+        "prize summary"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "370",
+   "knownName": {
+    "en": "Peter Medawar",
+    "se": "Peter Medawar"
+   },
+   "givenName": {
+    "en": "Peter",
+    "se": "Peter"
+   },
+   "familyName": {
+    "en": "Medawar",
+    "se": "Medawar"
+   },
+   "fullName": {
+    "en": "Peter Brian Medawar",
+    "se": "Peter Brian Medawar"
+   },
+   "fileName": "medawar",
+   "gender": "male",
+   "birth": {
+    "date": "1915-02-28",
+    "year": "1915",
+    "place": {
+     "city": {
+      "en": "Rio de Janeiro",
+      "no": "Rio de Janeiro",
+      "se": "Rio de Janeiro"
+     },
+     "country": {
+      "en": "Brazil",
+      "no": "Brasil",
+      "se": "Brasilien"
+     },
+     "cityNow": {
+      "en": "Rio de Janeiro",
+      "no": "Rio de Janeiro",
+      "se": "Rio de Janeiro",
+      "sameAs": [
+       "https://www.wikidata.org/wiki/Q8678",
+       "https://www.wikipedia.org/wiki/Rio_de_Janeiro"
+      ],
+      "latitude": "-22.911111",
+      "longitude": "-43.205556"
+     },
+     "countryNow": {
+      "en": "Brazil",
+      "no": "Brasil",
+      "se": "Brasilien",
+      "sameAs": [
+       "https://www.wikidata.org/wiki/Q155"
+      ],
+      "latitude": "-14.000000",
+      "longitude": "-53.000000"
+     },
+     "continent": {
+      "en": "South America",
+      "no": "Sør-Amerika",
+      "se": "Sydamerika"
+     },
+     "locationString": {
+      "en": "Rio de Janeiro, Brazil",
+      "no": "Rio de Janeiro, Brasil",
+      "se": "Rio de Janeiro, Brasilien"
+     }
+    }
+   },
+   "death": {
+    "date": "1987-10-02",
+    "place": {
+     "city": {
+      "en": "London",
+      "no": "London",
+      "se": "London"
+     },
+     "country": {
+      "en": "United Kingdom",
+      "no": "Storbritannia",
+      "se": "Storbritannien",
+      "sameAs": "https://www.wikidata.org/wiki/Q145"
+     },
+     "cityNow": {
+      "en": "London",
+      "no": "London",
+      "se": "London",
+      "sameAs": [
+       "https://www.wikidata.org/wiki/Q84",
+       "https://www.wikipedia.org/wiki/London"
+      ],
+      "latitude": "51.510235",
+      "longitude": "-0.120852"
+     },
+     "countryNow": {
+      "en": "United Kingdom",
+      "no": "Storbritannia",
+      "se": "Storbritannien",
+      "sameAs": [
+       "https://www.wikidata.org/wiki/Q145"
+      ],
+      "latitude": "54.600000",
+      "longitude": "-2.000000"
+     },
+     "continent": {
+      "en": "Europe",
+      "no": "Europa",
+      "se": "Europa"
+     },
+     "locationString": {
+      "en": "London, United Kingdom",
+      "no": "London, Storbritannia",
+      "se": "London, Storbritannien"
+     }
+    }
+   },
+   "wikipedia": {
+    "slug": "Peter_Medawar",
+    "english": "https://en.wikipedia.org/wiki/Peter_Medawar"
+   },
+   "wikidata": {
+    "id": "Q214209",
+    "url": "https://www.wikidata.org/wiki/Q214209"
+   },
+   "sameAs": [
+    "https://www.wikidata.org/wiki/Q214209",
+    "https://en.wikipedia.org/wiki/Peter_Medawar"
+   ],
+   "links": [
+    {
+     "rel": "laureate",
+     "href": "https://api.nobelprize.org/2/laureate/370",
+     "action": "GET",
+     "types": "application/json"
+    },
+    {
+     "rel": "external",
+     "href": "https://www.nobelprize.org/laureate/370",
+     "title": "Peter Medawar - Facts",
+     "action": "GET",
+     "types": "text/html",
+     "class": [
+      "laureate facts"
+     ]
+    }
+   ],
+   "nobelPrizes": [
+    {
+     "awardYear": "1960",
+     "category": {
+      "en": "Physiology or Medicine",
+      "no": "Fysiologi eller medisin",
+      "se": "Fysiologi eller medicin"
+     },
+     "categoryFullName": {
+      "en": "The Nobel Prize in Physiology or Medicine",
+      "no": "Nobelprisen i fysiologi eller medisin",
+      "se": "Nobelpriset i fysiologi eller medicin"
+     },
+     "sortOrder": "2",
+     "portion": "1/2",
+     "dateAwarded": "1960-10-20",
+     "prizeStatus": "received",
+     "motivation": {
+      "en": "for discovery of acquired immunological tolerance",
+      "se": "för upptäckten av förvärvad immunologisk tolerans"
+     },
+     "prizeAmount": 225987,
+     "prizeAmountAdjusted": 3369907,
+     "affiliations": [
+      {
+       "name": {
+        "en": "University College",
+        "no": "University College",
+        "se": "University College"
+       },
+       "nameNow": {
+        "en": "University College"
+       },
+       "city": {
+        "en": "London",
+        "no": "London",
+        "se": "London"
+       },
+       "country": {
+        "en": "United Kingdom",
+        "no": "Storbritannia",
+        "se": "Storbritannien"
+       },
+       "cityNow": {
+        "en": "London",
+        "no": "London",
+        "se": "London",
+        "sameAs": [
+         "https://www.wikidata.org/wiki/Q84",
+         "https://www.wikipedia.org/wiki/London"
+        ],
+        "latitude": "51.510235",
+        "longitude": "-0.120852"
+       },
+       "countryNow": {
+        "en": "United Kingdom",
+        "no": "Storbritannia",
+        "se": "Storbritannien",
+        "sameAs": [
+         "https://www.wikidata.org/wiki/Q145"
+        ],
+        "latitude": "54.600000",
+        "longitude": "-2.000000"
+       },
+       "continent": {
+        "en": "Europe"
+       },
+       "locationString": {
+        "en": "London, United Kingdom",
+        "no": "London, Storbritannia",
+        "se": "London, Storbritannien"
+       }
+      }
+     ],
+     "links": [
+      {
+       "rel": "nobelPrize",
+       "href": "https://api.nobelprize.org/2/nobelPrize/med/1960",
+       "action": "GET",
+       "types": "application/json"
+      },
+      {
+       "rel": "external",
+       "href": "https://www.nobelprize.org/prizes/medicine/1960/medawar/facts/",
+       "title": "Peter Medawar - Facts",
+       "action": "GET",
+       "types": "text/html",
+       "class": [
+        "laureate facts"
+       ]
+      },
+      {
+       "rel": "external",
+       "href": "https://www.nobelprize.org/prizes/medicine/1960/summary/",
+       "title": "The Nobel Prize in Physiology or Medicine 1960",
+       "action": "GET",
+       "types": "text/html",
+       "class": [
+        "prize summary"
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "meta": {
+  "count": 3
+ }
+}
