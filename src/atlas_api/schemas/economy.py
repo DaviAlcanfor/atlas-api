@@ -177,3 +177,18 @@ class CountryTradeOut(BaseModel):
     top_destinations: list[TradePartner]  # up to 10, by value
     top_origins: list[TradePartner]  # up to 10, by value
     sources: list[Source]
+
+
+class TechProduct(BaseModel):  # spec 041, CR-017
+    hs: str  # 8542, 8471, 8802, 8803, 8541 or 8517 (HS 2022)
+    label: str  # pt-BR heading, verbatim from MDIC/Secex NCM_SH
+    flow: Literal["export", "import"]
+    value_usd: float
+    share: float  # of the country's exports (flow export) or imports (flow import), 0..1
+    partners: list[TradePartner]  # up to 5 destinations (export) or origins (import); share is of THIS product flow
+
+
+class CountryTechOut(BaseModel):
+    year: int | None  # null when the country has no BACI data (then products and sources are empty)
+    products: list[TechProduct]  # HS in the order above, export before import; only flows with trade
+    sources: list[Source]

@@ -4,7 +4,7 @@ import io
 from pathlib import Path
 
 import pytest
-from etl.baci.pipeline import aggregate, country_iso2
+from etl.baci.pipeline import TECH, aggregate, country_iso2
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
@@ -44,6 +44,26 @@ def test_aggregate() -> None:
         aggregate(csv.reader(io.StringIO(CSV)), iso, {"2709": "x"})  # never invent a heading
 
 
+def test_aggregate_tech() -> None:
+    lines = """t,i,j,k,v,q
+2024,76,840,880230,60,1
+2024,76,490,880230,40,1
+2024,76,156,270900,900,1
+2024,156,76,854231,25,1
+2024,490,76,854231,25,1
+2024,840,76,270900,50,1
+"""
+    iso = {"76": "BR", "156": "CN", "840": "US"}
+    out = aggregate(csv.reader(io.StringIO(lines)), iso, {"2709": "Óleos", "8802": "Aviões", "8542": "Circuitos"})
+    assert "8802" in TECH
+    assert out["BR"]["tech"] == [  # TECH order; unmapped partner (490) counts in the total, not in partners
+        {"hs": "8542", "label": "Circuitos", "flow": "import", "value_usd": 50_000, "share": 0.5,
+         "partners": [{"iso2": "CN", "value_usd": 25_000, "share": 0.5}]},
+        {"hs": "8802", "label": "Aviões", "flow": "export", "value_usd": 100_000, "share": 0.1,
+         "partners": [{"iso2": "US", "value_usd": 60_000, "share": 0.6}]}]
+    assert out["CN"]["tech"][0]["hs"] == "8542" and out["CN"]["tech"][0]["flow"] == "export"
+
+
 def test_trade_endpoint(api_client: TestClient) -> None:
     eng = create_engine(api_client.app.state.test_url)  # type: ignore[attr-defined]
     with Session(eng) as s, s.begin():
@@ -59,3 +79,16 @@ def test_trade_endpoint(api_client: TestClient) -> None:
     assert "atualizada em 30/01/2026" in t["sources"][0]["title"] and t["sources"][0]["license"] == "Etalab 2.0"
     assert api_client.get("/v1/countries/UY/trade").status_code == 404  # country without BACI data
     assert api_client.get("/v1/countries/ZZ/trade").status_code == 404
+
+
+def test_tech_endpoint(api_client: TestClient) -> None:
+    eng = create_engine(api_client.app.state.test_url)  # type: ignore[attr-defined]
+    with Session(eng) as s, s.begin():
+        import_trade(s, Path("tests/fixtures/trade_sample.json"))
+    eng.dispose()
+    t = api_client.get("/v1/countries/BR/tech").json()
+    assert t["year"] == 2024 and [(p["hs"], p["flow"]) for p in t["products"]] == [("8542", "import"), ("8802", "export")]
+    assert t["products"][1]["partners"] == [{"iso2": "US", "value_usd": 60, "share": 0.6}]
+    assert [x["id"] for x in t["sources"]] == ["baci", "mdic-sh"]
+    assert api_client.get("/v1/countries/UY/tech").json() == {"year": None, "products": [], "sources": []}  # no data: empty
+    assert api_client.get("/v1/countries/ZZ/tech").status_code == 404

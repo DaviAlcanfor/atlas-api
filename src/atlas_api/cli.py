@@ -6,7 +6,7 @@ spec 024 phase 2). import-facts does the same as part of everything else.
 import-live-events: only data_out/live_events.json (the 30-min job, spec 034), only live_events; no data_version bump.
 import-nobel: only data_out/nobel.json (etl nobel, spec 033), only nobel_prizes and its source row.
 
-import-trade: only data_out/trade.json (etl baci, spec 029), only country_trade and its source rows.
+import-trade: only data_out/trade.json (etl baci, spec 029), only country_trade, country_tech_trade and their source rows.
 
 import-news: only data_out/news.json (the 6-hourly job, spec 008), only the news tables.
 

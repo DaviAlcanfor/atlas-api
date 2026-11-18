@@ -557,6 +557,49 @@
         }
       }
     },
+    "/v1/countries/{iso2}/tech": {
+      "get": {
+        "tags": [
+          "countries"
+        ],
+        "summary": "Get Tech",
+        "operationId": "get_tech_v1_countries__iso2__tech_get",
+        "parameters": [
+          {
+            "name": "iso2",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z]{2}$",
+              "title": "Iso2"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CountryTechOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/countries/{iso2}/nobel": {
       "get": {
         "tags": [
@@ -2482,6 +2525,42 @@
           "capital_coords"
         ],
         "title": "CountrySummary"
+      },
+      "CountryTechOut": {
+        "properties": {
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          },
+          "products": {
+            "items": {
+              "$ref": "#/components/schemas/TechProduct"
+            },
+            "type": "array",
+            "title": "Products"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/Source"
+            },
+            "type": "array",
+            "title": "Sources"
+          }
+        },
+        "type": "object",
+        "required": [
+          "year",
+          "products",
+          "sources"
+        ],
+        "title": "CountryTechOut"
       },
       "CountryTradeOut": {
         "properties": {
@@ -5611,6 +5690,51 @@
           "year"
         ],
         "title": "SubdivisionPopulation"
+      },
+      "TechProduct": {
+        "properties": {
+          "hs": {
+            "type": "string",
+            "title": "Hs"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "flow": {
+            "type": "string",
+            "enum": [
+              "export",
+              "import"
+            ],
+            "title": "Flow"
+          },
+          "value_usd": {
+            "type": "number",
+            "title": "Value Usd"
+          },
+          "share": {
+            "type": "number",
+            "title": "Share"
+          },
+          "partners": {
+            "items": {
+              "$ref": "#/components/schemas/TradePartner"
+            },
+            "type": "array",
+            "title": "Partners"
+          }
+        },
+        "type": "object",
+        "required": [
+          "hs",
+          "label",
+          "flow",
+          "value_usd",
+          "share",
+          "partners"
+        ],
+        "title": "TechProduct"
       },
       "TradePartner": {
         "properties": {

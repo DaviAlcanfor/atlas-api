@@ -9,5 +9,9 @@
          "top_exports": [{"hs": "2709", "label": "Óleos brutos de petróleo ou de minerais betuminosos", "value_usd": 600.0, "share": 0.6},
                          {"hs": "1201", "label": "Soja, mesmo triturada", "value_usd": 400.0, "share": 0.4}],
          "top_destinations": [{"iso2": "CN", "value_usd": 700.0, "share": 0.7}, {"iso2": "HK", "value_usd": 300.0, "share": 0.3}],
-         "top_origins": [{"iso2": "US", "value_usd": 800.0, "share": 1.0}]},
+         "top_origins": [{"iso2": "US", "value_usd": 800.0, "share": 1.0}],
+         "tech": [{"hs": "8542", "label": "Circuitos integrados e microconjuntos electrónicos", "flow": "import",
+                   "value_usd": 80.0, "share": 0.1, "partners": []},
+                  {"hs": "8802", "label": "Outros veículos aéreos (por exemplo: helicópteros, aviões)", "flow": "export",
+                   "value_usd": 100.0, "share": 0.1, "partners": [{"iso2": "US", "value_usd": 60.0, "share": 0.6}]}]},
   "HK": {"exports_usd": 300.0, "imports_usd": 300.0, "top_exports": [], "top_destinations": [], "top_origins": []}}}

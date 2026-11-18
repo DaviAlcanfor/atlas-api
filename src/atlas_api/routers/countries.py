@@ -15,6 +15,7 @@ from atlas_api.schemas import (
     CountryNobel,
     CountryOrganizations,
     CountryProfile,
+    CountryTechOut,
     CountryTradeOut,
     LeaderList,
     LeaderRole,
@@ -117,6 +118,16 @@ def get_trade(db: DbSession, iso2: Annotated[str, Path(pattern=r"^[A-Z]{2}$")]) 
     t = queries.get_trade(db, iso2)
     if t is None:
         raise NotFoundError(f"No BACI trade data for {iso2}")
+    return t
+
+
+@router.get("/{iso2}/tech")  # spec 041, CR-017
+def get_tech(db: DbSession, iso2: Annotated[str, Path(pattern=r"^[A-Z]{2}$")]) -> CountryTechOut:
+    if not queries.country_exists(db, iso2):
+        raise NotFoundError(f"Unknown country {iso2}")
+    t = queries.get_tech(db, iso2)
+    if t is None:  # no BACI data: empty lists, not 404 (the country exists)
+        return CountryTechOut(year=None, products=[], sources=[])
     return t
 
 
