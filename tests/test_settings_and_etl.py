@@ -2,7 +2,7 @@ import pytest
 from etl.restcountries.models import RawCountry
 from etl.restcountries.transform import to_facts
 
-from atlas_api.config import Settings
+from atlas_api.core.config import Settings
 
 
 def test_cors_origins_csv(monkeypatch: pytest.MonkeyPatch) -> None:

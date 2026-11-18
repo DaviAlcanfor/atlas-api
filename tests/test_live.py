@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
-from atlas_api.facts import import_live_events
+from atlas_api.importer.facts import import_live_events
 from atlas_api.schemas import LiveEventList
 
 USGS = json.loads(Path("tests/fixtures/usgs_4.5_week_sample.json").read_text(encoding="utf-8"))

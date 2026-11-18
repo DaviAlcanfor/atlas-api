@@ -6,7 +6,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from atlas_api.db.models import Event, GlossaryTerm, Meta, Polity, PolityName, Succession
-from atlas_api.importer import ContentError, import_content
+from atlas_api.importer.content import ContentError, import_content
 
 
 def _write(root: Path, polities: list[dict], succession: list[dict] | None = None) -> None:
@@ -92,7 +92,7 @@ def test_glossary_import_and_validation(session: Session, tmp_path: Path) -> Non
 
 
 def test_fx_part_changes_data_version(session: Session) -> None:  # spec 009: the daily import-fx must invalidate ETags
-    from atlas_api.importer import set_version
+    from atlas_api.importer.content import set_version
     before = set_version(session, "fx", "a")
     assert set_version(session, "fx", "b") != before
     assert set_version(session, "fx", "b") == set_version(session, "fx", "b")

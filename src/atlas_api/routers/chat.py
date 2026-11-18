@@ -6,8 +6,8 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field, field_validator
 
 from atlas_api import chat
-from atlas_api.config import get_settings
-from atlas_api.errors import problem
+from atlas_api.core.config import get_settings
+from atlas_api.core.errors import problem
 
 router = APIRouter(tags=["chat"])
 

@@ -4,7 +4,7 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import create_engine
 
-from atlas_api.config import get_settings
+from atlas_api.core.config import get_settings
 from atlas_api.db.models import Base
 
 config = context.config

@@ -4,8 +4,8 @@ from typing import Annotated
 from fastapi import APIRouter, Path
 
 from atlas_api import queries
-from atlas_api.deps import DbSession
-from atlas_api.errors import NotFoundError
+from atlas_api.core.deps import DbSession
+from atlas_api.core.errors import NotFoundError
 from atlas_api.schemas import IndicatorCatalog, IndicatorRanking
 
 router = APIRouter(tags=["indicators"])

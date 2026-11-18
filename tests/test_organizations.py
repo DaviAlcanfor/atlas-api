@@ -4,7 +4,7 @@ from typing import Any
 
 from fastapi.testclient import TestClient
 
-from atlas_api.importer import load_content, validate
+from atlas_api.importer.content import load_content, validate
 from atlas_api.schemas import CountryDetail, CountryOrganizations, OrganizationList
 
 

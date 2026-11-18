@@ -6,11 +6,11 @@ from typing import Any
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 
-from atlas_api.cache import add_cache_headers
-from atlas_api.config import get_settings
+from atlas_api.core.cache import add_cache_headers
+from atlas_api.core.config import get_settings
+from atlas_api.core.errors import register_error_handlers
+from atlas_api.db.migrate import upgrade_to_head
 from atlas_api.db.session import make_engine, make_session_factory
-from atlas_api.errors import register_error_handlers
-from atlas_api.migrate import upgrade_to_head
 from atlas_api.routers import (
     chat,
     countries,

@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
-from atlas_api.facts import import_nobel
+from atlas_api.importer.facts import import_nobel
 from atlas_api.schemas import CountryNobel
 
 RAW = json.loads(Path("tests/fixtures/nobel_laureates_sample.json").read_text(encoding="utf-8"))["laureates"]

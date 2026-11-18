@@ -6,8 +6,8 @@ from typing import Annotated, get_args
 from fastapi import APIRouter, Query, Response
 
 from atlas_api import queries
-from atlas_api.deps import DbSession
-from atlas_api.errors import InvalidParameterError
+from atlas_api.core.deps import DbSession
+from atlas_api.core.errors import InvalidParameterError
 from atlas_api.schemas import LiveEventList
 from atlas_api.schemas.live import LiveEventType
 

@@ -6,8 +6,8 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from atlas_api.db.models import CountryFacts, Polity
-from atlas_api.facts import import_facts
-from atlas_api.importer import import_content, load_content, validate
+from atlas_api.importer.content import import_content, load_content, validate
+from atlas_api.importer.facts import import_facts
 
 CONTRACT_IDS = {"austria", "brazil", "germany", "egypt", "japan", "turkey", "russia", "serbia"}
 

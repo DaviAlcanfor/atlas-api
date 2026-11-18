@@ -11,8 +11,8 @@ from sqlalchemy.orm import Session
 from tests.conftest import _fresh_database
 
 from atlas_api import chat
-from atlas_api.config import Settings
-from atlas_api.importer import import_content
+from atlas_api.core.config import Settings
+from atlas_api.importer.content import import_content
 from atlas_api.main import create_app
 
 
@@ -141,7 +141,7 @@ def test_gateway_error_is_an_sse_error(client: TestClient, gateway: Any, monkeyp
 
 
 def test_cors_preflight_allows_post(monkeypatch: pytest.MonkeyPatch) -> None:
-    from atlas_api.config import get_settings
+    from atlas_api.core.config import get_settings
     monkeypatch.setenv("CORS_ORIGINS", "http://localhost:5173")
     get_settings.cache_clear()
     try:

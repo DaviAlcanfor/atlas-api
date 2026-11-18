@@ -2,7 +2,7 @@
 from alembic.script import ScriptDirectory
 from sqlalchemy import Engine, text
 
-from atlas_api.migrate import MIGRATIONS, upgrade_to_head
+from atlas_api.db.migrate import MIGRATIONS, upgrade_to_head
 
 
 def test_upgrade_to_head_is_idempotent(engine: Engine) -> None:

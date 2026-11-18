@@ -13,9 +13,9 @@ from sqlalchemy.orm import Session
 from tests.conftest import _fresh_database
 
 from atlas_api import chat, chat_logs
-from atlas_api.config import Settings
+from atlas_api.core.config import Settings
 from atlas_api.db.models import ChatToolLog
-from atlas_api.importer import import_content
+from atlas_api.importer.content import import_content
 from atlas_api.main import create_app
 
 SECRET = "meu-segredo-12345"  # appears only in the user's message and in model-chosen free text
