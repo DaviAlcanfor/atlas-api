@@ -1,5 +1,5 @@
 # Atlas API contract v1 (FROZEN)
-Version: 1.10 (latest: v1.10 chat, see the end; base 1.2 additive over 1.1; part A = CR-003: languages_spoken, profile, economy, currencies; approved by the owner 2026-11-12)
+Version: 1.15 (latest: v1.15 tech trade, see the end; v1.11-v1.14 organizations, Nobel, live events, chat modes; base 1.2 additive over 1.1; part A = CR-003: languages_spoken, profile, economy, currencies; approved by the owner 2026-11-12)
 
 Status: FROZEN. Neither the API agent nor the web agent may edit this file.
 If you find a problem, stop, describe it in `contract/CHANGE_REQUESTS.md`
@@ -354,3 +354,83 @@ POST /v1/chat  body: { messages: ChatMessage[] /* 1..20, the last one role "user
 Model: `openai/gpt-6-luna` only (owner's decision), via the Vercel AI Gateway; the browser keeps the history and resends it.
 Limits are env-overridable (CHAT_PER_IP_HOUR, CHAT_PER_DAY, CHAT_MAX_TOOL_ROUNDS=6, CHAT_MAX_OUTPUT_TOKENS=1200).
 Clients must show the answer as AI-generated and list `done.sources`.
+
+## v1.11 (CR-013, applied 2026-11-18 on the owner's instruction): organizations
+Additive, two read-only endpoints; no field of an existing type changes.
+```
+OrganizationMember { iso2: string, joined: string /* ISO 8601 with the source's precision: "YYYY" | "YYYY-MM" | "YYYY-MM-DD" */,
+                     left: string|null /* same format; null = still a member */, suspended: boolean /* still a member */,
+                     note: string|null }
+Organization       { id: string /* = GlossaryTerm.id of kind "membership" */, label: string, short: string, icon: string|null,
+                     wikidata_qid: string|null, note: string|null,
+                     members: OrganizationMember[] /* every period, current and former; by joined, then iso2 */,
+                     sources: Source[] }
+CountryMembership  { id: string, label: string, joined: string, left: string|null, suspended: boolean, note: string|null }
+GET /v1/organizations                  -> { items: Organization[] }   by label
+GET /v1/countries/{iso2}/organizations -> { items: CountryMembership[], sources: Source[] }
+     current first (by label), then former (latest `left` first). Unknown iso2 -> 404; a country in none -> items [].
+```
+Data: curated `content/organizations.yaml` (12 organizations, one Wikipedia revision permalink each, CC BY-SA 4.0, facts
+only), written by `import-content`. `CountryDetail.memberships` keeps its type; for those 12 labels it now follows the
+curated list (current members, suspended included) instead of Wikidata. Clients must show `sources` (Wikipedia attribution).
+
+## v1.12 (CR-014, applied 2026-11-18 on the owner's instruction): Nobel laureates
+Additive, one read-only endpoint.
+```
+NobelAffiliation { name: string, city: string|null, iso2: string|null /* today's borders; null = not a /v1/countries country */ }
+NobelPrize   { laureate_id: string, name: string, kind: "person"|"organization", year: int,
+               category: "physics"|"chemistry"|"medicine"|"literature"|"peace"|"economics",
+               motivation: string|null /* official English text of the Nobel Prize API, verbatim, never translated */,
+               portion: string|null /* "1" | "1/2" | "1/3" | "1/4" */,
+               born_here: boolean /* born (organization: founded) in this country, today's borders */,
+               affiliated_here: boolean /* an affiliation at the time of the award is in this country */,
+               affiliations: NobelAffiliation[], wikipedia_url: string|null, url: string /* nobelprize.org laureate page */ }
+CountryNobel { born: int, affiliated: int /* prize counts */, items: NobelPrize[] /* newest first */, sources: Source[] }
+GET /v1/countries/{iso2}/nobel -> CountryNobel   Unknown iso2 -> 404; no laureate -> items [], counts 0, sources [].
+```
+Data: Nobel Prize API v2.1 (CC0 1.0), `etl nobel` + `import-nobel` (manual, yearly). Source id `nobelprize`. Its terms: do not
+alter the data; no Nobel name/logo implying endorsement; citing the API as the source is encouraged (clients show `sources`).
+
+## v1.13 (CR-015, applied 2026-11-18 on the owner's instruction): live events
+Additive, one read-only endpoint, refreshed every 30 min by `.github/workflows/live-events.yml`.
+```
+LiveEvent { id: string /* "usgs:<id>" | "eonet:<id>" */,
+            type: "earthquake"|"wildfire"|"severe_storm"|"volcano"|"flood"|"landslide"|"dust_haze"|"temp_extreme"|"drought"|"snow",
+            lat: number, lng: number, magnitude: number|null,
+            magnitude_unit: string|null /* USGS magType ("mww", "mb"...) or EONET unit ("kts", "acres"...) */,
+            title: string /* verbatim from the source, English */, url: string|null /* event page at the source */,
+            time: string /* ISO 8601 UTC; EONET: date of its latest position */, source: "usgs"|"eonet" }
+GET /v1/live/events?since=&type= -> { items: LiveEvent[] /* newest first */, fetched_at: string|null, sources: Source[] }
+     since: ISO 8601, default and floor 7 days ago; type: comma-separated LiveEvent.type values, unknown -> 422.
+     Exception to the caching rules: no ETag, not tied to data_version; Cache-Control "public, max-age=300".
+```
+Data: USGS M4.5+ past-week feed (U.S. public domain; credit "U.S. Geological Survey") and NASA EONET v3 (NASA content, not
+copyrighted in the US; "visualization and general information purposes only", not official). Retention 7 days.
+Clients must credit both and present EONET as informative.
+
+## v1.14 (CR-016, applied 2026-11-18 on the owner's instruction): chat modes and `map` event (chat is off in production for now)
+Additive; `POST /v1/chat` keeps working unchanged when `mode` is absent.
+```
+POST /v1/chat   body gains: mode?: "learn" | "analyse" | "tell"   (absent = today's behaviour; unknown value -> 422)
+SSE new event:  map  { iso2: string[], layer?: string, year?: int }
+     emitted only when `mode` was sent AND the answer yields a valid layer or year; sent after `countries`, before `done`.
+     iso2: existing countries the answer links to; layer: "content"|"regime"|"flags"|"ranking"; year: int in [year_min, year_max], never 0.
+     Every value is validated on the server; clients still ignore values they do not know.
+```
+
+## v1.15 (CR-017, applied 2026-11-18 on the owner's instruction): technology and chips trade
+Additive, one read-only endpoint; no field of an existing type changes.
+```
+TechPartner  { iso2: string, value_usd: float, share: float /* of THIS product flow, 0..1 */ }       // same shape as TradePartner (CR-010)
+TechProduct  { hs: "8542"|"8471"|"8802"|"8803"|"8541"|"8517" /* HS 2022, 4 digits */,
+               label: string /* pt-BR heading, verbatim from MDIC/Secex NCM_SH (CC BY-ND 3.0: never reworded) */,
+               flow: "export"|"import", value_usd: float,
+               share: float /* of the country's exports (flow export) or imports (flow import), 0..1 */,
+               partners: TechPartner[] /* up to 5 destinations (export) or origins (import), by value */ }
+CountryTech  { year: int|null /* null = no BACI data */, products: TechProduct[] /* by hs in the order above, export before import;
+               only flows with trade */, sources: Source[] }
+GET /v1/countries/{iso2}/tech -> CountryTech   Unknown iso2 -> 404; no BACI data (e.g. TW) -> { year: null, products: [], sources: [] }.
+```
+Data: BACI (CEPII, Etalab 2.0, HS22, 2024) already used by `/trade`; `etl baci` reads the same zip, `import-trade` fills the new table
+`country_tech_trade` (migration 0024, additive). Labels from MDIC/Secex (source ids `baci`, `mdic-sh`). `TX.VAL.TECH.MF.ZS` (high-tech
+share of manufactured exports) is NOT part of this endpoint: it is already in `GET /v1/indicators` and the profile.
