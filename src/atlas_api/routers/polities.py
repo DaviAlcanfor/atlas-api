@@ -5,9 +5,10 @@ from fastapi import APIRouter, Query
 from atlas_api import queries
 from atlas_api.core.deps import DbSession
 from atlas_api.core.errors import InvalidParameterError, NotFoundError
-from atlas_api.schemas import PolityDetail, PolityList
+from atlas_api.schemas import PolityDetail, PolityList, WikipediaSummary
 
 router = APIRouter(prefix="/polities", tags=["polities"])
+entities = APIRouter(prefix="/entities", tags=["polities"])
 
 
 @router.get("")
@@ -30,3 +31,12 @@ def get_polity(db: DbSession, id: str) -> PolityDetail:
     if polity is None:
         raise NotFoundError(f"Unknown polity {id}")
     return polity
+
+
+@entities.get("/{qid}/wikipedia")
+def entity_wikipedia(db: DbSession, qid: str) -> WikipediaSummary:
+    """spec 042: Wikipedia summary of a historical-map entity by its Wikidata Q-id (the `wikidata` of a snapshot feature)."""
+    found = queries.wikipedia_summary(db, qid)
+    if found is None:
+        raise NotFoundError(f"No Wikipedia summary for {qid}")
+    return found

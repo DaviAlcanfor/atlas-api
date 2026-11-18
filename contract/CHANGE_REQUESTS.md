@@ -507,3 +507,19 @@ GET /v1/countries/{iso2}/tech -> CountryTech   Unknown iso2 -> 404; no BACI data
 Data: BACI (CEPII, Etalab 2.0, HS22, 2024) already used by `/trade`; `etl baci` reads the same zip, `import-trade` fills the new table
 `country_tech_trade` (migration 0024, additive). Labels from MDIC/Secex (source ids `baci`, `mdic-sh`). `TX.VAL.TECH.MF.ZS` (high-tech
 share of manufactured exports) is NOT part of this endpoint: it is already in `GET /v1/indicators` and the profile.
+## CR-018: Wikipedia summary of historical entities (spec 042, 2026-11-18; owner asked "mostrar dentro do site as informações da Wikipedia")
+Additive; one new read-only endpoint and one new optional field. `PolityDetail.summary` (curated text) is unchanged.
+```
+WikipediaSummary { text: string /* plain text of the article lead, never HTML */, lang: "pt"|"en" /* pt preferred, en when pt has no article */,
+                   title: string, url: string /* the article */, license: "CC BY-SA 4.0",
+                   license_url: "https://creativecommons.org/licenses/by-sa/4.0/",
+                   attribution: string /* ready line: Texto: Wikipédia (<lang>), artigo "<title>", licença CC BY-SA 4.0 */,
+                   revision: int|null /* Wikipedia revision id the text came from */, fetched_at: string /* ISO 8601 */ }
+PolityDetail += { wikipedia_summary: WikipediaSummary|null }                 // by the polity's wikidata_qid; null when none
+GET /v1/entities/{wikidata_qid}/wikipedia -> WikipediaSummary                // Q-id = `wikidata` property of a historical snapshot feature
+     Unknown / no article -> 404.
+```
+Why a Q-id endpoint: most map entities (Cliopatria) are not rows of `polities`; the snapshot features only carry `wikidata`.
+Clients must show `attribution` with links to `url` and `license_url`. No image is served (each image has its own licence).
+Data: Wikipedia REST `page/summary` (text CC BY-SA 4.0), table `polity_summaries` (migration 0025, additive), `etl wikipedia-polities`
++ `import-polity-summaries`.

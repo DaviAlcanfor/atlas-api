@@ -69,6 +69,7 @@ def create_app(database_url: str | None = None) -> FastAPI:
         modules.append(chat)
     for module in modules:
         app.include_router(module.router, prefix="/v1")
+    app.include_router(polities.entities, prefix="/v1")
     return app
 
 

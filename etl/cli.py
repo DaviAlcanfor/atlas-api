@@ -23,6 +23,7 @@ from etl.wikidata import pipeline as wikidata
 from etl.wikidata import subdivisions as wikidata_subdivisions
 from etl.wikipedia import heads as wikipedia_heads
 from etl.wikipedia import history as wikipedia_history
+from etl.wikipedia import polities as wikipedia_polities
 from etl.worldbank import pipeline as worldbank
 
 COMMANDS: dict[str, Callable[[], None]] = {
@@ -32,6 +33,7 @@ COMMANDS: dict[str, Callable[[], None]] = {
     "wikidata-languages": wikidata_languages.run, "undp": undp.run, "fx": fx.run,
     "wikipedia-history": wikipedia_history.run, "cliopatria": cliopatria.run, "ai-summaries": ai_summaries.run, "news": news.run, "baci": baci.run,
     "gdl-shdi": gdl.run, "subdivision-heads": wikipedia_heads.run, "live-events": live.run, "nobel": nobel.run,
+    "wikipedia-polities": wikipedia_polities.run,
 }
 
 

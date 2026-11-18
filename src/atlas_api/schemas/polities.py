@@ -38,6 +38,19 @@ class Wikipedia(BaseModel):
     url: str
 
 
+class WikipediaSummary(BaseModel):
+    """spec 042 (CR-018): Wikipedia lead, CC BY-SA 4.0. Clients must show `attribution` and link `url` and `license_url`."""
+    text: str
+    lang: str
+    title: str
+    url: str
+    license: str
+    license_url: str
+    attribution: str
+    revision: int | None
+    fetched_at: str
+
+
 class PolityDetail(PolitySummary):
     start_precision: Precision
     end_precision: Precision | None
@@ -49,6 +62,7 @@ class PolityDetail(PolitySummary):
     politics: Politics | None
     timeline: list[Event]
     wikipedia: Wikipedia | None
+    wikipedia_summary: WikipediaSummary | None
     sources: list[Source]
     updated_at: str
 

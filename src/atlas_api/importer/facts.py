@@ -55,6 +55,7 @@ from atlas_api.db.models import (
     NobelPrize,
     Person,
     Polity,
+    PolityWikipedia,
     Snapshot,
     Source,
     Subdivision,
@@ -325,6 +326,16 @@ def import_nobel(session: Session, path: Path) -> int:
         session.execute(insert(NobelPrize), rows)
     session.flush()
     return len(rows)
+
+
+def import_polity_summaries(session: Session, path: Path) -> int:
+    """spec 042: data_out/polity_summaries.json (etl wikipedia-polities) -> polity_summaries (rebuilt). Touches only this table."""
+    items = json.loads(path.read_text(encoding="utf-8"))["items"]
+    session.execute(delete(PolityWikipedia))
+    if items:
+        session.execute(insert(PolityWikipedia), [{**x, "fetched_at": datetime.fromisoformat(x["fetched_at"])} for x in items])
+    session.flush()
+    return len(items)
 
 
 def import_snapshots(session: Session, path: Path) -> int:

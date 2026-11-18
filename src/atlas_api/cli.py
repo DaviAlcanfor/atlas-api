@@ -4,6 +4,7 @@ import-subdivisions: only the subdivisions table and its source rows, from data_
 spec 024 phase 2). import-facts does the same as part of everything else.
 
 import-live-events: only data_out/live_events.json (the 30-min job, spec 034), only live_events; no data_version bump.
+import-polity-summaries: only data_out/polity_summaries.json (etl wikipedia-polities, spec 042), only polity_summaries.
 import-nobel: only data_out/nobel.json (etl nobel, spec 033), only nobel_prizes and its source row.
 
 import-trade: only data_out/trade.json (etl baci, spec 029), only country_trade, country_tech_trade and their source rows.
@@ -33,6 +34,7 @@ from atlas_api.importer.facts import (
     import_live_events,
     import_news,
     import_nobel,
+    import_polity_summaries,
     import_subdivisions,
     import_trade,
 )
@@ -40,7 +42,7 @@ from atlas_api.importer.facts import (
 
 def main() -> int:
     ap = argparse.ArgumentParser(prog="atlas_api.cli")
-    ap.add_argument("command", choices=["import-content", "import-facts", "import-fx", "import-news", "import-trade", "import-live-events", "import-nobel", "import-subdivisions", "currency-codes", "chat-logs"])
+    ap.add_argument("command", choices=["import-content", "import-facts", "import-fx", "import-news", "import-trade", "import-live-events", "import-nobel", "import-polity-summaries", "import-subdivisions", "currency-codes", "chat-logs"])
     ap.add_argument("--content", default="content", type=Path)
     ap.add_argument("--data-out", default="data_out", type=Path)
     ap.add_argument("--since", default="1d", help="chat-logs: window, e.g. 1d or 6h")
@@ -82,6 +84,10 @@ def main() -> int:
                 nobel = args.data_out / "nobel.json"
                 summary = {"nobel_prizes_imported": import_nobel(session, nobel),
                            "data_version": set_version(session, "nobel", hashlib.sha256(nobel.read_bytes()).hexdigest()[:16])}
+            elif args.command == "import-polity-summaries":
+                f = args.data_out / "polity_summaries.json"
+                summary = {"polity_summaries_imported": import_polity_summaries(session, f),
+                           "data_version": set_version(session, "polity_summaries", hashlib.sha256(f.read_bytes()).hexdigest()[:16])}
             elif args.command == "import-subdivisions":
                 files = [args.data_out / n for n in ("subdivisions.json", "shdi.json", "heads.json")]
                 known = set(session.scalars(select(Polity.iso2).where(Polity.iso2.is_not(None))))

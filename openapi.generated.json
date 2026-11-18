@@ -1654,6 +1654,49 @@
           }
         }
       }
+    },
+    "/v1/entities/{qid}/wikipedia": {
+      "get": {
+        "tags": [
+          "polities"
+        ],
+        "summary": "Entity Wikipedia",
+        "description": "spec 042: Wikipedia summary of a historical-map entity by its Wikidata Q-id (the `wikidata` of a snapshot feature).",
+        "operationId": "entity_wikipedia_v1_entities__qid__wikipedia_get",
+        "parameters": [
+          {
+            "name": "qid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Qid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WikipediaSummary"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -4789,6 +4832,16 @@
               }
             ]
           },
+          "wikipedia_summary": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WikipediaSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "sources": {
             "items": {
               "$ref": "#/components/schemas/Source"
@@ -4819,6 +4872,7 @@
           "politics",
           "timeline",
           "wikipedia",
+          "wikipedia_summary",
           "sources",
           "updated_at"
         ],
@@ -5844,6 +5898,67 @@
           "url"
         ],
         "title": "Wikipedia"
+      },
+      "WikipediaSummary": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "lang": {
+            "type": "string",
+            "title": "Lang"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "license": {
+            "type": "string",
+            "title": "License"
+          },
+          "license_url": {
+            "type": "string",
+            "title": "License Url"
+          },
+          "attribution": {
+            "type": "string",
+            "title": "Attribution"
+          },
+          "revision": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revision"
+          },
+          "fetched_at": {
+            "type": "string",
+            "title": "Fetched At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text",
+          "lang",
+          "title",
+          "url",
+          "license",
+          "license_url",
+          "attribution",
+          "revision",
+          "fetched_at"
+        ],
+        "title": "WikipediaSummary",
+        "description": "spec 042 (CR-018): Wikipedia lead, CC BY-SA 4.0. Clients must show `attribution` and link `url` and `license_url`."
       },
       "WorldStats": {
         "properties": {

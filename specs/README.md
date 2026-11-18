@@ -32,6 +32,7 @@ Regras:
 | 034 | ["Acontecendo agora": terremotos e eventos naturais](034-live-events.md) | CR-015 | in progress (API em PR) |
 | 033 | [Prêmios Nobel por país](033-nobel.md) | CR-014 | in progress (API em PR) |
 | 032 | [Organizações com datas de entrada e saída](032-organizations.md) | CR-013 | in progress (API em PR) |
+| 042 | [Wikipedia dentro da viagem no tempo](042-polity-wikipedia.md) | CR-018 | approved (API em PR) |
 
 001, 002, 013 e 014 são só do web. Plano de execução, checklist e avaliação de stack: `atlas-web/specs/PLAN.md` e `atlas-web/specs/ADR-001-stack.md`.
 
